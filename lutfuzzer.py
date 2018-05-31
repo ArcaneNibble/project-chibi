@@ -77,7 +77,7 @@ signal_name = d {
 }
 """
 
-NTHREADS = 10
+NTHREADS = 20
 
 def fuzz_lut_at(x, y, n):
     this_lut_dir = 'lutfuzz/X{}_Y{}_N{}'.format(x, y, n)
