@@ -109,21 +109,22 @@ def main():
     donequeue = queue.Queue()
 
     num_items = 0
-    for x in [2]:#[2, 3, 4, 5, 6, 7]:
-        for y in [1]:#[1, 2, 3, 4]:
-            for n in [0, 1]:#, 2, 3, 4, 5, 6, 7, 8, 9]:
+    for x in [2, 3, 4, 5, 6, 7]:
+        for y in [1, 2, 3, 4]:
+            for n in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
                 workqueue.put((x, y, n))
                 num_items += 1
 
     def threadfn():
-        try:
-            x, y, n = workqueue.get(timeout=0)
-        except queue.Empty:
-            return
+        while True:
+            try:
+                x, y, n = workqueue.get(timeout=0)
+            except queue.Empty:
+                return
 
-        print("Working on X{}_Y{}_N{}".format(x, y, n))
-        fuzz_lut_at(x, y, n)
-        donequeue.put((x, y, n))
+            print("Working on X{}_Y{}_N{}".format(x, y, n))
+            fuzz_lut_at(x, y, n)
+            donequeue.put((x, y, n))
 
     for _ in range(NTHREADS):
         t = threading.Thread(target=threadfn)
