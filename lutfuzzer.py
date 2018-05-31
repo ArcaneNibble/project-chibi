@@ -1,6 +1,8 @@
 from runner import *
 import os
 import shutil
+import queue
+import threading
 
 BASE_DIR = '/home/rqou/.local/share/lxc/altera-quartus-prime-lite-18/rootfs/home/rqou'
 
@@ -75,6 +77,8 @@ signal_name = d {
 }
 """
 
+NTHREADS = 10
+
 def fuzz_lut_at(x, y, n):
     this_lut_dir = 'lutfuzz/X{}_Y{}_N{}'.format(x, y, n)
     os.mkdir(BASE_DIR + '/' + this_lut_dir)
@@ -98,5 +102,37 @@ def fuzz_lut_at(x, y, n):
 
         shutil.copy(BASE_DIR + '/' + this_lut_dir + '/output_files/maxvtest.pof', 'lutfuzz_X{}_Y{}_N{}_bits{:04X}.pof'.format(x, y, n, lut_contents_i))
 
-os.mkdir(BASE_DIR + '/lutfuzz')
-fuzz_lut_at(2, 1, 0)
+def main():
+    os.mkdir(BASE_DIR + '/lutfuzz')
+
+    workqueue = queue.Queue()
+    donequeue = queue.Queue()
+
+    num_items = 0
+    for x in [2]:#[2, 3, 4, 5, 6, 7]:
+        for y in [1]:#[1, 2, 3, 4]:
+            for n in [0, 1]:#, 2, 3, 4, 5, 6, 7, 8, 9]:
+                workqueue.put((x, y, n))
+                num_items += 1
+
+    def threadfn():
+        try:
+            x, y, n = workqueue.get(timeout=0)
+        except queue.Empty:
+            return
+
+        print("Working on X{}_Y{}_N{}".format(x, y, n))
+        fuzz_lut_at(x, y, n)
+        donequeue.put((x, y, n))
+
+    for _ in range(NTHREADS):
+        t = threading.Thread(target=threadfn)
+        t.start()
+
+    while num_items:
+        x, y, n = donequeue.get()
+        print("Finished X{}_Y{}_N{}".format(x, y, n))
+        num_items -= 1
+
+if __name__=='__main__':
+    main()
