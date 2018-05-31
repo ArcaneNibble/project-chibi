@@ -1,1 +1,4 @@
 notes
+venv
+__pycache__
+*.pof

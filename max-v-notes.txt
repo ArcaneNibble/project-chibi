@@ -1,0 +1,21 @@
+afaict there are only 4 unique dies:
+* 6x4 240 LE
+* 12x4 570 LE
+* 16x7 1270 LE
+* 20x10 2210 LE
+
+240 LE has 0xD000 = 53248 bits in main section
+
+10 LEs per LAB
+up to 7 IOEs per row IO block (5 in the 240 part)
+up to 4 IOEs per col IO block
+
+
+block sizes?
+0x440 (0xC0 larger)
+0x380
+0x380
+0x380
+0x380
+0x380
+0x3E0 (0x60 larger)
