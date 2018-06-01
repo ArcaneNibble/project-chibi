@@ -21,10 +21,13 @@ pixels = im.load()
 for y in range(H):
     for x in range(W):
         bit = y * W + x
+        if bit >= BITS:
+            continue
         # print(bit)
 
         byte_i = bit // 8
-        bit_i = 7 - (bit % 8)
+        # bit_i = 7 - (bit % 8)
+        bit_i = (bit % 8)
 
         if indata[byte_i] & (1 << bit_i):
             pixels[x, y] = 1

@@ -18,7 +18,7 @@ block sizes?
 0x380
 0x380
 0x380
-0x3E0 (0x60 larger)
+0x440
 
 $ diff -u <(xxd lutfuzz_X2_Y1_N0_bits0001.pof-cfm.bin) <(xxd lutfuzz_X2_Y1_N0_bits0002.pof-cfm.bin)
 --- /dev/fd/63  2018-05-31 01:59:56.983126203 -0700
@@ -96,3 +96,95 @@ X2_Y1_N5 - LUT[15]  0x3df bit 0
 
 
 X2_Y2_N0 - 0x3b2 bit 7
+
+
+X2_Y1_N? lut[0] is?
+Bit became UNSET at 0x03B9 bit 3
+Bit became UNSET at 0x03B9 bit 7
+Bit became UNSET at 0x03BA bit 3
+Bit became UNSET at 0x03BA bit 7
+Bit became UNSET at 0x03BB bit 3
+Bit became UNSET at 0x03BE bit 5
+Bit became UNSET at 0x03BE bit 1
+Bit became UNSET at 0x03BD bit 5
+Bit became UNSET at 0x03BD bit 1
+Bit became UNSET at 0x03BC bit 5
+
+X2_Y2_N? lut[0] is?
+Bit became UNSET at 0x03B2 bit 7
+Bit became UNSET at 0x03B3 bit 3
+Bit became UNSET at 0x03B3 bit 7
+Bit became UNSET at 0x03B4 bit 6
+Bit became UNSET at 0x03B5 bit 2
+Bit became UNSET at 0x03B8 bit 4
+Bit became UNSET at 0x03B7 bit 5
+Bit became UNSET at 0x03B7 bit 1
+Bit became UNSET at 0x03B6 bit 5
+Bit became UNSET at 0x03B6 bit 1
+
+X2_Y3_N? lut[0] is?
+Bit became UNSET at 0x03AC bit 5
+Bit became UNSET at 0x03AD bit 1
+Bit became UNSET at 0x03AD bit 5
+Bit became UNSET at 0x03AE bit 1
+Bit became UNSET at 0x03AE bit 5
+Bit became UNSET at 0x03B1 bit 7
+Bit became UNSET at 0x03B1 bit 3
+Bit became UNSET at 0x03B0 bit 7
+Bit became UNSET at 0x03B0 bit 3
+Bit became UNSET at 0x03AF bit 4
+
+X2_Y4_N? lut[0] is?
+Bit became UNSET at 0x03A6 bit 1
+Bit became UNSET at 0x03A6 bit 5
+Bit became UNSET at 0x03A7 bit 1
+Bit became UNSET at 0x03A7 bit 5
+Bit became UNSET at 0x03A8 bit 4
+Bit became UNSET at 0x03AB bit 3
+Bit became UNSET at 0x03AA bit 7
+Bit became UNSET at 0x03AA bit 3
+Bit became UNSET at 0x03A9 bit 7
+Bit became UNSET at 0x03A9 bit 3
+
+X3_Y1_N? lut[0] is?
+Bit became UNSET at 0x0739 bit 3
+Bit became UNSET at 0x0739 bit 7
+Bit became UNSET at 0x073A bit 3
+Bit became UNSET at 0x073A bit 7
+Bit became UNSET at 0x073B bit 3
+Bit became UNSET at 0x073E bit 5
+Bit became UNSET at 0x073E bit 1
+Bit became UNSET at 0x073D bit 5
+Bit became UNSET at 0x073D bit 1
+Bit became UNSET at 0x073C bit 5
+
+X4_Y1_N? lut[0] is?
+Bit became UNSET at 0x0AB9 bit 3
+Bit became UNSET at 0x0AB9 bit 7
+Bit became UNSET at 0x0ABA bit 3
+Bit became UNSET at 0x0ABA bit 7
+Bit became UNSET at 0x0ABB bit 3
+Bit became UNSET at 0x0ABE bit 5
+Bit became UNSET at 0x0ABE bit 1
+Bit became UNSET at 0x0ABD bit 5
+Bit became UNSET at 0x0ABD bit 1
+Bit became UNSET at 0x0ABC bit 5
+
+X7_Y1_N? lut[0] is?
+Bit became UNSET at 0x1539 bit 3
+Bit became UNSET at 0x1539 bit 7
+Bit became UNSET at 0x153A bit 3
+Bit became UNSET at 0x153A bit 7
+Bit became UNSET at 0x153B bit 3
+Bit became UNSET at 0x153E bit 5
+Bit became UNSET at 0x153E bit 1
+Bit became UNSET at 0x153D bit 5
+Bit became UNSET at 0x153D bit 1
+Bit became UNSET at 0x153C bit 5
+
+
+Y1 - 9ABCDE
+Y2 - 2345678
+Y3 - CDEF01
+Y4 - 6789AB
+
