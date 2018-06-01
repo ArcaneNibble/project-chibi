@@ -19,3 +19,80 @@ block sizes?
 0x380
 0x380
 0x3E0 (0x60 larger)
+
+$ diff -u <(xxd lutfuzz_X2_Y1_N0_bits0001.pof-cfm.bin) <(xxd lutfuzz_X2_Y1_N0_bits0002.pof-cfm.bin)
+--- /dev/fd/63  2018-05-31 01:59:56.983126203 -0700
++++ /dev/fd/62  2018-05-31 01:59:56.983126203 -0700
+@@ -55,9 +55,9 @@
+ 00000360: eeff ffff fdff ffff feff ffff fdff ffff  ................
+ 00000370: feff ffff fdff ffff fef7 ffff fdff ffff  ................
+ 00000380: feff ffff a5fa ffff fefb ffff fdff fff7  ................
+-00000390: feff ffff fdff feff fef0 ffff edff ffaf  ................
++00000390: feff ffff fdff feff fef8 ffff edff ffaf  ................
+ 000003a0: d6ff ffff f5ff ffff fefd ffff fdff fffb  ................
+-000003b0: feff ffff fd7f ffff fef8 ffff f5ff ffff  ................
++000003b0: feff ffff fd7f ffff fef0 ffff f5ff ffff  ................
+ 000003c0: feff ffff adfa ffff feff ffff fdff ffff  ................
+ 000003d0: feff ffff fdff ffff fef0 ffff fdff ffaf  ................
+ 000003e0: d6ff ffff fdff ffff feff ffff fdff ffff  ................
+
+0x399 bit 3
+0x3b9 bit 3
+
+0001->0004: (extra)
+0x3b9 bit 3
+0x3b9 bit 2
+
+0001->0008: (extra)
+0x399 bit 2
+0x3b9 bit 3
+
+
+
+-------------------------------------------------------------------------------
+
+X2_Y1_N0 - LUT[0]   0x3b9 bit 3
+X2_Y1_N0 - LUT[1]   0x399 bit 3
+X2_Y1_N0 - LUT[2]   0x3b9 bit 2
+X2_Y1_N0 - LUT[3]   0x399 bit 2
+X2_Y1_N0 - LUT[4]   0x3f9 bit 2
+X2_Y1_N0 - LUT[5]   0x3d9 bit 2
+X2_Y1_N0 - LUT[6]   0x3f9 bit 3
+X2_Y1_N0 - LUT[7]   0x3d9 bit 3
+X2_Y1_N0 - LUT[8]   0x3b9 bit 1
+X2_Y1_N0 - LUT[9]   0x399 bit 1
+X2_Y1_N0 - LUT[10]  0x3b9 bit 0
+X2_Y1_N0 - LUT[11]  0x399 bit 0
+X2_Y1_N0 - LUT[12]  0x3f9 bit 1
+X2_Y1_N0 - LUT[13]  0x3d9 bit 1
+X2_Y1_N0 - LUT[14]  0x3f9 bit 0
+X2_Y1_N0 - LUT[15]  0x3d9 bit 0
+
+X2_Y1_N1 - X2_Y1_N0 but bits+4
+
+X2_Y1_N2 - X2_Y1_N0 but last nybble a
+
+X2_Y1_N3 - X2_Y1_N2 but bits+4
+
+X2_Y1_N4 - X2_Y1_N0 but last nybble b
+
+X2_Y1_N5 - LUT[0]   0x3be bit 5
+X2_Y1_N5 - LUT[1]   0x39e bit 5
+X2_Y1_N5 - LUT[2]   0x3be bit 6
+X2_Y1_N5 - LUT[3]   0x39e bit 6
+X2_Y1_N5 - LUT[4]   0x3fe bit 6
+X2_Y1_N5 - LUT[5]   0x3de bit 6
+X2_Y1_N5 - LUT[6]   0x3fe bit 5
+X2_Y1_N5 - LUT[7]   0x3de bit 5
+X2_Y1_N5 - LUT[8]   0x3be bit 3
+X2_Y1_N5 - LUT[9]   0x39e bit 3
+X2_Y1_N5 - LUT[10]  0x3bf bit 0
+X2_Y1_N5 - LUT[11]  0x39f bit 0
+X2_Y1_N5 - LUT[12]  0x3fe bit 3
+X2_Y1_N5 - LUT[13]  0x3de bit 3
+X2_Y1_N5 - LUT[14]  0x3ff bit 0
+X2_Y1_N5 - LUT[15]  0x3df bit 0
+
+
+
+X2_Y2_N0 - 0x3b2 bit 7
