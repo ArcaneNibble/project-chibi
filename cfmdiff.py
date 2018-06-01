@@ -23,9 +23,9 @@ def diffcfm(fn1, fn2):
 
                 if bit1 != bit2:
                     if bit1:
-                        setbits.append((byte_i, bit_i))
-                    else:
                         unsetbits.append((byte_i, bit_i))
+                    else:
+                        setbits.append((byte_i, bit_i))
 
     return (setbits, unsetbits)
 
