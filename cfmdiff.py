@@ -22,6 +22,6 @@ for byte_i in range(len(f1)):
 
             if bit1 != bit2:
                 if bit1:
-                    print("Bit became UNSET at 0x{} bit {}".format(byte_i, bit_i))
+                    print("Bit became UNSET at 0x{:04X} bit {}".format(byte_i, bit_i))
                 else:
-                    print("Bit became SET at 0x{} bit {}".format(byte_i, bit_i))
+                    print("Bit became  SET  at 0x{:04X} bit {}".format(byte_i, bit_i))
