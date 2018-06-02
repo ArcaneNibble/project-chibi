@@ -36,10 +36,10 @@ def main():
     setbits, unsetbits = diffcfm(fn1, fn2)
 
     for byte_i, bit_i in setbits:
-        print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0))
+        print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
     for byte_i, bit_i in unsetbits:
-        print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0))
+        print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
 if __name__=='__main__':
     main()

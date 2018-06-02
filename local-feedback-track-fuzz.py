@@ -121,10 +121,10 @@ def fuzz_local_at(x, y, n):
         with open(BASE_DIR + '/' + this_lut_dir + '/top.v', 'w') as f:
             f.write(VLOG_TMPL)
 
-        # run_one_flow(this_lut_dir, False, True)
+        run_one_flow(this_lut_dir, False, True)
 
-        # shutil.copy(BASE_DIR + '/' + this_lut_dir + '/output_files/maxvtest.pof', 'localfeedbackfuzz_X{}_Y{}_N{}_DATA{}_from_N{}.pof'.format(x, y, n, inp, fromn))
-        # shutil.copy(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'localfeedbackfuzz_X{}_Y{}_N{}_DATA{}_from_N{}.rcf'.format(x, y, n, inp, fromn))
+        shutil.copy(BASE_DIR + '/' + this_lut_dir + '/output_files/maxvtest.pof', 'localfeedbackfuzz_X{}_Y{}_N{}_DATA{}_from_N{}.pof'.format(x, y, n, inp, fromn))
+        shutil.copy(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'localfeedbackfuzz_X{}_Y{}_N{}_DATA{}_from_N{}.rcf'.format(x, y, n, inp, fromn))
 
 def main():
     os.mkdir(BASE_DIR + '/localfeedbackfuzz')
