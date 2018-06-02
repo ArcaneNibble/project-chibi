@@ -269,9 +269,14 @@ less than 1% degradation in performance.
 DATAA is connected to:
 * LAB line 0
 * LAB line 1
+* LAB line 3
 * LAB line 6
+* LAB line 8
 * LAB line 9
 * LAB line 11
+* LAB line 14 (needs move to pin 48)
+* LAB line 15 (needs move to pin 48)
+* LAB line 18 (needs move to pin 48)
 * LAB line 19
 * LAB line 22
 * LAB line 25
@@ -280,13 +285,19 @@ DATAA is connected to:
 * Local line 5
 * Local line 6
 * Local line 8
-(missing 5?)
 
 DATAB is connected to:
+* LAB line 2
+* LAB line 4
 * LAB line 5
 * LAB line 7
+* LAB line 10
 * LAB line 12
+* LAB line 13
 * LAB line 16
+* LAB line 17
+* LAB line 20
+* LAB line 21
 * LAB line 23
 * LAB line 24
 * Local line 0
@@ -294,7 +305,6 @@ DATAB is connected to:
 * Local line 2
 * Local line 7
 * Local line 9
-(missing 7?)
 
 DATAC is connected to:
 * LAB line 0
@@ -304,29 +314,64 @@ DATAC is connected to:
 * LAB line 8
 * LAB line 9
 * LAB line 11
+* LAB line 14
 * LAB line 17
 * LAB line 18
+* LAB line 21
+* LAB line 22
+* LAB line 25
 * Local line 0
 * Local line 4
 * Local line 5
 * Local line 6
 * Local line 7
-(missing 4?)
 
 DATAD is connected to:
 * LAB line 1
 * LAB line 4
 * LAB line 5
 * LAB line 6
+* LAB line 10
 * LAB line 12
+* LAB line 13
+* LAB line 15
+* LAB line 16
 * LAB line 19
+* LAB line 20
+* LAB line 23
 * LAB line 24
 * Local line 1
 * Local line 2
 * Local line 3
 * Local line 8
 * Local line 9
-(missing 6?)
+
+LAB0  is AC
+LAB1  is AD
+LAB2  is BC
+LAB3  is AC
+LAB4  is BD
+LAB5  is BD
+LAB6  is AD
+LAB7  is BC
+LAB8  is AC
+LAB9  is AC
+LAB10 is BD
+LAB11 is AC
+LAB12 is BD
+LAB13 is BD
+LAB14 is AC
+LAB15 is AD
+LAB16 is BD
+LAB17 is BC
+LAB18 is AC
+LAB19 is AD
+LAB20 is BD
+LAB21 is BC
+LAB22 is AC
+LAB23 is BD
+LAB24 is BD
+LAB25 is AC
 
 LL0 is BC
 LL1 is BD
