@@ -61,6 +61,7 @@ def main():
 
     ##### Local feedback track to LUT inputs
     LOCALFEEDBACK_FN_TMPL = "localfeedbackfuzz-cfm/localfeedbackfuzz_X5_Y{}_N{}_DATA{}_from_N{}.pof-cfm.bin"
+    overall_local_feedback_bits = {}
     for tgtluty in [1, 2, 3, 4]:
         for tgtlutinp in ['A', 'B', 'C', 'D']:
 
@@ -103,8 +104,8 @@ def main():
                         unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
 
                         # Filter any that are known to be LUT bits
-                        setbits = [x for x in setbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
-                        unsetbits = [x for x in unsetbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
+                        setbits = [x for x in setbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None or bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]][1] != b"LUT"]
+                        unsetbits = [x for x in unsetbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None or bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]][1] != b"LUT"]
 
                         # for byte_i, bit_i in setbits:
                         #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
@@ -172,9 +173,42 @@ def main():
                 assert (len(overall_control_bits_for_entering_this_input[n]) == 5 or
                         len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'A' or tgtlutinp == 'C') and n == 4 or
                         len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'B' or tgtlutinp == 'D') and n == 1)
-                print("*" * 80)
+                # print("*" * 80)
                 for byte_i, bit_i in overall_control_bits_for_entering_this_input[n]:
-                    print("Bit at 0x{:04X} bit {} ({:03X}) is important for entering Y{}N{} DATA{}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, tgtluty, n, tgtlutinp))
+                    # print("Bit at 0x{:04X} bit {} ({:03X}) is important for entering Y{}N{} DATA{}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, tgtluty, n, tgtlutinp))
+                    byte_i -= 0xC0 + 3 * 0x380
+                    row_i = byte_i // 8
+                    row_byte = byte_i % 8
+                    bits[row_i][row_byte * 8 + bit_i] = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{} from local line".format(tgtluty, n, tgtlutinp).encode('ascii'))
+                overall_local_feedback_bits[(tgtluty, n, tgtlutinp)] = overall_control_bits_for_entering_this_input[n]
+    # print(overall_local_feedback_bits)
+    # for y in [1]:
+    #     for n in range(1):
+    #         for inp in ['A']:
+    #             if inp == 'A':
+    #                 srclutlocs = [3, 4, 5, 6, 8]
+    #             elif inp == 'B':
+    #                 srclutlocs = [0, 1, 2, 7, 9]
+    #             elif inp == 'C':
+    #                 srclutlocs = [0, 4, 5, 6, 7]
+    #             elif inp == 'D':
+    #                 srclutlocs = [1, 2, 3, 8, 9]
+
+    #             important_bits = overall_local_feedback_bits[(y, n, inp)]
+
+    #             for srclutidx in range(5):
+    #                 srclutn = srclutlocs[srclutidx]
+
+    #                 if n == srclutn:
+    #                     continue
+
+    #                 with open(LOCALFEEDBACK_FN_TMPL.format(y, n, inp, srclutn), 'rb') as f:
+    #                     cfm = f.read()
+
+    #                 print("Y{} N{} -> N{} DATA{}:".format(y, srclutn, n, inp))
+    #                 for byte_i, bit_i in important_bits:
+    #                     bitval = cfm[byte_i] & (1 << bit_i)
+    #                     print("0x{:04X} bit {} ({:03X}) == {}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, "1" if bitval else "0"))
 
     tabletabletable = b'<table id="thetable">'
 
