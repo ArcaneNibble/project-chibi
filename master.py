@@ -62,9 +62,7 @@ def main():
     ##### Local feedback track to LUT inputs
     LOCALFEEDBACK_FN_TMPL = "localfeedbackfuzz-cfm/localfeedbackfuzz_X5_Y{}_N{}_DATA{}_from_N{}.pof-cfm.bin"
     for tgtluty in [1]:
-        for tgtlutinp in ['A']:
-
-            tgtlutn = 0
+        for tgtlutinp in ['A', 'D']:
 
             if tgtlutinp == 'A':
                 srclutlocs = [3, 4, 5, 6, 8]
@@ -76,33 +74,67 @@ def main():
                 srclutlocs = [1, 2, 3, 8, 9]
 
             # Compare this input use with all of the other inputs used
-            for first_comp_choice_idx in [0]:
-                setunset_results = []
+            for first_comp_choice_idx in ([0] if tgtlutinp == 'A' else [2]):
+                for tgtlutn in range(10):
+                    setunset_results = []
+                    for second_comp_choice_idx in range(5):
+                        if first_comp_choice_idx == second_comp_choice_idx:
+                            continue
 
-                for second_comp_choice_idx in range(5):
-                    if first_comp_choice_idx == second_comp_choice_idx:
+                        if srclutlocs[first_comp_choice_idx] == tgtlutn:
+                            continue
+                        if srclutlocs[second_comp_choice_idx] == tgtlutn:
+                            continue
+
+                        # print("comparing {} {}".format(
+                        #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
+                        #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx])))
+
+                        setbits, unsetbits = cfmdiff.diffcfm(
+                            LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
+                            LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx]))
+
+                        # Filter any that are not in the column of interest
+                        setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+                        unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+
+                        # Filter any that are known to be LUT bits
+                        setbits = [x for x in setbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
+                        unsetbits = [x for x in unsetbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
+
+                        setunset_results.append((setbits, unsetbits))
+
+                    if len(setunset_results) == 0:
                         continue
 
-                    setbits, unsetbits = cfmdiff.diffcfm(
-                        LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
-                        LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx]))
+                    common_setbits = []
+                    for setbit_in_0 in setunset_results[0][0]:
+                        notfound = False
+                        for i in range(1, len(setunset_results)):
+                            if setbit_in_0 not in setunset_results[i][0]:
+                                notfound = True
+                                break
+                        if not notfound:
+                            common_setbits.append(setbit_in_0)
+                    common_unsetbits = []
+                    for unsetbit_in_0 in setunset_results[0][1]:
+                        notfound = False
+                        for i in range(1, len(setunset_results)):
+                            if unsetbit_in_0 not in setunset_results[i][1]:
+                                notfound = True
+                                break
+                        if not notfound:
+                            common_unsetbits.append(unsetbit_in_0)
 
-                    # Filter any that are not in the column of interest
-                    setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
-                    unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+                    # Swapping set/unset should give us what is _necessary_ for _enabling_ usage rather than _disabling
+                    common_setbits, common_unsetbits = common_unsetbits, common_setbits
 
-                    # Filter any that are known to be LUT bits
-                    setbits = [x for x in setbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
-                    unsetbits = [x for x in unsetbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
+                    print("Common to enable N{}, into N{} via DATA{}".format(srclutlocs[first_comp_choice_idx], tgtlutn, tgtlutinp))
 
-                    setunset_results.append((setbits, unsetbits))
-
-                    print("{}->{}".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx]))
-
-                    for byte_i, bit_i in setbits:
+                    for byte_i, bit_i in common_setbits:
                         print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
-                    for byte_i, bit_i in unsetbits:
+                    for byte_i, bit_i in common_unsetbits:
                         print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
     tabletabletable = b'<table id="thetable">'
