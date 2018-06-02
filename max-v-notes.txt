@@ -188,3 +188,119 @@ Y2 - 2345678
 Y3 - CDEF01
 Y4 - 6789AB
 
+~~~~~~~~~~ LUT input part ~~~~~~~~~~
+
+https://pdfs.semanticscholar.org/d1f2/0bfe31c1d637a0c49746474b4d600a780cf0.pdf
+
+4.1  Intra-LAB  Connectivity  
+As  shown  earlier  in  Figure  2  the  Altera  LAB  comprises  some  
+number  of  LAB  lines,  local  lines,  and  a  number  of  LEs.  The  
+LAB  lines  contain  signals  input  from  the  general  purpose  
+routing  fabric.  There  is  one  local  line  per  LE,  each  of  which  is  
+driven  by  an  output  of  an  LE.  Each  LE  is  has  identical  input  
+connection  topology  to  the  LAB  lines  and  local  lines.  In  all  
+previous LAB oriented architectures, the basic LE has a 4-input 
+LUT  and  a  flip  flop,  with  the  FF  either  the  LUT  output  or  FF  
+output being able to drive the routing, and the FF loading either 
+from  the  LUT  output  or  sharing  a  signal  with  one  of  the  LUT  
+inputs. 
+
+A  control  signal  block  routes  infrequently  used  signals  with  
+specific  LE  functionality  to  the  LEs.  These  signals  include  
+synchronous  control  signals  such  as  clocks,  clock  enables,  and  
+synchronous and asynchronous loads and clears. 
+
+Previous Altera architectures allowed each LE to select each LE 
+input  from  any  of  the  LAB  or  local  lines.  This  requires  a  fully  
+populated  mux  with  a  fanin  equal  to  the  total  number  of  LAB  
+and local lines, with substantial area cost. To reduce the area of 
+the  muxes  required  to  perform  this  selection,  Stratix  is  the  first  
+Altera  FPGA  which  has  a  regular  structure  in  the  LAB  level  
+connectivity,  but  a  depopulated  connectivity.  In  Stratix  
+each  of  
+the  LE  input  pins  can  only  
+access  half  of  the  LAB  and  local  
+lines,  forming  a  50%  connectivity.  Although  the  use  of  intra-
+cluster  depopulation  has  previously  been  reported  [5]  in  the  
+context  of  random-logic  circuits  with  a  fully  permutable  LUT,  
+the  constraints  of  layout  and  various  pin  restrictions  lead  to  a  
+different   connectivity   than   suggested   by   [5].   With   a   50%   
+population such that 
+each LAB line c
+onnects to two of the four 
+LE  input  pins,  6  different  connectivities  are  possible  for  the  
+LAB  and  local  lines,  with  some  of  the  lines  connecting  to  the  
+AB,AC,AD,BC,BD,    and    CD    pins    of    LEs    respectively.    
+Alternatively,  a  simple  depopulation  with  only  two  different  
+connectivities, such as AB and CD respectively is possible.
+
+An  important  aspect  of  the  LAB  line  population  pattern  is  that  
+all LEs have identical connectivity to the input pins of the LAB. 
+This means that all LEs are permutable, so that the output of an 
+LE  can  be  routed  to  any  of  the  available  routing  resources  
+provided  for  that  LAB,  without  consideration  of  the  routing  to  
+the  input.  This  provides  valuable  routing  flexibility  by  letting  
+the  router  assign  the  location  of  an  LE  in  the  LAB.  It  is  not  
+known  if  this  is  also  true  for  previous  architectures  that  use  
+partial   connectivity   between   the   general   routing   and   the   
+individual LEs [12]. 
+
+The  Stratix  LE  makes  neither  of  these  depopulation  schemes  
+desirable.  Experiments  with  the  simple  depopulation  proved  to  
+have  poor  routability  due  to  conflicts  for  LE  pins  on  nets  with  
+multiple fan outs. The 6-way depopulation is also not attractive 
+due  to  logical  properties  of  the  Stratix  LE.  In  particular,  when  
+used  in  arithmetic  mode,  only  the  A  and  B  pins  of  the  LE  are  
+required,  making  the  CD  lines  useless.  This  is  an  especially  
+severe  constraint,  as  arithmetic  logic  in  the  LAB  produces  the  
+highest  demand  for  input  signals.  Therefore  Stratix  adopts  a  4-
+way   depopulation   with   25%   of   the   LAB   and   local   lines   
+connected   to   the   AC,BC,AD,   and   BD   pins   of   the   LEs   
+respectively.  Experimental  evaluation  of  this  structure  showed  
+that  approximately  7%  area  reduction  could  be  achieved  with  
+less than 1% degradation in performance. 
+
+
+
+
+** All LEs have identical connectivity to the input pins of the LAB. This means that all LEs are permutable.
+** Stratix adopts a 4-way depopulation with 25% of the LAB and local lines connected to the AC,BC,AD, and BD pins of the LEs respectively.
+
+DATAA is connected to:
+* Local line 3
+* Local line 4
+* Local line 5
+* Local line 6
+* Local line 8
+
+DATAB is connected to:
+* Local line 0
+* Local line 1
+* Local line 2
+* Local line 7
+* Local line 9
+
+DATAC is connected to:
+* Local line 0
+* Local line 4
+* Local line 5
+* Local line 6
+* Local line 7
+
+DATAD is connected to:
+* Local line 1
+* Local line 2
+* Local line 3
+* Local line 8
+* Local line 9
+
+LL0 is BC
+LL1 is BD
+LL2 is BD
+LL3 is AD
+LL4 is AC
+LL5 is AD
+LL6 is AC
+LL7 is BC
+LL8 is AD
+LL9 is BD
