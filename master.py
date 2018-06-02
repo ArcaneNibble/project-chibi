@@ -169,8 +169,11 @@ def main():
             for i in range(len(overall_control_bits_for_entering_this_input)):
                 overall_control_bits_for_entering_this_input[i] = sorted(list(overall_control_bits_for_entering_this_input[i]))
             for n in range(len(overall_control_bits_for_entering_this_input)):
-                assert len(overall_control_bits_for_entering_this_input[i]) == 5
-                for byte_i, bit_i in overall_control_bits_for_entering_this_input[i]:
+                assert (len(overall_control_bits_for_entering_this_input[n]) == 5 or
+                        len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'A' or tgtlutinp == 'C') and n == 4 or
+                        len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'B' or tgtlutinp == 'D') and n == 1)
+                print("*" * 80)
+                for byte_i, bit_i in overall_control_bits_for_entering_this_input[n]:
                     print("Bit at 0x{:04X} bit {} ({:03X}) is important for entering Y{}N{} DATA{}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, tgtluty, n, tgtlutinp))
 
     tabletabletable = b'<table id="thetable">'
