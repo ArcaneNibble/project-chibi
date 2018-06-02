@@ -61,8 +61,8 @@ def main():
 
     ##### Local feedback track to LUT inputs
     LOCALFEEDBACK_FN_TMPL = "localfeedbackfuzz-cfm/localfeedbackfuzz_X5_Y{}_N{}_DATA{}_from_N{}.pof-cfm.bin"
-    for tgtluty in [1]:
-        for tgtlutinp in ['A']:
+    for tgtluty in [1, 2, 3, 4]:
+        for tgtlutinp in ['A', 'B', 'C', 'D']:
 
             if tgtlutinp == 'A':
                 srclutlocs = [3, 4, 5, 6, 8]
@@ -73,9 +73,13 @@ def main():
             elif tgtlutinp == 'D':
                 srclutlocs = [1, 2, 3, 8, 9]
 
+            overall_control_bits_for_entering_this_input = list()
+            for _ in range(10):
+                overall_control_bits_for_entering_this_input.append(set())
+
             # Compare this input use with all of the other inputs used
-            for first_comp_choice_idx in ([0] if tgtlutinp == 'A' else [2]):
-                for second_comp_choice_idx in [1]:
+            for first_comp_choice_idx in range(5):
+                for second_comp_choice_idx in range(5):
                     if first_comp_choice_idx == second_comp_choice_idx:
                         continue
 
@@ -86,9 +90,9 @@ def main():
                         if srclutlocs[second_comp_choice_idx] == tgtlutn:
                             continue
 
-                        print("comparing {} {}".format(
-                            LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
-                            LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx])))
+                        # print("comparing {} {}".format(
+                        #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
+                        #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx])))
 
                         setbits, unsetbits = cfmdiff.diffcfm(
                             LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
@@ -102,16 +106,13 @@ def main():
                         setbits = [x for x in setbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
                         unsetbits = [x for x in unsetbits if bits[(x[0] - 0xB40) // 8][(x[0] - 0xB40) % 8 + x[1]] is None]
 
-                        for byte_i, bit_i in setbits:
-                            print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                        # for byte_i, bit_i in setbits:
+                        #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
-                        for byte_i, bit_i in unsetbits:
-                            print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                        # for byte_i, bit_i in unsetbits:
+                        #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
                         setunset_results.append([setbits, unsetbits, tgtlutn])
-
-                    # if len(setunset_results) == 0:
-                    #     continue
 
                     common_setbits = []
                     for setbit_in_0 in setunset_results[0][0]:
@@ -132,30 +133,45 @@ def main():
                         if not notfound:
                             common_unsetbits.append(unsetbit_in_0)
 
-                    # # Swapping set/unset should give us what is _necessary_ for _enabling_ usage rather than _disabling
-                    # common_setbits, common_unsetbits = common_unsetbits, common_setbits
+                    # print("*" * 80)
 
-                    print("Common to change from N{} to N{} via DATA{} into Nx".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp))
+                    # print("Common to change from N{} to N{} via DATA{} into Nx".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp))
 
-                    for byte_i, bit_i in common_setbits:
-                        print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                    # for byte_i, bit_i in common_setbits:
+                    #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
-                    for byte_i, bit_i in common_unsetbits:
-                        print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                    # for byte_i, bit_i in common_unsetbits:
+                    #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
                     # Filter for the things _not_ in common
                     for i in range(len(setunset_results)):
                         setunset_results[i][0] = [x for x in setunset_results[i][0] if x not in common_setbits]
                         setunset_results[i][1] = [x for x in setunset_results[i][1] if x not in common_unsetbits]
 
+                    # for x in setunset_results:
+                    #     # if x[2] != 0:
+                    #     #     continue
+
+                    #     print("Unique to change from N{} to N{} via DATA{} into N{}".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp, x[2]))
+
+                    #     for byte_i, bit_i in x[0]:
+                    #         print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+                    #     for byte_i, bit_i in x[1]:
+                    #         print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
                     for x in setunset_results:
-                        print("Unique to change from N{} to N{} via DATA{} into N{}".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp, x[2]))
+                        for bit in x[0]:
+                            overall_control_bits_for_entering_this_input[x[2]].add(bit)
+                        for bit in x[1]:
+                            overall_control_bits_for_entering_this_input[x[2]].add(bit)
 
-                        for byte_i, bit_i in x[0]:
-                            print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                        for byte_i, bit_i in x[1]:
-                            print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+            for i in range(len(overall_control_bits_for_entering_this_input)):
+                overall_control_bits_for_entering_this_input[i] = sorted(list(overall_control_bits_for_entering_this_input[i]))
+            for n in range(len(overall_control_bits_for_entering_this_input)):
+                assert len(overall_control_bits_for_entering_this_input[i]) == 5
+                for byte_i, bit_i in overall_control_bits_for_entering_this_input[i]:
+                    print("Bit at 0x{:04X} bit {} ({:03X}) is important for entering Y{}N{} DATA{}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, tgtluty, n, tgtlutinp))
 
     tabletabletable = b'<table id="thetable">'
 
