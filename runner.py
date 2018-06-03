@@ -15,7 +15,7 @@ def run_one_flow(container_dir, output=True, back_annotate=False, run_map=True, 
 
     if run_fit:
         ret = subprocess.run(["ssh", "-i", "containerkey", "altera-quartus-prime-lite-18.lxc", "--",
-            "cd {}; quartus_fit --read_settings_file=off --write_settings_file=off maxvtest -c maxvtest".format(container_dir)],
+            "cd {}; quartus_fit --read_settings_file={} --write_settings_file=off maxvtest -c maxvtest".format(container_dir, "on" if not run_map else "off")],
             stdout=streams, stderr=streams)
         if ret.returncode != 0:
             raise Exception("quartus_fit failed")
