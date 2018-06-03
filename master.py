@@ -180,6 +180,7 @@ def main():
                     row_i = byte_i // 8
                     row_byte = byte_i % 8
                     bits[row_i][row_byte * 8 + bit_i] = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{} from local line".format(tgtluty, n, tgtlutinp).encode('ascii'))
+                assert (tgtluty, n, tgtlutinp) not in overall_local_feedback_bits
                 overall_local_feedback_bits[(tgtluty, n, tgtlutinp)] = overall_control_bits_for_entering_this_input[n]
     # print(overall_local_feedback_bits)
     # for y in [1]:

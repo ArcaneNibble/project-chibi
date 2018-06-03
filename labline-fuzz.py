@@ -87,7 +87,7 @@ def fuzz_local_at(x, y, inp, track):
     with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'w') as f:
         f.write(RCF_TMPL.format(x, y, track, inp, b_input_pin))
 
-    for n in range(2):
+    for n in range(10):
         with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'r') as f:
             rcflines = f.readlines()
         with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'w') as f:
@@ -101,13 +101,11 @@ def fuzz_local_at(x, y, inp, track):
                 else:
                     if line.strip() == "}":
                         is_in_my_lcell = False
-        # with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'r') as f:
-        #     print(f.read())
 
         with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.qsf', 'w') as f:
             f.write(QSF_TMPL.format(x, y, n))
 
-        run_one_flow(this_lut_dir, True, True, n == 0)
+        run_one_flow(this_lut_dir, False, True, n == 0)
 
         shutil.copy(BASE_DIR + '/' + this_lut_dir + '/output_files/maxvtest.pof', 'labtrackfuzz_X{}_Y{}_N{}_DATA{}_from_labline{}.pof'.format(x, y, n, inp, track))
         shutil.copy(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'labtrackfuzz_X{}_Y{}_N{}_DATA{}_from_labline{}.rcf'.format(x, y, n, inp, track))
@@ -121,8 +119,8 @@ def main():
 
     num_items = 0
     X = 5
-    for y in [1]:#, 2, 3, 4]:
-        for inp in ['A']:#, 'B', 'C', 'D']:
+    for y in [1, 2, 3, 4]:
+        for inp in ['A', 'B', 'C', 'D']:
             if inp == 'A':
                 tracks = [ 0,  1,  3,  6,  8,  9, 11, 14, 15, 18, 19, 22, 25]
             elif inp == 'B':
@@ -132,7 +130,7 @@ def main():
             elif inp == 'D':
                 tracks = [ 1,  4,  5,  6, 10, 12, 13, 15, 16, 19, 20, 23, 24]
 
-            for trackidx in range(1):
+            for trackidx in range(13):
                 track = tracks[trackidx]
                 workqueue.put((X, y, inp, track))
                 num_items += 1
