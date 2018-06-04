@@ -62,6 +62,9 @@ def main():
 
 
     ##### Local feedback part of local tracks into LUT inputs
+
+    lut_input_settings = {}
+
     # Note that this section requires a little bit of cheating. It requires the old code (that was broken) to show
     # the overall structure. This new code then fuzzes based on knowledge obtained from that
     LOCALFEEDBACK_FN_TMPL = "localfeedbackfuzz-cfm/localfeedbackfuzz_X5_Y{}_N{}_DATA{}_from_N{}.pof-cfm.bin"
@@ -110,14 +113,14 @@ def main():
                     #     for yy in xx:
                     #         print("1" if yy else "0", end='')
                     #     print()
-                    collected_line_to_lut_bits.append(my_line_to_lut_bits)
+                    collected_line_to_lut_bits.append((my_line_to_lut_bits, srclutn))
 
                 common_zero_bits = []
                 for yy in range(4):
                     for xx in range(9):
                         allunset = True
                         for inpinp in range(len(collected_line_to_lut_bits)):
-                            if collected_line_to_lut_bits[inpinp][yy][xx]:
+                            if collected_line_to_lut_bits[inpinp][0][yy][xx]:
                                 allunset = False
                                 break
                         if allunset:
@@ -129,13 +132,30 @@ def main():
                     myzerobits = []
                     for yy in range(4):
                         for xx in range(9):
-                            if not collected_line_to_lut_bits[srcidx][yy][xx] and (xx, yy) not in common_zero_bits:
+                            if not collected_line_to_lut_bits[srcidx][0][yy][xx] and (xx, yy) not in common_zero_bits:
                                 myzerobits.append((xx, yy))
                     # print(myzerobits)
                     assert len(myzerobits) == 2
 
+                    srclutn = collected_line_to_lut_bits[srcidx][1]
+
                     # print("To set Y{}_N{}_DATA{} to N{}, set ({}, {}) and ({}, {})".format(tgtluty, tgtlutn, tgtlutinp, srclutn,
                     #     myzerobits[0][0], myzerobits[0][1], myzerobits[1][0], myzerobits[1][1]))
+
+                    myrearrangedzerobits = []
+                    for lutinx, lutiny in myzerobits:
+                        if tgtlutn >= 5:
+                            lutiny_ = 3 - lutiny
+                        else:
+                            lutiny_ = lutiny
+                        myrearrangedzerobits.append((lutinx, lutiny_))
+                    myrearrangedzerobits.sort()
+
+                    if (tgtlutinp, "N{}".format(srclutn)) in lut_input_settings:
+                        print(lut_input_settings[(tgtlutinp, "N{}".format(srclutn))])
+                        print(myrearrangedzerobits)
+                        assert lut_input_settings[(tgtlutinp, "N{}".format(srclutn))] == myrearrangedzerobits
+                    lut_input_settings[(tgtlutinp, "N{}".format(srclutn))] = myrearrangedzerobits
 
                     for lutinx, lutiny in myzerobits:
                         mycoordx = lutinx + 13
@@ -200,33 +220,64 @@ def main():
                 common_zero_bits = []
                 for yy in range(4):
                     for xx in range(9):
-                        allunset = True
+                        numunset = 0
                         for inpinp in range(len(collected_line_to_lut_bits)):
-                            if collected_line_to_lut_bits[inpinp][yy][xx]:
-                                allunset = False
-                                break
-                        if allunset:
+                            if not collected_line_to_lut_bits[inpinp][yy][xx]:
+                                numunset += 1
+                        # ALSO HUGE HACK
+                        if numunset >= 6:
                             common_zero_bits.append((xx, yy))
+
+                # # HUGE HACK
+                # if tgtlutinp == 'C' or tgtlutinp == 'D':
+                #     # We know these aren't in the top half
+                #     for yy in range(2):
+                #         for xx in range(9):
+                #             common_zero_bits.append((xx, yy))
+
                 # print(common_zero_bits)
                 # assert len(common_zero_bits) == 2
                 if len(common_zero_bits) == 0:
                     print("problem {} {} DATA{}".format(tgtluty, tgtlutn, tgtlutinp))
-                    continue
+                    # continue
 
                 for srcidx in range(len(collected_line_to_lut_bits)):
                     myzerobits = []
-                    for yy in range(4):
+                    # HUGE HACKS
+                    if tgtlutinp == 'C' or tgtlutinp == 'D':
+                        if tgtlutn < 5:
+                            yrange = range(2, 4)
+                        else:
+                            yrange = range(2)
+                    else:
+                        yrange = range(4)
+                    for yy in yrange:
                         for xx in range(9):
                             if not collected_line_to_lut_bits[srcidx][yy][xx] and (xx, yy) not in common_zero_bits:
                                 myzerobits.append((xx, yy))
                     # print(myzerobits)
                     # assert len(myzerobits) == 2
                     if len(myzerobits) != 2:
-                        print("problem2 {} {} DATA{}".format(tgtluty, tgtlutn, tgtlutinp))
+                        print("problem2 {} {} DATA{} line {}".format(tgtluty, tgtlutn, tgtlutinp, tracks[srcidx]))
                         continue
 
                     # print("To set Y{}_N{}_DATA{} to LAB line {}, set ({}, {}) and ({}, {})".format(tgtluty, tgtlutn, tgtlutinp, tracks[srcidx],
                     #     myzerobits[0][0], myzerobits[0][1], myzerobits[1][0], myzerobits[1][1]))
+
+                    myrearrangedzerobits = []
+                    for lutinx, lutiny in myzerobits:
+                        if tgtlutn >= 5:
+                            lutiny_ = 3 - lutiny
+                        else:
+                            lutiny_ = lutiny
+                        myrearrangedzerobits.append((lutinx, lutiny_))
+                    myrearrangedzerobits.sort()
+
+                    if (tgtlutinp, "LAB{}".format(tracks[srcidx])) in lut_input_settings:
+                        print(lut_input_settings[(tgtlutinp, "LAB{}".format(tracks[srcidx]))])
+                        print(myrearrangedzerobits)
+                        assert lut_input_settings[(tgtlutinp, "LAB{}".format(tracks[srcidx]))] == myrearrangedzerobits
+                    lut_input_settings[(tgtlutinp, "LAB{}".format(tracks[srcidx]))] = myrearrangedzerobits
 
                     for lutinx, lutiny in myzerobits:
                         mycoordx = lutinx + 13
@@ -238,9 +289,11 @@ def main():
                         origbit = bits_lookup(x, 0)
                         newbit = (b"LI", b"LUTIN", "XnY{}N{} LUT DATA{} source".format(tgtluty, tgtlutn, tgtlutinp).encode('ascii'))
                         if origbit is not None and origbit != newbit:
-                            print(origbit)
+                            print(origbit, newbit)
                         assert origbit is None or origbit == newbit
                         bits_set(x, 0, newbit)
+
+    print(lut_input_settings)
 
 
     # ##### Local feedback track to LUT inputs
