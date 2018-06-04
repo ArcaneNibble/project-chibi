@@ -268,8 +268,8 @@ def main():
                     # HACK HACK HACK
                     oldsets = len(setunsets_per_lut_and_labline[n][trackidx][0])
                     oldunsets = len(setunsets_per_lut_and_labline[n][trackidx][1])
-                    setunsets_per_lut_and_labline[n][trackidx][0] = [x for x in setunsets_per_lut_and_labline[n][trackidx][0] if x[0] - 0xB40 >= 0x100]
-                    setunsets_per_lut_and_labline[n][trackidx][1] = [x for x in setunsets_per_lut_and_labline[n][trackidx][1] if x[0] - 0xB40 >= 0x100]
+                    setunsets_per_lut_and_labline[n][trackidx][0] = [x for x in setunsets_per_lut_and_labline[n][trackidx][0] if x[0] - 0xB40 >= 0x150]
+                    setunsets_per_lut_and_labline[n][trackidx][1] = [x for x in setunsets_per_lut_and_labline[n][trackidx][1] if x[0] - 0xB40 >= 0x150]
 
                     if len(setunsets_per_lut_and_labline[n][trackidx][0]) != oldsets:
                         print("dbg: dropped a set bit")
@@ -290,7 +290,14 @@ def main():
                         if origbit is not None and origbit != newbit:
                             print(origbit)
                         # assert origbit is None or origbit == newbit
-                        # bits_set(x, 0xC0 + 3 * 0x380, newbit)
+                        bits_set(x, 0xC0 + 3 * 0x380, newbit)
+                    for x in setunsets_per_lut_and_labline[n][trackidx][1]:
+                        origbit = bits_lookup(x, 0xB40)
+                        newbit = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(y, n, inp).encode('ascii'))
+                        if origbit is not None and origbit != newbit:
+                            print(origbit)
+                        # assert origbit is None or origbit == newbit
+                        bits_set(x, 0xC0 + 3 * 0x380, newbit)
 
 
     # print(overall_local_feedback_bits)
