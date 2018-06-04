@@ -360,7 +360,7 @@ def main():
 
     tabletabletable += b'<h1>Rearranged tables</h1>'
 
-    tabletabletable += b'<table id="rearranged-unkcols">'
+    tabletabletable += b'<h2>Unknown column bits</h2><table id="rearranged-unkcols">'
 
     tabletabletable += b'<tr><th>Byte</th><th colspan="3">+0</th><th colspan="3">+4</th></tr>'
 
@@ -389,12 +389,12 @@ def main():
         tabletabletable += b'</tr>'
     tabletabletable += b'</table>'
 
-    tabletabletable += b'<table id="rearranged-superrows">'
-    for y in range(28):
+    tabletabletable += b'<h2>"Main" bits</h2><table id="rearranged-superrows">'
+    for y in range(232):
         tabletabletable += b'<tr>'
-        for x in range(232):
-            oldy = y * 4 + x // 58
-            oldx = x % 58 + 3
+        for x in range(28):
+            oldy = x * 4 + y // 58
+            oldx = y % 58 + 3
             if oldx >= 32:
                 oldx += 3
 
