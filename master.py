@@ -1,4 +1,5 @@
 import cfmdiff
+import cfmdump
 
 def main():
     bits = []
@@ -59,245 +60,428 @@ def main():
 
                 bits_set(setbits[0], 0xC0, (b"LU", b"LUT", "XnY{}N{} - LUT[{}]".format(luty, lutn, lutbit).encode('ascii')))
 
-    ##### Local feedback track to LUT inputs
+
+    ##### Local feedback part of local tracks into LUT inputs
+    # Note that this section requires a little bit of cheating. It requires the old code (that was broken) to show
+    # the overall structure. This new code then fuzzes based on knowledge obtained from that
     LOCALFEEDBACK_FN_TMPL = "localfeedbackfuzz-cfm/localfeedbackfuzz_X5_Y{}_N{}_DATA{}_from_N{}.pof-cfm.bin"
-    overall_local_feedback_bits = {}
     for tgtluty in [1, 2, 3, 4]:
-        for tgtlutinp in ['A', 'B', 'C', 'D']:
+        for tgtlutn in range(10):
 
-            if tgtlutinp == 'A':
-                srclutlocs = [3, 4, 5, 6, 8]
-            elif tgtlutinp == 'B':
-                srclutlocs = [0, 1, 2, 7, 9]
-            elif tgtlutinp == 'C':
-                srclutlocs = [0, 4, 5, 6, 7]
-            elif tgtlutinp == 'D':
-                srclutlocs = [1, 2, 3, 8, 9]
+            starty = [179, 133, 86, 40][tgtluty - 1]
+            if tgtlutn < 5:
+                offy = tgtlutn * 4
+            else:
+                offy = (9 - tgtlutn) * 4 + 26
 
-            overall_control_bits_for_entering_this_input = list()
-            for _ in range(10):
-                overall_control_bits_for_entering_this_input.append(set())
+            for tgtlutinp in ['A', 'B', 'C', 'D']:
+                if tgtlutinp == 'A':
+                    srclutlocs = [3, 4, 5, 6, 8]
+                elif tgtlutinp == 'B':
+                    srclutlocs = [0, 1, 2, 7, 9]
+                elif tgtlutinp == 'C':
+                    srclutlocs = [0, 4, 5, 6, 7]
+                elif tgtlutinp == 'D':
+                    srclutlocs = [1, 2, 3, 8, 9]
 
-            # Compare this input use with all of the other inputs used
-            for first_comp_choice_idx in range(5):
-                for second_comp_choice_idx in range(5):
-                    if first_comp_choice_idx == second_comp_choice_idx:
+                collected_line_to_lut_bits = []
+
+                for srcidx in range(len(srclutlocs)):
+                    srclutn = srclutlocs[srcidx]
+
+                    if srclutn == tgtlutn:
                         continue
 
-                    setunset_results = []
-                    for tgtlutn in range(10):
-                        if srclutlocs[first_comp_choice_idx] == tgtlutn:
-                            continue
-                        if srclutlocs[second_comp_choice_idx] == tgtlutn:
-                            continue
+                    # print(LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutn))
 
-                        # print("comparing {} {}".format(
-                        #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
-                        #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx])))
+                    with open(LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutn), 'rb') as f:
+                        bitstream = f.read()
 
-                        setbits, unsetbits = cfmdiff.diffcfm(
-                            LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
-                            LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx]))
+                    col = bitstream[0xB40:0xB40 + 0x380]
 
-                        # Filter any that are not in the column of interest
-                        setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
-                        unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+                    my_line_to_lut_bits = []
+                    for yy in range(4):
+                        row = []
+                        for xx in range(9):
+                            row.append(cfmdump.bit_at_my_coords(col, 13 + xx, starty + offy + yy) != 0)
+                        my_line_to_lut_bits.append(row)
+                    
+                    # for xx in my_line_to_lut_bits:
+                    #     for yy in xx:
+                    #         print("1" if yy else "0", end='')
+                    #     print()
+                    collected_line_to_lut_bits.append(my_line_to_lut_bits)
 
-                        # Filter any that are known to be LUT bits
-                        setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
-                        unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
-
-                        # for byte_i, bit_i in setbits:
-                        #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                        # for byte_i, bit_i in unsetbits:
-                        #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                        setunset_results.append([setbits, unsetbits, tgtlutn])
-
-                    common_setbits = []
-                    for setbit_in_0 in setunset_results[0][0]:
-                        notfound = False
-                        for i in range(1, len(setunset_results)):
-                            if setbit_in_0 not in setunset_results[i][0]:
-                                notfound = True
+                common_zero_bits = []
+                for yy in range(4):
+                    for xx in range(9):
+                        allunset = True
+                        for inpinp in range(len(collected_line_to_lut_bits)):
+                            if collected_line_to_lut_bits[inpinp][yy][xx]:
+                                allunset = False
                                 break
-                        if not notfound:
-                            common_setbits.append(setbit_in_0)
-                    common_unsetbits = []
-                    for unsetbit_in_0 in setunset_results[0][1]:
-                        notfound = False
-                        for i in range(1, len(setunset_results)):
-                            if unsetbit_in_0 not in setunset_results[i][1]:
-                                notfound = True
-                                break
-                        if not notfound:
-                            common_unsetbits.append(unsetbit_in_0)
+                        if allunset:
+                            common_zero_bits.append((xx, yy))
+                # print(common_zero_bits)
+                assert len(common_zero_bits) == 2
 
-                    # print("*" * 80)
+                for srcidx in range(len(collected_line_to_lut_bits)):
+                    myzerobits = []
+                    for yy in range(4):
+                        for xx in range(9):
+                            if not collected_line_to_lut_bits[srcidx][yy][xx] and (xx, yy) not in common_zero_bits:
+                                myzerobits.append((xx, yy))
+                    # print(myzerobits)
+                    assert len(myzerobits) == 2
 
-                    # print("Common to change from N{} to N{} via DATA{} into Nx".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp))
+                    # print("To set Y{}_N{}_DATA{} to N{}, set ({}, {}) and ({}, {})".format(tgtluty, tgtlutn, tgtlutinp, srclutn,
+                    #     myzerobits[0][0], myzerobits[0][1], myzerobits[1][0], myzerobits[1][1]))
 
-                    # for byte_i, bit_i in common_setbits:
-                    #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                    for lutinx, lutiny in myzerobits:
+                        mycoordx = lutinx + 13
+                        mycoordy = lutiny + starty + offy
 
-                    # for byte_i, bit_i in common_unsetbits:
-                    #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                        tile_coords_x, tile_coords_y = cfmdump.our_shuffle_coords_to_tile_coords(mycoordx, mycoordy)
+                        x = cfmdump.our_tile_coords_to_byte_bit(tile_coords_x, tile_coords_y)
 
-                    # Filter for the things _not_ in common
-                    for i in range(len(setunset_results)):
-                        setunset_results[i][0] = [x for x in setunset_results[i][0] if x not in common_setbits]
-                        setunset_results[i][1] = [x for x in setunset_results[i][1] if x not in common_unsetbits]
+                        origbit = bits_lookup(x, 0)
+                        newbit = (b"LI", b"LUTIN", "XnY{}N{} LUT DATA{} source".format(tgtluty, tgtlutn, tgtlutinp).encode('ascii'))
+                        if origbit is not None and origbit != newbit:
+                            print(origbit)
+                        assert origbit is None or origbit == newbit
+                        bits_set(x, 0, newbit)
 
-                    # for x in setunset_results:
-                    #     # if x[2] != 0:
-                    #     #     continue
-
-                    #     print("Unique to change from N{} to N{} via DATA{} into N{}".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp, x[2]))
-
-                    #     for byte_i, bit_i in x[0]:
-                    #         print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                    #     for byte_i, bit_i in x[1]:
-                    #         print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                    for x in setunset_results:
-                        for bit in x[0]:
-                            overall_control_bits_for_entering_this_input[x[2]].add(bit)
-                        for bit in x[1]:
-                            overall_control_bits_for_entering_this_input[x[2]].add(bit)
-
-            for i in range(len(overall_control_bits_for_entering_this_input)):
-                overall_control_bits_for_entering_this_input[i] = sorted(list(overall_control_bits_for_entering_this_input[i]))
-            for n in range(len(overall_control_bits_for_entering_this_input)):
-                assert (len(overall_control_bits_for_entering_this_input[n]) == 5 or
-                        len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'A' or tgtlutinp == 'C') and n == 4 or
-                        len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'B' or tgtlutinp == 'D') and n == 1)
-                # print("*" * 80)
-                for x in overall_control_bits_for_entering_this_input[n]:
-                    # print("Bit at 0x{:04X} bit {} ({:03X}) is important for entering Y{}N{} DATA{}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, tgtluty, n, tgtlutinp))
-                    bits_set(x, 0xC0 + 3 * 0x380, (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(tgtluty, n, tgtlutinp).encode('ascii')))
-                assert (tgtluty, n, tgtlutinp) not in overall_local_feedback_bits
-                overall_local_feedback_bits[(tgtluty, n, tgtlutinp)] = overall_control_bits_for_entering_this_input[n]
-
-    ##### LAB line to LUT input
+    ##### LAB tracks into LUT inputs
     LABTRACK_FN_TMPL = "lablinefuzz-cfm/labtrackfuzz_X5_Y{}_N{}_DATA{}_from_labline{}.pof-cfm.bin"
-    for y in [1, 2, 3, 4]:
-        for inp in ['A', 'B', 'C', 'D']:
+    for tgtluty in [1, 2, 3, 4]:
+        for tgtlutn in range(10):
 
-            if inp == 'A':
-                tracks = [ 0,  1,  3,  6,  8,  9, 11, 14, 15, 18, 19, 22, 25]
-            elif inp == 'B':
-                tracks = [ 2,  4,  5,  7, 10, 12, 13, 16, 17, 20, 21, 23, 24]
-            elif inp == 'C':
-                tracks = [ 0,  2,  3,  7,  8,  9, 11, 14, 17, 18, 21, 22, 25]
-            elif inp == 'D':
-                tracks = [ 1,  4,  5,  6, 10, 12, 13, 15, 16, 19, 20, 23, 24]
+            starty = [179, 133, 86, 40][tgtluty - 1]
+            if tgtlutn < 5:
+                offy = tgtlutn * 4
+            else:
+                offy = (9 - tgtlutn) * 4 + 26
 
-            setunsets_per_lut_and_labline = []
+            for tgtlutinp in ['A', 'B', 'C', 'D']:
+                if tgtlutinp == 'A':
+                    tracks = [ 0,  1,  3,  6,  8,  9, 11, 14, 15, 18, 19, 22, 25]
+                elif tgtlutinp == 'B':
+                    tracks = [ 2,  4,  5,  7, 10, 12, 13, 16, 17, 20, 21, 23, 24]
+                elif tgtlutinp == 'C':
+                    tracks = [ 0,  2,  3,  7,  8,  9, 11, 14, 17, 18, 21, 22, 25]
+                elif tgtlutinp == 'D':
+                    tracks = [ 1,  4,  5,  6, 10, 12, 13, 15, 16, 19, 20, 23, 24]
 
-            for n in range(10):
-                setunsets_in_this_lut = []
+                collected_line_to_lut_bits = []
 
-                for trackidx in range(1, len(tracks)):
-                    track = tracks[trackidx]
+                for srcidx in range(len(tracks)):
+                    srctrack = tracks[srcidx]
 
-                    # print("Comparing {} with {}".format(
-                    #     LABTRACK_FN_TMPL.format(y, n, inp, tracks[0]),
-                    #     LABTRACK_FN_TMPL.format(y, n, inp, track)))
+                    # print(LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutn))
 
-                    setbits, unsetbits = cfmdiff.diffcfm(
-                        LABTRACK_FN_TMPL.format(y, n, inp, tracks[0]),
-                        LABTRACK_FN_TMPL.format(y, n, inp, track))
+                    with open(LABTRACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srctrack), 'rb') as f:
+                        bitstream = f.read()
 
-                    # Filter any that are not in the column of interest
-                    setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
-                    unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+                    col = bitstream[0xB40:0xB40 + 0x380]
 
-                    # Filter any that are known to be LUT bits
-                    setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
-                    unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
+                    my_line_to_lut_bits = []
+                    for yy in range(4):
+                        row = []
+                        for xx in range(9):
+                            row.append(cfmdump.bit_at_my_coords(col, 13 + xx, starty + offy + yy) != 0)
+                        my_line_to_lut_bits.append(row)
+                    
+                    # for xx in my_line_to_lut_bits:
+                    #     for yy in xx:
+                    #         print("1" if yy else "0", end='')
+                    #     print()
+                    collected_line_to_lut_bits.append(my_line_to_lut_bits)
 
-                    # for byte_i, bit_i in setbits:
-                    #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                common_zero_bits = []
+                for yy in range(4):
+                    for xx in range(9):
+                        allunset = True
+                        for inpinp in range(len(collected_line_to_lut_bits)):
+                            if collected_line_to_lut_bits[inpinp][yy][xx]:
+                                allunset = False
+                                break
+                        if allunset:
+                            common_zero_bits.append((xx, yy))
+                # print(common_zero_bits)
+                # assert len(common_zero_bits) == 2
+                if len(common_zero_bits) == 0:
+                    print("problem {} {} DATA{}".format(tgtluty, tgtlutn, tgtlutinp))
+                    continue
 
-                    # for byte_i, bit_i in unsetbits:
-                    #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                for srcidx in range(len(collected_line_to_lut_bits)):
+                    myzerobits = []
+                    for yy in range(4):
+                        for xx in range(9):
+                            if not collected_line_to_lut_bits[srcidx][yy][xx] and (xx, yy) not in common_zero_bits:
+                                myzerobits.append((xx, yy))
+                    # print(myzerobits)
+                    # assert len(myzerobits) == 2
+                    if len(myzerobits) != 2:
+                        print("problem2 {} {} DATA{}".format(tgtluty, tgtlutn, tgtlutinp))
+                        continue
 
-                    setunsets_in_this_lut.append([setbits, unsetbits])
+                    # print("To set Y{}_N{}_DATA{} to LAB line {}, set ({}, {}) and ({}, {})".format(tgtluty, tgtlutn, tgtlutinp, tracks[srcidx],
+                    #     myzerobits[0][0], myzerobits[0][1], myzerobits[1][0], myzerobits[1][1]))
 
-                setunsets_per_lut_and_labline.append(setunsets_in_this_lut)
+                    for lutinx, lutiny in myzerobits:
+                        mycoordx = lutinx + 13
+                        mycoordy = lutiny + starty + offy
 
-            # Now for each LAB line, filter out the common bits that happen in every lut
-            for trackidx in range(len(tracks) - 1):
-                commonsets = []
-                commonunsets = []
+                        tile_coords_x, tile_coords_y = cfmdump.our_shuffle_coords_to_tile_coords(mycoordx, mycoordy)
+                        x = cfmdump.our_tile_coords_to_byte_bit(tile_coords_x, tile_coords_y)
 
-                for setbit in setunsets_per_lut_and_labline[0][trackidx][0]:
-                    ineverything = True
-                    for n in range(1, len(setunsets_per_lut_and_labline)):
-                        if setbit not in setunsets_per_lut_and_labline[n][trackidx][0]:
-                            ineverything = False
-                            break
-                    if ineverything:
-                        commonsets.append(setbit)
-                for unsetbit in setunsets_per_lut_and_labline[0][trackidx][1]:
-                    ineverything = True
-                    for n in range(1, len(setunsets_per_lut_and_labline)):
-                        if unsetbit not in setunsets_per_lut_and_labline[n][trackidx][1]:
-                            ineverything = False
-                            break
-                    if ineverything:
-                        commonunsets.append(unsetbit)
-
-                print("*" * 80)
-                print("Y{} DATA{}".format(y, inp))
-
-                # print("lab line {} common".format(tracks[trackidx + 1]))
-                # for byte_i, bit_i in commonsets:
-                #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                # for byte_i, bit_i in commonunsets:
-                #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                # Actual filtering now
-                for n in range(len(setunsets_per_lut_and_labline)):
-                    setunsets_per_lut_and_labline[n][trackidx][0] = [x for x in setunsets_per_lut_and_labline[n][trackidx][0] if x not in commonsets]
-                    setunsets_per_lut_and_labline[n][trackidx][1] = [x for x in setunsets_per_lut_and_labline[n][trackidx][1] if x not in commonunsets]
-
-                    # HACK HACK HACK
-                    oldsets = len(setunsets_per_lut_and_labline[n][trackidx][0])
-                    oldunsets = len(setunsets_per_lut_and_labline[n][trackidx][1])
-                    setunsets_per_lut_and_labline[n][trackidx][0] = [x for x in setunsets_per_lut_and_labline[n][trackidx][0] if x[0] - 0xB40 >= 0x150]
-                    setunsets_per_lut_and_labline[n][trackidx][1] = [x for x in setunsets_per_lut_and_labline[n][trackidx][1] if x[0] - 0xB40 >= 0x150]
-
-                    if len(setunsets_per_lut_and_labline[n][trackidx][0]) != oldsets:
-                        print("dbg: dropped a set bit")
-                    if len(setunsets_per_lut_and_labline[n][trackidx][1]) != oldunsets:
-                        print("dbg: dropped an unset bit")
-
-                    print("lab line {} N{}".format(tracks[trackidx + 1], n))
-
-                    for byte_i, bit_i in setunsets_per_lut_and_labline[n][trackidx][0]:
-                        print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                    for byte_i, bit_i in setunsets_per_lut_and_labline[n][trackidx][0]:
-                        print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-
-                    for x in setunsets_per_lut_and_labline[n][trackidx][0]:
-                        origbit = bits_lookup(x, 0xB40)
-                        newbit = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(y, n, inp).encode('ascii'))
+                        origbit = bits_lookup(x, 0)
+                        newbit = (b"LI", b"LUTIN", "XnY{}N{} LUT DATA{} source".format(tgtluty, tgtlutn, tgtlutinp).encode('ascii'))
                         if origbit is not None and origbit != newbit:
                             print(origbit)
-                        # assert origbit is None or origbit == newbit
-                        bits_set(x, 0xC0 + 3 * 0x380, newbit)
-                    for x in setunsets_per_lut_and_labline[n][trackidx][1]:
-                        origbit = bits_lookup(x, 0xB40)
-                        newbit = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(y, n, inp).encode('ascii'))
-                        if origbit is not None and origbit != newbit:
-                            print(origbit)
-                        # assert origbit is None or origbit == newbit
-                        bits_set(x, 0xC0 + 3 * 0x380, newbit)
+                        assert origbit is None or origbit == newbit
+                        bits_set(x, 0, newbit)
+
+
+    # ##### Local feedback track to LUT inputs
+    # LOCALFEEDBACK_FN_TMPL = "localfeedbackfuzz-cfm/localfeedbackfuzz_X5_Y{}_N{}_DATA{}_from_N{}.pof-cfm.bin"
+    # overall_local_feedback_bits = {}
+    # for tgtluty in [1, 2, 3, 4]:
+    #     for tgtlutinp in ['A', 'B', 'C', 'D']:
+
+    #         if tgtlutinp == 'A':
+    #             srclutlocs = [3, 4, 5, 6, 8]
+    #         elif tgtlutinp == 'B':
+    #             srclutlocs = [0, 1, 2, 7, 9]
+    #         elif tgtlutinp == 'C':
+    #             srclutlocs = [0, 4, 5, 6, 7]
+    #         elif tgtlutinp == 'D':
+    #             srclutlocs = [1, 2, 3, 8, 9]
+
+    #         overall_control_bits_for_entering_this_input = list()
+    #         for _ in range(10):
+    #             overall_control_bits_for_entering_this_input.append(set())
+
+    #         # Compare this input use with all of the other inputs used
+    #         for first_comp_choice_idx in range(5):
+    #             for second_comp_choice_idx in range(5):
+    #                 if first_comp_choice_idx == second_comp_choice_idx:
+    #                     continue
+
+    #                 setunset_results = []
+    #                 for tgtlutn in range(10):
+    #                     if srclutlocs[first_comp_choice_idx] == tgtlutn:
+    #                         continue
+    #                     if srclutlocs[second_comp_choice_idx] == tgtlutn:
+    #                         continue
+
+    #                     # print("comparing {} {}".format(
+    #                     #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
+    #                     #     LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx])))
+
+    #                     setbits, unsetbits = cfmdiff.diffcfm(
+    #                         LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[first_comp_choice_idx]),
+    #                         LOCALFEEDBACK_FN_TMPL.format(tgtluty, tgtlutn, tgtlutinp, srclutlocs[second_comp_choice_idx]))
+
+    #                     # Filter any that are not in the column of interest
+    #                     setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+    #                     unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+
+    #                     # Filter any that are known to be LUT bits
+    #                     setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
+    #                     unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
+
+    #                     # for byte_i, bit_i in setbits:
+    #                     #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                     # for byte_i, bit_i in unsetbits:
+    #                     #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                     setunset_results.append([setbits, unsetbits, tgtlutn])
+
+    #                 common_setbits = []
+    #                 for setbit_in_0 in setunset_results[0][0]:
+    #                     notfound = False
+    #                     for i in range(1, len(setunset_results)):
+    #                         if setbit_in_0 not in setunset_results[i][0]:
+    #                             notfound = True
+    #                             break
+    #                     if not notfound:
+    #                         common_setbits.append(setbit_in_0)
+    #                 common_unsetbits = []
+    #                 for unsetbit_in_0 in setunset_results[0][1]:
+    #                     notfound = False
+    #                     for i in range(1, len(setunset_results)):
+    #                         if unsetbit_in_0 not in setunset_results[i][1]:
+    #                             notfound = True
+    #                             break
+    #                     if not notfound:
+    #                         common_unsetbits.append(unsetbit_in_0)
+
+    #                 # print("*" * 80)
+
+    #                 # print("Common to change from N{} to N{} via DATA{} into Nx".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp))
+
+    #                 # for byte_i, bit_i in common_setbits:
+    #                 #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 # for byte_i, bit_i in common_unsetbits:
+    #                 #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 # Filter for the things _not_ in common
+    #                 for i in range(len(setunset_results)):
+    #                     setunset_results[i][0] = [x for x in setunset_results[i][0] if x not in common_setbits]
+    #                     setunset_results[i][1] = [x for x in setunset_results[i][1] if x not in common_unsetbits]
+
+    #                 # for x in setunset_results:
+    #                 #     # if x[2] != 0:
+    #                 #     #     continue
+
+    #                 #     print("Unique to change from N{} to N{} via DATA{} into N{}".format(srclutlocs[first_comp_choice_idx], srclutlocs[second_comp_choice_idx], tgtlutinp, x[2]))
+
+    #                 #     for byte_i, bit_i in x[0]:
+    #                 #         print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 #     for byte_i, bit_i in x[1]:
+    #                 #         print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 for x in setunset_results:
+    #                     for bit in x[0]:
+    #                         overall_control_bits_for_entering_this_input[x[2]].add(bit)
+    #                     for bit in x[1]:
+    #                         overall_control_bits_for_entering_this_input[x[2]].add(bit)
+
+    #         for i in range(len(overall_control_bits_for_entering_this_input)):
+    #             overall_control_bits_for_entering_this_input[i] = sorted(list(overall_control_bits_for_entering_this_input[i]))
+    #         for n in range(len(overall_control_bits_for_entering_this_input)):
+    #             assert (len(overall_control_bits_for_entering_this_input[n]) == 5 or
+    #                     len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'A' or tgtlutinp == 'C') and n == 4 or
+    #                     len(overall_control_bits_for_entering_this_input[n]) == 4 and (tgtlutinp == 'B' or tgtlutinp == 'D') and n == 1)
+    #             # print("*" * 80)
+    #             for x in overall_control_bits_for_entering_this_input[n]:
+    #                 # print("Bit at 0x{:04X} bit {} ({:03X}) is important for entering Y{}N{} DATA{}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, tgtluty, n, tgtlutinp))
+    #                 bits_set(x, 0xC0 + 3 * 0x380, (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(tgtluty, n, tgtlutinp).encode('ascii')))
+    #             assert (tgtluty, n, tgtlutinp) not in overall_local_feedback_bits
+    #             overall_local_feedback_bits[(tgtluty, n, tgtlutinp)] = overall_control_bits_for_entering_this_input[n]
+
+    # ##### LAB line to LUT input
+    # LABTRACK_FN_TMPL = "lablinefuzz-cfm/labtrackfuzz_X5_Y{}_N{}_DATA{}_from_labline{}.pof-cfm.bin"
+    # for y in [1, 2, 3, 4]:
+    #     for inp in ['A', 'B', 'C', 'D']:
+
+    #         if inp == 'A':
+    #             tracks = [ 0,  1,  3,  6,  8,  9, 11, 14, 15, 18, 19, 22, 25]
+    #         elif inp == 'B':
+    #             tracks = [ 2,  4,  5,  7, 10, 12, 13, 16, 17, 20, 21, 23, 24]
+    #         elif inp == 'C':
+    #             tracks = [ 0,  2,  3,  7,  8,  9, 11, 14, 17, 18, 21, 22, 25]
+    #         elif inp == 'D':
+    #             tracks = [ 1,  4,  5,  6, 10, 12, 13, 15, 16, 19, 20, 23, 24]
+
+    #         setunsets_per_lut_and_labline = []
+
+    #         for n in range(10):
+    #             setunsets_in_this_lut = []
+
+    #             for trackidx in range(1, len(tracks)):
+    #                 track = tracks[trackidx]
+
+    #                 # print("Comparing {} with {}".format(
+    #                 #     LABTRACK_FN_TMPL.format(y, n, inp, tracks[0]),
+    #                 #     LABTRACK_FN_TMPL.format(y, n, inp, track)))
+
+    #                 setbits, unsetbits = cfmdiff.diffcfm(
+    #                     LABTRACK_FN_TMPL.format(y, n, inp, tracks[0]),
+    #                     LABTRACK_FN_TMPL.format(y, n, inp, track))
+
+    #                 # Filter any that are not in the column of interest
+    #                 setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+    #                 unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+
+    #                 # Filter any that are known to be LUT bits
+    #                 setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
+    #                 unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or bits_lookup(x, 0xB40)[1] != b"LUT"]
+
+    #                 # for byte_i, bit_i in setbits:
+    #                 #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 # for byte_i, bit_i in unsetbits:
+    #                 #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 setunsets_in_this_lut.append([setbits, unsetbits])
+
+    #             setunsets_per_lut_and_labline.append(setunsets_in_this_lut)
+
+    #         # Now for each LAB line, filter out the common bits that happen in every lut
+    #         for trackidx in range(len(tracks) - 1):
+    #             commonsets = []
+    #             commonunsets = []
+
+    #             for setbit in setunsets_per_lut_and_labline[0][trackidx][0]:
+    #                 ineverything = True
+    #                 for n in range(1, len(setunsets_per_lut_and_labline)):
+    #                     if setbit not in setunsets_per_lut_and_labline[n][trackidx][0]:
+    #                         ineverything = False
+    #                         break
+    #                 if ineverything:
+    #                     commonsets.append(setbit)
+    #             for unsetbit in setunsets_per_lut_and_labline[0][trackidx][1]:
+    #                 ineverything = True
+    #                 for n in range(1, len(setunsets_per_lut_and_labline)):
+    #                     if unsetbit not in setunsets_per_lut_and_labline[n][trackidx][1]:
+    #                         ineverything = False
+    #                         break
+    #                 if ineverything:
+    #                     commonunsets.append(unsetbit)
+
+    #             print("*" * 80)
+    #             print("Y{} DATA{}".format(y, inp))
+
+    #             # print("lab line {} common".format(tracks[trackidx + 1]))
+    #             # for byte_i, bit_i in commonsets:
+    #             #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #             # for byte_i, bit_i in commonunsets:
+    #             #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #             # Actual filtering now
+    #             for n in range(len(setunsets_per_lut_and_labline)):
+    #                 setunsets_per_lut_and_labline[n][trackidx][0] = [x for x in setunsets_per_lut_and_labline[n][trackidx][0] if x not in commonsets]
+    #                 setunsets_per_lut_and_labline[n][trackidx][1] = [x for x in setunsets_per_lut_and_labline[n][trackidx][1] if x not in commonunsets]
+
+    #                 # HACK HACK HACK
+    #                 oldsets = len(setunsets_per_lut_and_labline[n][trackidx][0])
+    #                 oldunsets = len(setunsets_per_lut_and_labline[n][trackidx][1])
+    #                 setunsets_per_lut_and_labline[n][trackidx][0] = [x for x in setunsets_per_lut_and_labline[n][trackidx][0] if x[0] - 0xB40 >= 0x150]
+    #                 setunsets_per_lut_and_labline[n][trackidx][1] = [x for x in setunsets_per_lut_and_labline[n][trackidx][1] if x[0] - 0xB40 >= 0x150]
+
+    #                 if len(setunsets_per_lut_and_labline[n][trackidx][0]) != oldsets:
+    #                     print("dbg: dropped a set bit")
+    #                 if len(setunsets_per_lut_and_labline[n][trackidx][1]) != oldunsets:
+    #                     print("dbg: dropped an unset bit")
+
+    #                 print("lab line {} N{}".format(tracks[trackidx + 1], n))
+
+    #                 for byte_i, bit_i in setunsets_per_lut_and_labline[n][trackidx][0]:
+    #                     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 for byte_i, bit_i in setunsets_per_lut_and_labline[n][trackidx][0]:
+    #                     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #                 for x in setunsets_per_lut_and_labline[n][trackidx][0]:
+    #                     origbit = bits_lookup(x, 0xB40)
+    #                     newbit = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(y, n, inp).encode('ascii'))
+    #                     if origbit is not None and origbit != newbit:
+    #                         print(origbit)
+    #                     # assert origbit is None or origbit == newbit
+    #                     bits_set(x, 0xC0 + 3 * 0x380, newbit)
+    #                 for x in setunsets_per_lut_and_labline[n][trackidx][1]:
+    #                     origbit = bits_lookup(x, 0xB40)
+    #                     newbit = (b"LI?", b"LUTIN", "XnY{}N{} LUT DATA{}".format(y, n, inp).encode('ascii'))
+    #                     if origbit is not None and origbit != newbit:
+    #                         print(origbit)
+    #                     # assert origbit is None or origbit == newbit
+    #                     bits_set(x, 0xC0 + 3 * 0x380, newbit)
 
 
     # print(overall_local_feedback_bits)

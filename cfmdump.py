@@ -125,6 +125,16 @@ def dumplogiccol(data):
 
             print("{:04X}".format(lut))
 
+
+            print("LUT input bits:")
+            for lutiny in range(4):
+                for lutinx in range(9):
+                    bit = bit_at_my_coords(data, 13 + lutinx, starty + offy + lutiny)
+                    print("1" if bit else "0", end='')
+                print()
+            print()
+
+
         print()
 
 def main():
