@@ -397,8 +397,13 @@ def main():
     tabletabletable += b'</table>'
 
     tabletabletable += b'<h2>"Main" bits</h2><table id="rearranged-superrows">'
+    tabletabletable += b'<tr><th></th>'
+    for x in range(28):
+        tabletabletable += '<th>{}</th>'.format(x).encode('ascii')
+    tabletabletable += b'</tr>'
     for y in range(232):
         tabletabletable += b'<tr>'
+        tabletabletable += '<th>{}</th>'.format(y).encode('ascii')
         for x in range(28):
             oldy = x * 4 + y // 58
             oldx = y % 58 + 3
