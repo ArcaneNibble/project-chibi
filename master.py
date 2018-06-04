@@ -322,7 +322,9 @@ def main():
     #                     bitval = cfm[byte_i] & (1 << bit_i)
     #                     print("0x{:04X} bit {} ({:03X}) == {}".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380, "1" if bitval else "0"))
 
-    tabletabletable = b'<table id="thetable">'
+    tabletabletable = b'<h1>Byte-based arrangement</h1>'
+
+    tabletabletable += b'<table id="thetable">'
 
     tabletabletable += b'<tr><th>Byte</th><th colspan="8">+0</th><th colspan="8">+1</th><th colspan="8">+2</th><th colspan="8">+3</th><th colspan="8">+4</th><th colspan="8">+5</th><th colspan="8">+6</th><th colspan="8">+7</th></tr>'
 
@@ -349,6 +351,65 @@ def main():
 
                 tabletabletable += b'<td class="' + bitclass + b'">' + tooltip + b'</td>'
         tabletabletable += b'</tr>'
+    tabletabletable += b'</table>'
+
+
+
+
+
+
+    tabletabletable += b'<h1>Rearranged tables</h1>'
+
+    tabletabletable += b'<table id="rearranged-unkcols">'
+
+    tabletabletable += b'<tr><th>Byte</th><th colspan="3">+0</th><th colspan="3">+4</th></tr>'
+
+    tabletabletable += b'<tr><th>Bit</th>'
+    for _ in range(2):
+        tabletabletable += b'<th>0</th><th>1</th><th>2</th>'
+    tabletabletable += b'</tr>'
+
+    for y in range(112):
+        tabletabletable += b'<tr>'
+
+        byterange = "<th>0x{:03X}-0x{:03X}</th>".format(y * 8, y * 8 + 7).encode('ascii')
+        tabletabletable += byterange
+
+        for x in [0, 1, 2, 32, 33, 34]:
+            bit = bits[y][x]
+            if bit is None:
+                tabletabletable += b'<td>?</td>'
+            else:
+                shortdesc, bitclass, longdesc = bit
+
+                tooltip = b'<div class="tooltip">' + shortdesc + \
+                    b'<span class="tooltiptext">' + longdesc + b'</span></div>'
+
+                tabletabletable += b'<td class="' + bitclass + b'">' + tooltip + b'</td>'
+        tabletabletable += b'</tr>'
+    tabletabletable += b'</table>'
+
+    tabletabletable += b'<table id="rearranged-superrows">'
+    for y in range(28):
+        tabletabletable += b'<tr>'
+        for x in range(232):
+            oldy = y * 4 + x // 58
+            oldx = x % 58 + 3
+            if oldx >= 32:
+                oldx += 3
+
+            bit = bits[oldy][oldx]
+            if bit is None:
+                tabletabletable += b'<td>?</td>'
+            else:
+                shortdesc, bitclass, longdesc = bit
+
+                tooltip = b'<div class="tooltip">' + shortdesc + \
+                    b'<span class="tooltiptext">' + longdesc + b'</span></div>'
+
+                tabletabletable += b'<td class="' + bitclass + b'">' + tooltip + b'</td>'
+        tabletabletable += b'</tr>'
+
     tabletabletable += b'</table>'
 
     # print(bits)
