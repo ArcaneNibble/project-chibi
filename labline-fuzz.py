@@ -65,6 +65,17 @@ signal_name = b {{
     zero_or_more, *;
     dest = ( my_lcell, DATAB ), route_port = DATA{};
 }}
+
+signal_name = my_lcell {{
+# DUMMY
+}}
+"""
+
+RCF_OUTPUT_TMPL = """signal_name = my_lcell {{
+    LE_BUFFER:X{}Y{}S0I{};
+    zero_or_more, *;
+    dest = ( o, DATAIN );
+}}
 """
 
 NTHREADS = 10
@@ -87,6 +98,8 @@ def fuzz_local_at(x, y, inp, track):
     with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'w') as f:
         f.write(RCF_TMPL.format(x, y, track, inp, b_input_pin))
 
+    OUTPUT_LINE_TO_USE = [1, 2, 4, 6, 8, 11, 12, 14, 16, 18]
+
     for n in range(10):
         with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.rcf', 'r') as f:
             rcflines = f.readlines()
@@ -101,6 +114,7 @@ def fuzz_local_at(x, y, inp, track):
                 else:
                     if line.strip() == "}":
                         is_in_my_lcell = False
+                        f.write(RCF_OUTPUT_TMPL.format(x, y, OUTPUT_LINE_TO_USE[n]))
 
         with open(BASE_DIR + '/' + this_lut_dir + '/maxvtest.qsf', 'w') as f:
             f.write(QSF_TMPL.format(x, y, n))
