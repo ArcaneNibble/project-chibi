@@ -23,6 +23,90 @@ def bit_at_my_coords(data, x, y):
     byte_i, bit_i = our_tile_coords_to_byte_bit(tilex, tiley)
     return data[byte_i] & (1 << bit_i)
 
+DATAA_INPUTS = [
+    ['N3', (5, 1), (7, 0)],
+    ['N4', (1, 1), (6, 0)],
+    ['N5', (1, 1), (7, 0)],
+    ['N6', (1, 1), (8, 0)],
+    ['N8', (5, 1), (8, 0)],
+    ['LAB0', (0, 0), (6, 0)],
+    ['LAB1', (5, 0), (6, 0)],
+    ['LAB3', (0, 0), (7, 0)],
+    ['LAB6', (5, 0), (7, 0)],
+    ['LAB8', (0, 0), (8, 0)],
+    ['LAB9', (0, 1), (6, 0)],
+    ['LAB11', (0, 1), (7, 0)],
+    ['LAB14', (0, 1), (8, 0)],
+    ['LAB15', (5, 0), (8, 0)],
+    ['LAB18', (1, 0), (6, 0)],
+    ['LAB19', (5, 1), (6, 0)],
+    ['LAB22', (1, 0), (7, 0)],
+    ['LAB25', (1, 0), (8, 0)],
+]
+
+DATAB_INPUTS = [
+    ['N0', (2, 1), (7, 1)],
+    ['N1', (4, 1), (8, 1)],
+    ['N2', (4, 1), (7, 1)],
+    ['N7', (2, 1), (6, 1)],
+    ['N9', (4, 1), (6, 1)],
+    ['LAB2', (2, 0), (8, 1)],
+    ['LAB4', (3, 0), (8, 1)],
+    ['LAB5', (3, 0), (7, 1)],
+    ['LAB7', (2, 0), (7, 1)],
+    ['LAB10', (3, 0), (6, 1)],
+    ['LAB12', (3, 1), (8, 1)],
+    ['LAB13', (3, 1), (7, 1)],
+    ['LAB16', (3, 1), (6, 1)],
+    ['LAB17', (2, 0), (6, 1)],
+    ['LAB20', (4, 0), (8, 1)],
+    ['LAB21', (2, 1), (8, 1)],
+    ['LAB23', (4, 0), (7, 1)],
+    ['LAB24', (4, 0), (6, 1)],
+]
+
+DATAC_INPUTS = [
+    ['N0', (2, 3), (7, 2)],
+    ['N4', (1, 3), (6, 2)],
+    ['N5', (1, 3), (7, 2)],
+    ['N6', (1, 3), (8, 2)],
+    ['N7', (2, 3), (8, 2)],
+    ['LAB0', (0, 2), (6, 2)],
+    ['LAB2', (2, 2), (6, 2)],
+    ['LAB3', (0, 2), (7, 2)],
+    ['LAB7', (2, 2), (7, 2)],
+    ['LAB8', (0, 2), (8, 2)],
+    ['LAB9', (0, 3), (6, 2)],
+    ['LAB11', (0, 3), (7, 2)],
+    ['LAB14', (0, 3), (8, 2)],
+    ['LAB17', (2, 2), (8, 2)],
+    ['LAB18', (1, 2), (6, 2)],
+    ['LAB21', (2, 3), (6, 2)],
+    ['LAB22', (1, 2), (7, 2)],
+    ['LAB25', (1, 2), (8, 2)],
+]
+
+DATAD_INPUTS = [
+    ['N1', (4, 3), (8, 3)],
+    ['N2', (4, 3), (7, 3)],
+    ['N3', (5, 3), (7, 3)],
+    ['N8', (5, 3), (6, 3)],
+    ['N9', (4, 3), (6, 3)],
+    ['LAB1', (5, 2), (8, 3)],
+    ['LAB4', (3, 2), (8, 3)],
+    ['LAB5', (3, 2), (7, 3)],
+    ['LAB6', (5, 2), (7, 3)],
+    ['LAB10', (3, 2), (6, 3)],
+    ['LAB12', (3, 3), (8, 3)],
+    ['LAB13', (3, 3), (7, 3)],
+    ['LAB15', (5, 2), (6, 3)],
+    ['LAB16', (3, 3), (6, 3)],
+    ['LAB19', (5, 3), (8, 3)],
+    ['LAB20', (4, 2), (8, 3)],
+    ['LAB23', (4, 2), (7, 3)],
+    ['LAB24', (4, 2), (6, 3)],
+]
+
 def dumplogiccol(data):
     print("Unknown stripe bits")
     for y in range(112):
@@ -127,13 +211,66 @@ def dumplogiccol(data):
 
 
             print("LUT input bits:")
-            for lutiny in range(4):
-                for lutinx in range(9):
-                    bit = bit_at_my_coords(data, 13 + lutinx, starty + offy + lutiny)
-                    print("1" if bit else "0", end='')
-                print()
-            print()
 
+            print("DATAA: ", end='')
+            anydriver = False
+            for name, b1, b2 in DATAA_INPUTS:
+                if n < 5:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + b2[1])
+                else:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + 3 - b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + 3 - b2[1])
+                if not bit1 and not bit2:
+                    anydriver = True
+                    print(name)
+            if not anydriver:
+                print("<NONE>")
+
+            print("DATAB: ", end='')
+            anydriver = False
+            for name, b1, b2 in DATAB_INPUTS:
+                if n < 5:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + b2[1])
+                else:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + 3 - b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + 3 - b2[1])
+                if not bit1 and not bit2:
+                    anydriver = True
+                    print(name)
+            if not anydriver:
+                print("<NONE>")
+
+            print("DATAC: ", end='')
+            anydriver = False
+            for name, b1, b2 in DATAC_INPUTS:
+                if n < 5:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + b2[1])
+                else:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + 3 - b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + 3 - b2[1])
+                if not bit1 and not bit2:
+                    anydriver = True
+                    print(name)
+            if not anydriver:
+                print("<NONE>")
+
+            print("DATAD: ", end='')
+            anydriver = False
+            for name, b1, b2 in DATAD_INPUTS:
+                if n < 5:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + b2[1])
+                else:
+                    bit1 = bit_at_my_coords(data, 13 + b1[0], starty + offy + 3 - b1[1])
+                    bit2 = bit_at_my_coords(data, 13 + b2[0], starty + offy + 3 - b2[1])
+                if not bit1 and not bit2:
+                    anydriver = True
+                    print(name)
+            if not anydriver:
+                print("<NONE>")
 
         print()
 
