@@ -53,7 +53,7 @@ signal_name = a {{
     zero_or_more, *;
     C4:X{}Y{}S0I{};
     LOCAL_INTERCONNECT:X5Y2S0I{};
-    dest = ( intermed, DATAA );
+    dest = ( my_lcell, DATAA );
 }}
 
 {}
@@ -67,10 +67,10 @@ signal_name = my_lcell {{
 }}
 """
 
-NTHREADS = 10
+NTHREADS = 40
 
 def fuzz_c4_at(workdir, threadi, x, y, i):
-    for lablinei in [24]:#range(26):
+    for lablinei in range(26):
         with open(workdir + '/maxvtest.qsf', 'w') as f:
             f.write(QSF_TMPL)
 
@@ -106,15 +106,12 @@ def fuzz_c4_at(workdir, threadi, x, y, i):
             c4line = c4line[3:-1]
 
             actual_labline = int(liline[liline.find("I") + 1:])
-            print(actual_labline)
 
             expected_c4line = "X{}Y{}S0I{}".format(x, y, i)
 
             if actual_labline == lablinei:
-                print("YAYYAY", c4line)
                 if expected_c4line == c4line:
-                    print("YAYAYAY2")
-
+                    print("Got C4:X{}Y{}S0I{} -> LOCAL_INTERCONNECT:X5Y2S0I{}".format(x, y, i, lablinei))
                     shutil.copy(workdir + '/output_files/maxvtest.pof', 'c4-to-lab-fuzz_X{}Y{}I{}_to_LAB{}.pof'.format(x, y, i, lablinei))
                     shutil.copy(workdir + '/maxvtest.rcf', 'c4-to-lab-fuzz_X{}Y{}I{}_to_LAB{}.rcf'.format(x, y, i, lablinei))
 
@@ -125,9 +122,9 @@ def main():
     donequeue = queue.Queue()
 
     num_items = 0
-    for x in [4]:#, 5]:
-        for y in [1]:#, 1, 2, 3, 4, 5]:
-            for i in [26]:#range(1):
+    for x in [4, 5]:
+        for y in [0, 1, 2, 3, 4, 5]:
+            for i in range(64):
                 workqueue.put((x, y, i))
                 num_items += 1
 
