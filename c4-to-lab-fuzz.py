@@ -204,10 +204,10 @@ def main():
     donequeue = queue.Queue()
 
     num_items = 0
-    for tiley in [1]:#, 2, 3, 4]:
-        for chanx in [4]:#, 5]:
-            for chany in [0]:#, 1, 2, 3, 4, 5]:
-                for chani in range(1):#64):
+    for tiley in [1, 2, 3, 4]:
+        for chanx in [4, 5]:
+            for chany in [0, 1, 2, 3, 4, 5]:
+                for chani in range(64):
                     workqueue.put((tiley, chanx, chany, chani))
                     num_items += 1
 
