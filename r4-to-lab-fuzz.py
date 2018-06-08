@@ -140,7 +140,7 @@ signal_name = a {{
 NTHREADS = 40
 
 def fuzz_r4_at(workdir, threadi, chanx, chany, chani, tiley):
-    for lablinei in [0]:#range(26):
+    for lablinei in range(26):
         with open(workdir + '/maxvtest.qsf', 'w') as f:
             f.write(QSF_TMPL.format(tiley))
 
@@ -188,7 +188,12 @@ def fuzz_r4_at(workdir, threadi, chanx, chany, chani, tiley):
         with open(workdir + '/maxvtest.rcf', 'w') as f:
             f.write(rcfrcf)
 
-        run_one_flow("r4-to-lab-fuzz/thread{}".format(threadi), False, True, False)
+        while True:
+            try:
+                run_one_flow("r4-to-lab-fuzz/thread{}".format(threadi), False, True, False)
+                break
+            except Exception:
+                pass
 
         with open(workdir + '/maxvtest.rcf', 'r') as f:
             rcflinesnew = f.readlines()
@@ -201,7 +206,7 @@ def fuzz_r4_at(workdir, threadi, chanx, chany, chani, tiley):
         liline = rcflinesnew[dataa_line_idx - 1].strip()
         r4line = rcflinesnew[dataa_line_idx - 2].strip()
 
-        if not liline.startswith("LOCAL_INTERCONNECT:") or not r4line.startswith("R4:"):
+        if not liline.startswith("LOCAL_INTERCONNECT:") or not (r4line.startswith("R4:") or r4line.startswith("C4:")):
             print("Something weird happened in R4:X{}Y{}I{} -> LOCAL_INTERCONNECT:X5Y{}I{}".format(chanx, chany, chani, tiley, lablinei))
             shutil.copy(workdir + '/output_files/maxvtest.pof', 'XXX-r4-to-lab-fuzz_X{}Y{}I{}_to_X5Y{}_LAB{}.pof'.format(chanx, chany, chani, tiley, lablinei))
             shutil.copy(workdir + '/maxvtest.rcf', 'XXX-r4-to-lab-fuzz_X{}Y{}I{}_to_X5Y{}_LAB{}.rcf'.format(chanx, chany, chani, tiley, lablinei))
@@ -209,14 +214,14 @@ def fuzz_r4_at(workdir, threadi, chanx, chany, chani, tiley):
             liline = liline[19:-1]
             r4line = r4line[3:-1]
 
-            print(liline, r4line)
+            # print(liline, r4line)
 
             actual_labline = int(liline[liline.find("I") + 1:])
 
             expected_r4line = "X{}Y{}S0I{}".format(chanx, chany, chani)
 
             if actual_labline == lablinei:
-                if expected_c4line == c4line:
+                if expected_r4line == r4line:
                     print("Got R4:X{}Y{}I{} -> LOCAL_INTERCONNECT:X5Y{}I{}".format(chanx, chany, chani, tiley, lablinei))
                     shutil.copy(workdir + '/output_files/maxvtest.pof', 'r4-to-lab-fuzz_X{}Y{}I{}_to_X5Y{}_LAB{}.pof'.format(chanx, chany, chani, tiley, lablinei))
                     shutil.copy(workdir + '/maxvtest.rcf', 'r4-to-lab-fuzz_X{}Y{}I{}_to_X5Y{}_LAB{}.rcf'.format(chanx, chany, chani, tiley, lablinei))
@@ -231,8 +236,8 @@ def main():
 
     for tiley in [1, 2, 3, 4]:
         for chany in [tiley - 1, tiley]:
-            for chanx in [0]:#, 1, 2, 3, 4, 5, 6, 7, 8]:
-                for chani in [0]:#range(64):
+            for chanx in [0, 1, 2, 3, 4, 5, 6, 7, 8]:
+                for chani in range(64):
                     workqueue.put((tiley, chanx, chany, chani))
                     num_items += 1
 
