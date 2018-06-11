@@ -107,7 +107,7 @@ DATAD_INPUTS = [
     ['LAB24', (4, 2), (6, 3)],
 ]
 
-def dumplogiccol(data):
+def dumplogiccol(data, data2):
     print("Unknown stripe bits")
     for y in range(112):
         for x in [0, 1, 2, 32, 33, 34]:
@@ -274,6 +274,73 @@ def dumplogiccol(data):
 
         print()
 
+        print("LAB inputs:")
+        def dump2x4(data, x, y, flipH=False):
+            for yy in range(2):
+                for xx in range(4) if not flipH else reversed(range(4)):
+                    print("1" if bit_at_my_coords(data, x + xx, y + yy) else "0", end='')
+                print()
+        def dump2x4inv(data, x, y, flipH=False):
+            for yy in range(2):
+                for xx in range(4) if not flipH else reversed(range(4)):
+                    print("1" if bit_at_my_coords(data, x + xx, y - yy) else "0", end='')
+                print()
+        print("LAB0:")
+        dump2x4(data2, 1, starty + 2, True)
+        print("LAB1:")
+        dump2x4(data2, 1, starty + 6, True)
+        print("LAB2:")
+        dump2x4(data2, 1, starty + 10, True)
+        print("LAB3:")
+        dump2x4(data2, 1, starty + 14, True)
+        print("LAB4:")
+        dump2x4(data2, 1, starty + 18, True)
+
+        print("LAB5:")
+        dump2x4(data, 9, starty + 0)
+        print("LAB6:")
+        dump2x4(data, 9, starty + 2)
+        print("LAB7:")
+        dump2x4(data, 9, starty + 4)
+        print("LAB8:")
+        dump2x4(data, 9, starty + 6)
+        print("LAB9:")
+        dump2x4(data, 9, starty + 8)
+        print("LAB10:")
+        dump2x4(data, 9, starty + 10)
+        print("LAB11:")
+        dump2x4(data, 9, starty + 12)
+        print("LAB12:")
+        dump2x4(data, 9, starty + 14)
+
+        print("LAB13:")
+        dump2x4inv(data2, 1, starty + 43, True)
+        print("LAB14:")
+        dump2x4inv(data2, 1, starty + 39, True)
+        print("LAB15:")
+        dump2x4inv(data2, 1, starty + 35, True)
+        print("LAB16:")
+        dump2x4inv(data2, 1, starty + 31, True)
+        print("LAB17:")
+        dump2x4inv(data2, 1, starty + 27, True)
+
+        print("LAB18:")
+        dump2x4inv(data, 9, starty + 45)
+        print("LAB19:")
+        dump2x4inv(data, 9, starty + 43)
+        print("LAB20:")
+        dump2x4inv(data, 9, starty + 41)
+        print("LAB21:")
+        dump2x4inv(data, 9, starty + 39)
+        print("LAB22:")
+        dump2x4inv(data, 9, starty + 37)
+        print("LAB23:")
+        dump2x4inv(data, 9, starty + 35)
+        print("LAB24:")
+        dump2x4inv(data, 9, starty + 33)
+        print("LAB25:")
+        dump2x4inv(data, 9, starty + 31)
+
 def main():
     fn = sys.argv[1]
 
@@ -286,7 +353,8 @@ def main():
 
     for x in range(6):
         print("----- Column X{} -----".format(x + 2))
-        dumplogiccol(data[0xC0 + x * 0x380:0xC0 + (x + 1) * 0x380])
+        dumplogiccol(data[0xC0 + x * 0x380:0xC0 + (x + 1) * 0x380],
+                     data[0xC0 + (x + 1) * 0x380:0xC0 + (x + 2) * 0x380])
         print()
 
     print("----- Unknown ending 0x440 bytes -----")

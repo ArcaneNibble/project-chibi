@@ -255,42 +255,78 @@ def main():
                         assert origbit is None or origbit == newbit
                         bits_set(x, 0, newbit)
 
-    # ##### C4 to LAB tracks (only finding involved bits for now)
-    # LABTRACK_FN_TMPL = "c4-to-lab-fuzz-Y2-cfm/c4-to-lab-fuzz_X{}Y{}I{}_to_LAB{}.pof-cfm.bin"
-    # for x in [4, 5]:
-    #     for y in [0, 1, 2, 3, 4, 5]:
-    #         for i in range(64):
-    #             all_files = []
-    #             for lablinei in range(26):
-    #                 fn = LABTRACK_FN_TMPL.format(x, y, i, lablinei)
-    #                 if os.path.isfile(fn):
-    #                     all_files.append(fn)
-    #             # print(all_files)
-    #             if len(all_files) < 2:
-    #                 if len(all_files) == 1:
-    #                     print("Oops, can't fuzz C4:X{}Y{}I{} -> LAB{} this way (not enough files)".format(x, y, i, lablinei))
-    #                 continue
+    ##### C4 to LAB tracks (only finding involved bits for now)
+    C4_LABTRACK_FN_TMPL = "c4-to-lab-fuzz-cfm/c4-to-lab-fuzz_X{}Y{}I{}_to_X5Y{}_LAB{}.pof-cfm.bin"
+    for tiley in [1, 2, 3, 4]:
+        for chanx in [4, 5]:
+            for chany in [0, 1, 2, 3, 4, 5]:
+                for chani in range(64):
+                    all_files = []
+                    for lablinei in range(26):
+                        fn = C4_LABTRACK_FN_TMPL.format(chanx, chany, chani, tiley, lablinei)
+                        if os.path.isfile(fn):
+                            all_files.append(fn)
+                    # print(all_files)
+                    if len(all_files) < 2:
+                        if len(all_files) == 1:
+                            print("Oops, can't fuzz C4:X{}Y{}I{} -> X5Y{} LAB{} this way (not enough files)".format(chanx, chany, chani, tiley, lablinei))
+                        continue
 
-    #             for filei in range(1, len(all_files)):
-    #                 setbits, unsetbits = cfmdiff.diffcfm(all_files[0], all_files[filei])
+                    for filei in range(1, len(all_files)):
+                        setbits, unsetbits = cfmdiff.diffcfm(all_files[0], all_files[filei])
 
-    #                 # Filter any that are not in the column of interest
-    #                 setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
-    #                 unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+                        # Filter any that are not in the column of interest
+                        setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+                        unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
 
-    #                 # Filter any that are known to be LUT bits or LUT input bits
-    #                 setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or (bits_lookup(x, 0xB40)[1] != b"LUT" and bits_lookup(x, 0xB40)[1] != b"LUTIN")]
-    #                 unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or (bits_lookup(x, 0xB40)[1] != b"LUT" and bits_lookup(x, 0xB40)[1] != b"LUTIN")]
+                        # Filter any that are known to be LUT bits or LUT input bits
+                        setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or (bits_lookup(x, 0xB40)[1] != b"LUT" and bits_lookup(x, 0xB40)[1] != b"LUTIN")]
+                        unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or (bits_lookup(x, 0xB40)[1] != b"LUT" and bits_lookup(x, 0xB40)[1] != b"LUTIN")]
 
-    #                 # for byte_i, bit_i in setbits:
-    #                 #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
-    #                 # for byte_i, bit_i in unsetbits:
-    #                 #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                        # for byte_i, bit_i in setbits:
+                        #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                        # for byte_i, bit_i in unsetbits:
+                        #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
 
-    #                 for x in setbits:
-    #                     bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
-    #                 for x in unsetbits:
-    #                     bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
+                        for x in setbits:
+                            bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
+                        for x in unsetbits:
+                            bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
+    for tiley in [1, 2, 3, 4]:
+        for chanx in [4, 5]:
+            for chany in [0, 1, 2, 3, 4, 5]:
+                for chani in range(64):
+                    all_files = []
+                    for lablinei in range(26):
+                        fn = C4_LABTRACK_FN_TMPL.format(chanx, chany, chani, tiley, lablinei)
+                        if os.path.isfile(fn):
+                            all_files.append(fn)
+                    # print(all_files)
+                    if len(all_files) < 2:
+                        if len(all_files) == 1:
+                            print("Oops, can't fuzz C4:X{}Y{}I{} -> X5Y{} LAB{} this way (not enough files)".format(chanx, chany, chani, tiley, lablinei))
+                        continue
+
+                    for filei in range(1, len(all_files)):
+                        setbits, unsetbits = cfmdiff.diffcfm(all_files[0], all_files[filei])
+
+                        # Filter any that are not in the column of interest
+                        setbits = [x for x in setbits if x[0] >= 0xEC0 and x[0] < 0x1240]
+                        unsetbits = [x for x in unsetbits if x[0] >= 0xEC0 and x[0] < 0x1240]
+
+                        # Filter any that are known to be LUT bits or LUT input bits
+                        setbits = [x for x in setbits if bits_lookup(x, 0xEC0) is None or (bits_lookup(x, 0xEC0)[1] != b"LUT" and bits_lookup(x, 0xEC0)[1] != b"LUTIN")]
+                        unsetbits = [x for x in unsetbits if bits_lookup(x, 0xEC0) is None or (bits_lookup(x, 0xEC0)[1] != b"LUT" and bits_lookup(x, 0xEC0)[1] != b"LUTIN")]
+
+                        # for byte_i, bit_i in setbits:
+                        #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+                        # for byte_i, bit_i in unsetbits:
+                        #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+                        for x in setbits:
+                            bits_set(x, 0xEC0, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
+                        for x in unsetbits:
+                            bits_set(x, 0xEC0, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
 
     # # This one cannot stay; it will definitely false-positive
     # for lablinei in range(26):
@@ -365,6 +401,43 @@ def main():
                             bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
                         for x in unsetbits:
                             bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
+
+    # # This one cannot stay; it will definitely false-positive
+    # for tiley in [1, 2, 3, 4]:
+    #     for lablinei in range(26):
+    #         all_files = []
+    #         for chanx in range(9):
+    #             for chany in [1, 2, 3, 4]:
+    #                 for chani in range(64):
+    #                         fn = R4_LABTRACK_FN_TMPL.format(chanx, chany, chani, tiley, lablinei)
+    #                         if os.path.isfile(fn):
+    #                             all_files.append(fn)
+    #         # print(all_files)
+    #         if len(all_files) < 2:
+    #             if len(all_files) == 1:
+    #                 print("Oops, can't fuzz C4 -> X5Y{} LAB{} this way (not enough files)".format(tiley, lablinei))
+    #             continue
+
+    #         for filei in range(1, len(all_files)):
+    #             setbits, unsetbits = cfmdiff.diffcfm(all_files[0], all_files[filei])
+
+    #             # Filter any that are not in the column of interest
+    #             setbits = [x for x in setbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+    #             unsetbits = [x for x in unsetbits if x[0] >= 0xB40 and x[0] < 0xEC0]
+
+    #             # Filter any that are known to be LUT bits or LUT input bits
+    #             setbits = [x for x in setbits if bits_lookup(x, 0xB40) is None or (bits_lookup(x, 0xB40)[1] != b"LUT" and bits_lookup(x, 0xB40)[1] != b"LUTIN")]
+    #             unsetbits = [x for x in unsetbits if bits_lookup(x, 0xB40) is None or (bits_lookup(x, 0xB40)[1] != b"LUT" and bits_lookup(x, 0xB40)[1] != b"LUTIN")]
+
+    #             # for byte_i, bit_i in setbits:
+    #             #     print("Bit became   SET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+    #             # for byte_i, bit_i in unsetbits:
+    #             #     print("Bit became UNSET at 0x{:04X} bit {} ({:03X})".format(byte_i, bit_i, byte_i - 0xC0 - 3 * 0x380))
+
+    #             for x in setbits:
+    #                 bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
+    #             for x in unsetbits:
+    #                 bits_set(x, 0xB40, (b"LL", b"LABIN", b"XnY2 LAB line input mux"))
 
     print(lut_input_settings)
 
