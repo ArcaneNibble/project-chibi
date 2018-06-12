@@ -219,6 +219,33 @@ for y in [1, 2, 3, 4]:
         drawbox(pixels, 7, LUTYLOCS[4 - y] + 2 + 2 * nn, 4, 2, (255, 0, 0))
         drawbox(pixels, 7, LUTYLOCS[4 - y] + 26 + 2 * nn, 4, 2, (255, 0, 0))
 
+# TOP IO tiles
+for x in range(2, 8):
+    for nn in range(5):
+        drawbox(pixels,
+            (x - 1) * 28 + 3,
+            1 + 2 * nn,
+            4, 2,
+            (255, 0, 0))
+        drawbox(pixels,
+            (x - 1) * 28 - 13,
+            1 + 2 * nn,
+            4, 2,
+            (255, 0, 0))
+
+# Bottom IO tiles (guessed)
+for x in range(2, 8):
+    for nn in range(5):
+        drawbox(pixels,
+            (x - 1) * 28 + 3,
+            196 + 2 * nn,
+            4, 2,
+            (255, 0, 0))
+        drawbox(pixels,
+            (x - 1) * 28 - 13,
+            196 + 2 * nn,
+            4, 2,
+            (255, 0, 0))
 
 # USERCODE
 drawbox(pixels, 1, 202, 10, 3, (255, 0, 255))
