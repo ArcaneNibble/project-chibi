@@ -24,6 +24,19 @@ def drawbox(px, x, y, w, h, color):
         px[x * 8, y * 8 + yy] = color
         px[(x + w) * 8 - 1, y * 8 + yy] = color
 
+def draw_wire_t(px, x, y, l, color):
+    for xx in range(8 * l):
+        px[x * 8 + xx, y * 8] = color
+def draw_wire_b(px, x, y, l, color):
+    for xx in range(8 * l):
+        px[x * 8 + xx, y * 8 + 7] = color
+def draw_wire_l(px, x, y, h, color):
+    for yy in range(8 * h):
+        px[x * 8, y * 8 + yy] = color
+def draw_wire_r(px, x, y, h, color):
+    for yy in range(8 * h):
+        px[x * 8 + 7, y * 8 + yy] = color
+
 def my_coords_to_byte_bit(x, y):
     if y < 232:
         intermed_biti = x * 232 + y
@@ -143,37 +156,35 @@ for x in range(2, 8):
 
 for x in range(2, 9):
     for y in [1, 2, 3, 4]:
-        # C4 going up (not sure if Y=4 has one yet)
-            if y != 4:
-                drawbox(pixels,
-                    (x - 1) * 28 - 21,
-                    LUTYLOCS[4 - y] + 0,
-                    4, 2, (250,99,213))
-                drawbox(pixels,
-                    (x - 1) * 28 - 17,
-                    LUTYLOCS[4 - y] + 4,
-                    4, 2, (250,99,213))
-                drawbox(pixels,
-                    (x - 1) * 28 - 17,
-                    LUTYLOCS[4 - y] + 10,
-                    4, 2, (250,99,213))
-                drawbox(pixels,
-                    (x - 1) * 28 - 17,
-                    LUTYLOCS[4 - y] + 16,
-                    4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 21,
+                LUTYLOCS[4 - y] + 0,
+                4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 17,
+                LUTYLOCS[4 - y] + 4,
+                4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 17,
+                LUTYLOCS[4 - y] + 10,
+                4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 17,
+                LUTYLOCS[4 - y] + 16,
+                4, 2, (250,99,213))
 
-                drawbox(pixels,
-                    (x - 1) * 28 - 17,
-                    LUTYLOCS[4 - y] + 32,
-                    4, 2, (250,99,213))
-                drawbox(pixels,
-                    (x - 1) * 28 - 17,
-                    LUTYLOCS[4 - y] + 36,
-                    4, 2, (250,99,213))
-                drawbox(pixels,
-                    (x - 1) * 28 - 17,
-                    LUTYLOCS[4 - y] + 42,
-                    4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 17,
+                LUTYLOCS[4 - y] + 32,
+                4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 17,
+                LUTYLOCS[4 - y] + 36,
+                4, 2, (250,99,213))
+            drawbox(pixels,
+                (x - 1) * 28 - 17,
+                LUTYLOCS[4 - y] + 42,
+                4, 2, (250,99,213))
 
         # C4 going down (not sure if Y=1 has one yet)
             if y != 1:
@@ -213,11 +224,67 @@ for y in [1, 2, 3, 4]:
         drawbox(pixels, 183, LUTYLOCS[4 - y] + 2 + 2 * nn, 4, 2, (255, 0, 0))
         drawbox(pixels, 183, LUTYLOCS[4 - y] + 26 + 2 * nn, 4, 2, (255, 0, 0))
 
+    # for nn in range(3):
+    #     draw_wire_t(pixels, 187, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         5, (0, 255, 0))
+    #     draw_wire_b(pixels, 187, LUTYLOCS[4 - y] + 9 + 4 * nn,
+    #         4, (0, 255, 0))
+    #     draw_wire_b(pixels, 191, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_l(pixels, 187, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         2, (0, 255, 0))
+    #     draw_wire_r(pixels, 191, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_r(pixels, 190, LUTYLOCS[4 - y] + 9 + 4 * nn,
+    #         1, (0, 255, 0))
+
+    # for nn in range(2):
+    #     draw_wire_t(pixels, 187, LUTYLOCS[4 - y] + 28 + 4 * nn,
+    #         4, (0, 255, 0))
+    #     draw_wire_b(pixels, 187, LUTYLOCS[4 - y] + 29 + 4 * nn,
+    #         5, (0, 255, 0))
+    #     draw_wire_t(pixels, 191, LUTYLOCS[4 - y] + 29 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_l(pixels, 187, LUTYLOCS[4 - y] + 28 + 4 * nn,
+    #         2, (0, 255, 0))
+    #     draw_wire_r(pixels, 191, LUTYLOCS[4 - y] + 29 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_r(pixels, 190, LUTYLOCS[4 - y] + 28 + 4 * nn,
+    #         1, (0, 255, 0))
+
 # LH IO tiles
 for y in [1, 2, 3, 4]:
     for nn in range(9):
         drawbox(pixels, 7, LUTYLOCS[4 - y] + 2 + 2 * nn, 4, 2, (255, 0, 0))
         drawbox(pixels, 7, LUTYLOCS[4 - y] + 26 + 2 * nn, 4, 2, (255, 0, 0))
+
+    # for nn in range(3):
+    #     draw_wire_t(pixels, 2, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         5, (0, 255, 0))
+    #     draw_wire_b(pixels, 3, LUTYLOCS[4 - y] + 9 + 4 * nn,
+    #         4, (0, 255, 0))
+    #     draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_r(pixels, 6, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         2, (0, 255, 0))
+    #     draw_wire_l(pixels, 2, LUTYLOCS[4 - y] + 8 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_l(pixels, 3, LUTYLOCS[4 - y] + 9 + 4 * nn,
+    #         1, (0, 255, 0))
+
+    # for nn in range(2):
+    #     draw_wire_t(pixels, 3, LUTYLOCS[4 - y] + 28 + 4 * nn,
+    #         4, (0, 255, 0))
+    #     draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
+    #         5, (0, 255, 0))
+    #     draw_wire_t(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_r(pixels, 6, LUTYLOCS[4 - y] + 28 + 4 * nn,
+    #         2, (0, 255, 0))
+    #     draw_wire_l(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
+    #         1, (0, 255, 0))
+    #     draw_wire_l(pixels, 3, LUTYLOCS[4 - y] + 28 + 4 * nn,
+    #         1, (0, 255, 0))
 
 # TOP IO tiles
 for x in range(2, 8):
@@ -248,7 +315,11 @@ for x in range(2, 8):
             (255, 0, 0))
 
 # USERCODE
-drawbox(pixels, 1, 202, 10, 3, (255, 0, 255))
-drawbox(pixels, 9, 205, 2, 1, (255, 0, 255))
+draw_wire_t(pixels, 1, 202, 10, (255, 0, 255))
+draw_wire_l(pixels, 1, 202, 3, (255, 0, 255))
+draw_wire_r(pixels, 10, 202, 4, (255, 0, 255))
+draw_wire_b(pixels, 1, 204, 8, (255, 0, 255))
+draw_wire_l(pixels, 9, 205, 1, (255, 0, 255))
+draw_wire_b(pixels, 9, 205, 2, (255, 0, 255))
 
 im.save(outfn)
