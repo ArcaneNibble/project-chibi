@@ -769,10 +769,10 @@ LAB0:
 LAB1:
 |G|C|D|H|A|B|E|F|
 |0| | | | | | | |       N1 on the right
-| |0| | |0| | | |       
-| |0| | | |0| | |       
+| |0| | |0| | | |       u1 at y-1 if in Y2/Y3/Y4
+| |0| | | |0| | |       u2 at y-1 if in Y2/Y3/Y4
 | |0| | | | |0| |       
-| |0| | | | | |0|       
+| |0| | | | | |0|       d1 at y+3 if in Y1, d1 at y+2 if in Y2
 | | |0| |0| | | |       
 | | |0| | |0| | |       
 | | |0| | | |0| |       
@@ -780,7 +780,7 @@ LAB1:
 | | | |0|0| | | |       
 | | | |0| |0| | |       
 | | | |0| | |0| |       
-| | | |0| | | |0|       
+| | | |0| | | |0|       d1 at y+1 if in Y1/Y2/Y3 (d? from IO in Y4)
 
 LAB2:
 |G|C|D|H|A|B|E|F|
@@ -1177,3 +1177,18 @@ LAB25:
 
 
 
+
+
+
+
+
+how do IOs work?
+
+top
+
+bottom
+
+left
+
+right
+18 local tracks

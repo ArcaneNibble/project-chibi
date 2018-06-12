@@ -211,7 +211,17 @@ for x in range(2, 9):
 for y in [1, 2, 3, 4]:
     for nn in range(9):
         drawbox(pixels, 183, LUTYLOCS[4 - y] + 2 + 2 * nn, 4, 2, (255, 0, 0))
-        drawbox(pixels, 183, LUTYLOCS[4 - y] + 27 + 2 * nn, 4, 2, (255, 0, 0))
+        drawbox(pixels, 183, LUTYLOCS[4 - y] + 26 + 2 * nn, 4, 2, (255, 0, 0))
 
+# LH IO tiles
+for y in [1, 2, 3, 4]:
+    for nn in range(9):
+        drawbox(pixels, 7, LUTYLOCS[4 - y] + 2 + 2 * nn, 4, 2, (255, 0, 0))
+        drawbox(pixels, 7, LUTYLOCS[4 - y] + 26 + 2 * nn, 4, 2, (255, 0, 0))
+
+
+# USERCODE
+drawbox(pixels, 1, 202, 10, 3, (255, 0, 255))
+drawbox(pixels, 9, 205, 2, 1, (255, 0, 255))
 
 im.save(outfn)
