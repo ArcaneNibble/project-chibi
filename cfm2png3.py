@@ -90,6 +90,8 @@ for x in range(2, 8):
                 LUTYLOCS[4 - y] + nn * 4 + 26,
                 4, 2, (255, 0, 0))
 
+for x in range(2, 9):
+    for y in [1, 2, 3, 4]:
         # R4 going left (not sure if X=2 has one yet)
         if x != 2:
             for nn in range(4):
@@ -102,41 +104,42 @@ for x in range(2, 8):
                     LUTYLOCS[4 - y] + nn * 4 + 28,
                     4, 2, (132,98,213))
 
-        # R4 going right (not sure if X=7 has one yet)
-        if x != 7:
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 0,
-                4, 2, (101,161,14))
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 6,
-                4, 2, (101,161,14))
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 14,
-                4, 2, (101,161,14))
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 18,
-                4, 2, (101,161,14))
+for x in range(2, 8):
+    for y in [1, 2, 3, 4]:
+        # R4 going right
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 0,
+            4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 6,
+            4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 14,
+            4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 18,
+            4, 2, (101,161,14))
 
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 26,
-                4, 2, (101,161,14))
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 30,
-                4, 2, (101,161,14))
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 38,
-                4, 2, (101,161,14))
-            drawbox(pixels,
-                (x - 1) * 28 - 17,
-                LUTYLOCS[4 - y] + 44,
-                4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 26,
+            4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 30,
+            4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 38,
+            4, 2, (101,161,14))
+        drawbox(pixels,
+            (x - 1) * 28 - 17,
+            LUTYLOCS[4 - y] + 44,
+            4, 2, (101,161,14))
 
 for x in range(2, 9):
     for y in [1, 2, 3, 4]:
@@ -203,5 +206,12 @@ for x in range(2, 9):
                     (x - 1) * 28 - 21,
                     LUTYLOCS[4 - y] + 44,
                     4, 2, (184,228,80))
+
+# RH IO tiles
+for y in [1, 2, 3, 4]:
+    for nn in range(9):
+        drawbox(pixels, 183, LUTYLOCS[4 - y] + 2 + 2 * nn, 4, 2, (255, 0, 0))
+        drawbox(pixels, 183, LUTYLOCS[4 - y] + 27 + 2 * nn, 4, 2, (255, 0, 0))
+
 
 im.save(outfn)
