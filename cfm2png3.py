@@ -155,6 +155,82 @@ for x in range(2, 8):
             LUTYLOCS[4 - y] + 44,
             4, 2, (101,161,14))
 
+# Extra set of R4 (R1?) going left in the last column
+for y in [1, 2, 3, 4]:
+    # R4 going right
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 0,
+        4, 2, (132,98,213))
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 6,
+        4, 2, (132,98,213))
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 14,
+        4, 2, (132,98,213))
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 18,
+        4, 2, (132,98,213))
+
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 26,
+        4, 2, (132,98,213))
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 30,
+        4, 2, (132,98,213))
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 38,
+        4, 2, (132,98,213))
+    drawbox(pixels,
+        (8 - 1) * 28 - 17,
+        LUTYLOCS[4 - y] + 44,
+        4, 2, (132,98,213))
+
+# Extra set of R4 going right in the first column
+for y in [1, 2, 3, 4]:
+    # R4 going right
+    drawbox(pixels,
+        3,
+        LUTYLOCS[4 - y] + 1,
+        2, 1, (101,161,14))
+    drawbox(pixels,
+        5,
+        LUTYLOCS[4 - y] + 1,
+        2, 1, (101,161,14))
+
+    drawbox(pixels,
+        3,
+        LUTYLOCS[4 - y] + 3,
+        2, 1, (101,161,14))
+    drawbox(pixels,
+        5,
+        LUTYLOCS[4 - y] + 3,
+        2, 1, (101,161,14))
+
+    drawbox(pixels,
+        3,
+        LUTYLOCS[4 - y] + 42,
+        2, 1, (101,161,14))
+    drawbox(pixels,
+        5,
+        LUTYLOCS[4 - y] + 42,
+        2, 1, (101,161,14))
+
+    drawbox(pixels,
+        3,
+        LUTYLOCS[4 - y] + 44,
+        2, 1, (101,161,14))
+    drawbox(pixels,
+        5,
+        LUTYLOCS[4 - y] + 44,
+        2, 1, (101,161,14))
+
 for x in range(2, 9):
     for y in [1, 2, 3, 4]:
             # C4 up
