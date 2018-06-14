@@ -469,6 +469,7 @@ def main():
                         all_my_wires.append("D:X{}Y{}I{}".format(x, y, nn))
 
     # print(all_my_wires)
+    # First step - if a mux gets used, it must show up in all the rcf files
     wire_to_potential_sites_map = {}
     for my_wire_name in all_my_wires:
         for cfmfn, cfmwires, rcfwires in all_teh_bits:
@@ -483,6 +484,31 @@ def main():
                         print("Warning: {} made {} go to zero".format(cfmfn, my_wire_name))
 
                 # print("Possible RCF names for {} now {}".format(my_wire_name, wire_to_potential_sites_map[my_wire_name]))
+
+    # Second step - it must _not_ show up in _any_ rcf files where the mux isn't used
+    for my_wire_name in all_my_wires:
+        if my_wire_name in wire_to_potential_sites_map:
+            all_wires_in_files_not_using_this_wire = set()
+            for cfmfn, cfmwires, rcfwires in all_teh_bits:
+                if my_wire_name not in cfmwires:
+                    all_wires_in_files_not_using_this_wire |= rcfwires
+
+            wire_to_potential_sites_map[my_wire_name] -= all_wires_in_files_not_using_this_wire
+
+    # print(wire_to_potential_sites_map)
+    # Now report
+    for my_wire_name in all_my_wires:
+        print("Wire {}  =  ".format(my_wire_name), end='')
+        if my_wire_name not in wire_to_potential_sites_map:
+            print("UNKNOWN! PLZ 2 FUZZ MOAR")
+        else:
+            potential_sites = wire_to_potential_sites_map[my_wire_name]
+            if len(potential_sites) == 0:
+                print("BAD! Zero sites!")
+            elif len(potential_sites) != 1:
+                print("Multiple! Fuzz more! {}", potential_sites)
+            else:
+                print(list(potential_sites)[0])
 
 if __name__=='__main__':
     main()

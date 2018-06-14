@@ -157,7 +157,6 @@ for x in range(2, 8):
 
 # Extra set of R4 (R1?) going left in the last column
 for y in [1, 2, 3, 4]:
-    # R4 going right
     drawbox(pixels,
         (8 - 1) * 28 - 17,
         LUTYLOCS[4 - y] + 0,
