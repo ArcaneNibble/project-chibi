@@ -411,11 +411,40 @@ def set_bits_in_each(cfmfn, rcffn):
         print("Warning: {} and {} do not have matching wire counts".format(cfmfn, rcffn))
     return (cfmwires, rcfwires)
 
-WORKDIRS = ['r4-to-lab-fuzz-cfm']
+WORKDIRS = [
+    'r4-to-lab-fuzz-cfm',
+    'c4-to-lab-fuzz-cfm',
+    'c4-to-lab-fuzz-Y2-cfm',
+    'localfeedbackfuzz-cfm',
+    'lablinefuzz-cfm',
+    'lh-io-local-manualfuzz',
+    'lh-io-outwire-manualfuzz',
+    'rh-io-local-manualfuzz',
+    'rh-io-outwire-manualfuzz',
+    'top-io-local-manualfuzz',
+]
 
 def xlat_cfm_to_pof(cfmfn):
     if cfmfn.startswith('r4-to-lab-fuzz-cfm'):
         return cfmfn[:-11].replace('r4-to-lab-fuzz-cfm', 'r4-to-lab-fuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('c4-to-lab-fuzz-cfm'):
+        return cfmfn[:-11].replace('c4-to-lab-fuzz-cfm', 'c4-to-lab-fuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('c4-to-lab-fuzz-Y2-cfm'):
+        return cfmfn[:-11].replace('c4-to-lab-fuzz-Y2-cfm', 'c4-to-lab-fuzz-Y2-pofrcf') + 'rcf'
+    elif cfmfn.startswith('localfeedbackfuzz-cfm'):
+        return cfmfn[:-11].replace('localfeedbackfuzz-cfm', 'localfeedbackfuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('lablinefuzz-cfm'):
+        return cfmfn[:-11].replace('lablinefuzz-cfm', 'lablinefuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('lh-io-local-manualfuzz'):
+        return cfmfn[:-3] + 'rcf'
+    elif cfmfn.startswith('lh-io-outwire-manualfuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('rh-io-local-manualfuzz'):
+        return cfmfn[:-3] + 'rcf'
+    elif cfmfn.startswith('rh-io-outwire-manualfuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('top-io-local-manualfuzz'):
+        return cfmfn[:-3] + 'rcf'
     else:
         raise Exception()
 
@@ -425,6 +454,9 @@ def main():
     for workdir_cfm in WORKDIRS:
         for fn in os.listdir(workdir_cfm):
             cfmfn = workdir_cfm + '/' + fn
+            if not cfmfn.endswith(".bin") and not cfmfn.endswith(".cfm"):
+                continue
+
             rcffn = xlat_cfm_to_pof(cfmfn)
             # print(cfmfn, rcffn)
             print("Loading {}".format(cfmfn))
@@ -506,7 +538,7 @@ def main():
             if len(potential_sites) == 0:
                 print("BAD! Zero sites!")
             elif len(potential_sites) != 1:
-                print("Multiple! Fuzz more! {}", potential_sites)
+                print("Multiple! Fuzz more! {}", sorted(list(potential_sites)))
             else:
                 print(list(potential_sites)[0])
 
