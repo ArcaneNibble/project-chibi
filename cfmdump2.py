@@ -130,6 +130,21 @@ COL_IO_INPUTS = [
     ['9', (3, 1), (1, 1)],
 ]
 
+LH_IO_TRACK_MUX = [
+    ["N3", "N2"],   ["N3", "N2"],
+    ["UNK !!!", "N0"],   ["UNK !!!", "N0"],
+    ["N2", "UNK !!!"],   ["N2", "UNK !!!"],
+    ["N1", "UNK !!!"],   ["N1", "UNK !!!"],
+]
+
+BOT_IO_TRACK_MUX = [
+    ["N3", "N0"],
+    ["N3", "N1"],
+    ["N2", "N0"],
+    ["N3", "N2"],
+    ["N1", "N0"],
+]
+
 def my_coords_to_byte_bit(x, y):
     if y < 232:
         intermed_biti = x * 232 + y
@@ -287,6 +302,34 @@ def dump_left_ios(data):
                 assert outinp == "<NONE>"
             else:
                 print("L IO Y{}N{} output: local track {}".format(Y, N, outinp))
+
+        # Routing tracks
+        for N in range(8):
+            if N < 2:
+                trackY = LUTYLOCS[4 - Y] + 1
+            elif N < 4:
+                trackY = LUTYLOCS[4 - Y] + 3
+            elif N < 6:
+                trackY = LUTYLOCS[4 - Y] + 42
+            elif N < 8:
+                trackY = LUTYLOCS[4 - Y] + 44
+
+            trackX = 3 if N % 2 == 0 else 5
+
+            bitL = getbit(data, trackX + 0, trackY)
+            bitR = getbit(data, trackX + 1, trackY)
+
+            assert not (not bitL and not bitR)
+
+            if not bitL:
+                outp = LH_IO_TRACK_MUX[N][0]
+            elif not bitR:
+                outp = LH_IO_TRACK_MUX[N][1]
+            else:
+                outp = "<NONE>"
+
+            print("Wire R:X1Y{}I{} = {}".format(Y, N, outp))
+
         print()
 
 def dump_right_ios(data):
@@ -359,6 +402,29 @@ def dump_bot_ios(data):
                 assert outinp == "VDD ???"
             else:
                 print("B IO X{}N{} output: local track {}".format(X, N, outinp))
+
+        # Routing tracks
+        for N in range(10):
+            trackX = tileX + (0 if N < 5 else 24)
+            trackY = 196 + 2 * (N % 5)
+
+            if N < 5:
+                bitL = getbit(data, trackX + 0, trackY + 0)
+                bitR = getbit(data, trackX + 2, trackY + 1)
+            else:
+                bitR = getbit(data, trackX + 1, trackY + 1)
+                bitL = getbit(data, trackX + 3, trackY + 0)
+
+            assert not (not bitL and not bitR)
+
+            if not bitL:
+                outp = BOT_IO_TRACK_MUX[N % 5][0]
+            elif not bitR:
+                outp = BOT_IO_TRACK_MUX[N % 5][1]
+            else:
+                outp = "<NONE>"
+
+            print("Wire Y:X{}Y1I{} = {}".format(X, N, outp))
         print()
 
 def main():

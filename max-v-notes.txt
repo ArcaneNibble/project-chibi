@@ -1192,3 +1192,67 @@ left
 
 right
 18 local tracks
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+~~~~~ LH IO right-going tracks
+
+3L      N3
+3R      N2
+7L      N3
+7R      N2
+
+11L     
+11R     N0
+15L     
+15R     N0
+
+19L     N1
+19R     
+23L     N1
+23R     
+
+27L     N2
+27R     
+31L     N2
+31R     
+
+
+~~~~~ Bottom IO up-going tracks
+
+0L      N3
+0R      N0
+1L      N3
+1R      N1
+2L      N2
+2R      N0
+3L      N3
+3R      N2
+4L      N1
+4R      N0
+
+5L      N0
+5R      N3
+6L      N1
+6R      N3
+7L      N0
+7R      N2
+8L      N2
+8R      N3
+9L      N0
+9R      N1
