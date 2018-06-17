@@ -86,6 +86,50 @@ DATAD_INPUTS = [
     ['LAB24', (4, 2), (6, 3)],
 ]
 
+ROW_IO_INPUTS = [
+    ['0', (2, 0), (3, 0)],
+    ['1', (2, 0), (4, 0)],
+    ['2', (2, 0), (3, 1)],
+
+    ['3', (2, 1), (3, 0)],
+    ['4', (2, 1), (4, 0)],
+    ['5', (2, 1), (3, 1)],
+
+    ['6', (1, 0), (3, 0)],
+    ['7', (1, 0), (4, 0)],
+    ['8', (1, 0), (3, 1)],
+
+    ['9', (1, 1), (3, 0)],
+    ['10', (1, 1), (4, 0)],
+    ['11', (1, 1), (3, 1)],
+
+    ['12', (0, 0), (3, 0)],
+    ['13', (0, 0), (4, 0)],
+    ['14', (0, 0), (3, 1)],
+
+    ['15', (0, 1), (3, 0)],
+    ['16', (0, 1), (4, 0)],
+    ['17', (0, 1), (3, 1)],
+]
+
+COL_IO_INPUTS = [
+    ['0', (2, 0), (0, 0)],
+    ['UNK 2 !!!', (2, 0), (1, 0)],
+    ['1', (2, 0), (1, 1)],
+
+    ['2', (2, 1), (1, 0)],
+    ['3', (2, 1), (0, 0)],
+    ['4', (2, 1), (1, 1)],
+
+    ['5', (3, 0), (0, 0)],
+    ['VDD ???', (3, 0), (1, 0)],
+    ['6', (3, 0), (1, 1)],
+
+    ['7', (3, 1), (1, 0)],
+    ['8', (3, 1), (0, 0)],
+    ['9', (3, 1), (1, 1)],
+]
+
 def my_coords_to_byte_bit(x, y):
     if y < 232:
         intermed_biti = x * 232 + y
@@ -119,21 +163,14 @@ def getbox(data, x, y, w, h, fliph=False, flipv=False):
 def getbit(data, x, y):
     return getbox(data, x, y, 1, 1)[0][0]
 
-def anybits(bits):
-    for y in bits:
-        for x in y:
-            if not x:
-                return True
-    return False
-
-def lut_input_decode(inp_encoding, lutinpbox):
+def twohot_decode(inp_encoding, box):
     anydriver = False
     anybits = False
     ret = None
 
     for name, b1, b2 in inp_encoding:
-        bit1 = lutinpbox[b1[1]][b1[0]]
-        bit2 = lutinpbox[b2[1]][b2[0]]
+        bit1 = box[b1[1]][b1[0]]
+        bit2 = box[b2[1]][b2[0]]
 
         if not bit1 or not bit2:
             anybits = True
@@ -221,16 +258,108 @@ def dump_logic_col(data, X):
             print("LUT X{}Y{}N{}: {:04X}".format(X, Y, N, lutval))
 
             lutinpbox = getbox(data, lutX - 9, lutY, 9, 4, flipv=N >= 5)
-            lutinpa = lut_input_decode(DATAA_INPUTS, lutinpbox)
+            lutinpa = twohot_decode(DATAA_INPUTS, lutinpbox)
             print("LUT X{}Y{}N{} DATAA: {}".format(X, Y, N, lutinpa))
-            lutinpb = lut_input_decode(DATAB_INPUTS, lutinpbox)
+            lutinpb = twohot_decode(DATAB_INPUTS, lutinpbox)
             print("LUT X{}Y{}N{} DATAB: {}".format(X, Y, N, lutinpb))
-            lutinpc = lut_input_decode(DATAC_INPUTS, lutinpbox)
+            lutinpc = twohot_decode(DATAC_INPUTS, lutinpbox)
             print("LUT X{}Y{}N{} DATAC: {}".format(X, Y, N, lutinpc))
-            lutinpd = lut_input_decode(DATAD_INPUTS, lutinpbox)
+            lutinpd = twohot_decode(DATAD_INPUTS, lutinpbox)
             print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
         print()
     print()
+
+def dump_left_ios(data):
+    for Y in range(1, 5):
+        for N in range(5):
+            localY = LUTYLOCS[4 - Y] + 8 + N * 4
+            if N >= 3:
+                localY += 8
+
+            print("L IO Y{}N{} invert: {}".format(Y, N,
+                not getbit(data, 2, localY + (1 if N < 3 else 0))))
+
+            outbox = getbox(data, 2, localY, 5, 2, fliph=True, flipv=N >= 3)
+            outinp = twohot_decode(ROW_IO_INPUTS, outbox)
+
+            if not getbit(data, 1, localY + (1 if N < 3 else 0)):
+                print("L IO Y{}N{} output: Bypass path".format(Y, N))
+                assert outinp == "<NONE>"
+            else:
+                print("L IO Y{}N{} output: local track {}".format(Y, N, outinp))
+        print()
+
+def dump_right_ios(data):
+    for Y in range(1, 5):
+        for N in range(5):
+            localY = LUTYLOCS[4 - Y] + 8 + N * 4
+            if N >= 3:
+                localY += 8
+
+            print("R IO Y{}N{} invert: {}".format(Y, N,
+                not getbit(data, 191, localY + (1 if N < 3 else 0))))
+
+            outbox = getbox(data, 187, localY, 5, 2, fliph=False, flipv=N >= 3)
+            outinp = twohot_decode(ROW_IO_INPUTS, outbox)
+
+            if not getbit(data, 192, localY + (1 if N < 3 else 0)):
+                print("R IO Y{}N{} output: Bypass path".format(Y, N))
+                assert outinp == "<NONE>"
+            else:
+                print("R IO Y{}N{} output: local track {}".format(Y, N, outinp))
+        print()
+
+def dump_top_ios(data):
+    for X in range(2, 8):
+        tileX = (X - 1) * 28 - 17
+
+        for N in range(4):
+            outpY = 1 if N == 0 or N == 2 else 3
+
+            print("T IO X{}N{} invert: {}".format(X, N,
+                not getbit(data, tileX + (11 if N >= 2 else 15), outpY + 1)))
+
+            if N >= 2:
+                outbox = getbox(data, tileX + 8, outpY, 4, 2, fliph=True)
+            else:
+                outbox = getbox(data, tileX + 15, outpY, 5, 2)
+                for i in range(len(outbox)):
+                    del outbox[i][1]
+            # print(outbox)
+            outinp = twohot_decode(COL_IO_INPUTS, outbox)
+
+            if not getbit(data, tileX + (12 if N >= 2 else 14), outpY + 1):
+                print("T IO X{}N{} output: Bypass path".format(X, N))
+                assert outinp == "VDD ???"
+            else:
+                print("T IO X{}N{} output: local track {}".format(X, N, outinp))
+        print()
+
+def dump_bot_ios(data):
+    for X in range(2, 8):
+        tileX = (X - 1) * 28 - 17
+
+        for N in range(4):
+            outpY = 204 if N == 0 or N == 2 else 202
+
+            print("B IO X{}N{} invert: {}".format(X, N,
+                not getbit(data, tileX + (11 if N >= 2 else 15), outpY)))
+
+            if N >= 2:
+                outbox = getbox(data, tileX + 8, outpY, 4, 2, fliph=True, flipv=True)
+            else:
+                outbox = getbox(data, tileX + 15, outpY, 5, 2, flipv=True)
+                for i in range(len(outbox)):
+                    del outbox[i][1]
+            # print(outbox)
+            outinp = twohot_decode(COL_IO_INPUTS, outbox)
+
+            if not getbit(data, tileX + (12 if N >= 2 else 14), outpY):
+                print("B IO X{}N{} output: Bypass path".format(X, N))
+                assert outinp == "VDD ???"
+            else:
+                print("B IO X{}N{} output: local track {}".format(X, N, outinp))
+        print()
 
 def main():
     fn = sys.argv[1]
@@ -241,6 +370,18 @@ def main():
     print("******************** LOGIC COLUMNS ********************")
     for X in range(2, 8):
         dump_logic_col(data, X)
+
+    print("******************** LEFT IOs ********************")
+    dump_left_ios(data)
+
+    print("******************** RIGHT IOs ********************")
+    dump_right_ios(data)
+
+    print("******************** TOP IOs ********************")
+    dump_top_ios(data)
+
+    print("******************** BOTTOM IOs ********************")
+    dump_bot_ios(data)
 
 if __name__=='__main__':
     main()

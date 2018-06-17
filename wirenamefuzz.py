@@ -234,7 +234,7 @@ def set_bits_in_each(cfmfn, rcffn):
             LUTYLOCS[4 - y] + 42,
             2, 1)
         if anybits(bitsbits):
-            cfmwires.add("R:X{}Y{}I{}".format(1, y, 45))
+            cfmwires.add("R:X{}Y{}I{}".format(1, y, 4))
 
         bitsbits = getbox(cfmdata,
             5,
@@ -422,6 +422,9 @@ WORKDIRS = [
     'rh-io-local-manualfuzz',
     'rh-io-outwire-manualfuzz',
     'top-io-local-manualfuzz',
+    'manual-more-wire-names-fuzz',
+    'manual-more-wire-names-fuzz-2',
+    'manual-more-wire-names-fuzz-3',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -445,6 +448,12 @@ def xlat_cfm_to_pof(cfmfn):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('top-io-local-manualfuzz'):
         return cfmfn[:-3] + 'rcf'
+    elif cfmfn.startswith('manual-more-wire-names-fuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('manual-more-wire-names-fuzz-2'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('manual-more-wire-names-fuzz-3'):
+        return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
 
@@ -452,6 +461,7 @@ def main():
     all_teh_bits = []
 
     for workdir_cfm in WORKDIRS:
+        print("Working in {}".format(workdir_cfm))
         for fn in os.listdir(workdir_cfm):
             cfmfn = workdir_cfm + '/' + fn
             if not cfmfn.endswith(".bin") and not cfmfn.endswith(".cfm"):
@@ -459,7 +469,7 @@ def main():
 
             rcffn = xlat_cfm_to_pof(cfmfn)
             # print(cfmfn, rcffn)
-            print("Loading {}".format(cfmfn))
+            # print("Loading {}".format(cfmfn))
             cfmwires, rcfwires = set_bits_in_each(cfmfn, rcffn)
             all_teh_bits.append((cfmfn, cfmwires, rcfwires))
 
@@ -538,7 +548,7 @@ def main():
             if len(potential_sites) == 0:
                 print("BAD! Zero sites!")
             elif len(potential_sites) != 1:
-                print("Multiple! Fuzz more! {}", sorted(list(potential_sites)))
+                print("Multiple! Fuzz more! {}".format(sorted(list(potential_sites))))
             else:
                 print(list(potential_sites)[0])
 
