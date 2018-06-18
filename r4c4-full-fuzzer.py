@@ -63,10 +63,12 @@ def prep_all_routes(outfn, my_wire_to_quartus_wire):
             for srcI in range(8):
                 this_inputs["R:X{}Y{}I{}".format(srcX, dstY, srcI)] = "maybe"
 
-        # All left wires to the right of this (IOs not understood)
+        # All left wires to the right of this (IOs not fully understood)
         for srcX in range(max(3, dstX), 9):
             for srcI in range(8):
                 this_inputs["L:X{}Y{}I{}".format(srcX, dstY, srcI)] = "maybe"
+        for srcI in range(8):
+            this_inputs["L2:X8Y{}I{}".format(dstY, srcI)] = "maybe"
 
         all_routes_to_try["{}:X{}Y{}I{}".format(direction, dstX, dstY, dstI)] = this_inputs
 
@@ -78,6 +80,19 @@ def prep_all_routes(outfn, my_wire_to_quartus_wire):
             if k not in my_wire_to_quartus_wire:
                 print(k)
             assert k in my_wire_to_quartus_wire
+
+    # What do we already know?
+    with open('initial-interconnect.json', 'r') as f:
+        initial_interconnect_map = json.load(f)
+
+    for dstnode, srcnodes in initial_interconnect_map.items():
+        if dstnode.startswith("LOCAL_INTERCONNECT"):
+            continue
+        for srcnode in srcnodes:
+            if srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER"):
+                continue
+            assert all_routes_to_try[dstnode][srcnode] != False
+            all_routes_to_try[dstnode][srcnode] = True
 
     # print(all_routes_to_try)
     with open(outfn, 'w') as f:
