@@ -368,7 +368,6 @@ def dump_top_ios(data):
                 outbox = getbox(data, tileX + 15, outpY, 5, 2)
                 for i in range(len(outbox)):
                     del outbox[i][1]
-            # print(outbox)
             outinp = twohot_decode(COL_IO_INPUTS, outbox)
 
             if not getbit(data, tileX + (12 if N >= 2 else 14), outpY + 1):
@@ -376,6 +375,29 @@ def dump_top_ios(data):
                 assert outinp == "VDD ???"
             else:
                 print("T IO X{}N{} output: local track {}".format(X, N, outinp))
+
+        # Routing tracks
+        for N in range(10):
+            trackX = tileX + (0 if N < 5 else 24)
+            trackY = 1 + 2 * (N % 5)
+
+            if N < 5:
+                bitL = getbit(data, trackX + 0, trackY + 1)
+                bitR = getbit(data, trackX + 2, trackY + 0)
+            else:
+                bitR = getbit(data, trackX + 1, trackY + 0)
+                bitL = getbit(data, trackX + 3, trackY + 1)
+
+            assert not (not bitL and not bitR)
+
+            if not bitL:
+                outp = BOT_IO_TRACK_MUX[4 - (N % 5)][0]
+            elif not bitR:
+                outp = BOT_IO_TRACK_MUX[4 - (N % 5)][1]
+            else:
+                outp = "<NONE>"
+
+            print("Wire D:X{}Y5I{} = {}".format(X, N, outp))
         print()
 
 def dump_bot_ios(data):
@@ -394,7 +416,6 @@ def dump_bot_ios(data):
                 outbox = getbox(data, tileX + 15, outpY, 5, 2, flipv=True)
                 for i in range(len(outbox)):
                     del outbox[i][1]
-            # print(outbox)
             outinp = twohot_decode(COL_IO_INPUTS, outbox)
 
             if not getbit(data, tileX + (12 if N >= 2 else 14), outpY):
@@ -424,7 +445,7 @@ def dump_bot_ios(data):
             else:
                 outp = "<NONE>"
 
-            print("Wire Y:X{}Y1I{} = {}".format(X, N, outp))
+            print("Wire U:X{}Y0I{} = {}".format(X, N, outp))
         print()
 
 def main():
