@@ -6,6 +6,17 @@ import sys
 WORKDIRS = [
     'r4-to-lab-fuzz-cfm',
     'c4-to-lab-fuzz-cfm',
+    'c4-to-lab-fuzz-Y2-cfm',
+    'localfeedbackfuzz-cfm',
+    'lablinefuzz-cfm',
+    'lh-io-local-manualfuzz',
+    'lh-io-outwire-manualfuzz',
+    'rh-io-local-manualfuzz',
+    'rh-io-outwire-manualfuzz',
+    'top-io-local-manualfuzz',
+    'manual-more-wire-names-fuzz',
+    'manual-more-wire-names-fuzz-2',
+    'manual-more-wire-names-fuzz-3',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -13,6 +24,28 @@ def xlat_cfm_to_pof(cfmfn):
         return cfmfn[:-11].replace('r4-to-lab-fuzz-cfm', 'r4-to-lab-fuzz-pofrcf') + 'rcf'
     elif cfmfn.startswith('c4-to-lab-fuzz-cfm'):
         return cfmfn[:-11].replace('c4-to-lab-fuzz-cfm', 'c4-to-lab-fuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('c4-to-lab-fuzz-Y2-cfm'):
+        return cfmfn[:-11].replace('c4-to-lab-fuzz-Y2-cfm', 'c4-to-lab-fuzz-Y2-pofrcf') + 'rcf'
+    elif cfmfn.startswith('localfeedbackfuzz-cfm'):
+        return cfmfn[:-11].replace('localfeedbackfuzz-cfm', 'localfeedbackfuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('lablinefuzz-cfm'):
+        return cfmfn[:-11].replace('lablinefuzz-cfm', 'lablinefuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('lh-io-local-manualfuzz'):
+        return cfmfn[:-3] + 'rcf'
+    elif cfmfn.startswith('lh-io-outwire-manualfuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('rh-io-local-manualfuzz'):
+        return cfmfn[:-3] + 'rcf'
+    elif cfmfn.startswith('rh-io-outwire-manualfuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('top-io-local-manualfuzz'):
+        return cfmfn[:-3] + 'rcf'
+    elif cfmfn.startswith('manual-more-wire-names-fuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('manual-more-wire-names-fuzz-2'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('manual-more-wire-names-fuzz-3'):
+        return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
 
@@ -266,6 +299,10 @@ def extract_mux_bits(data, muxname):
         raise Exception()
 
 def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
+    # HACKS
+    if cfmfn.startswith('rh-io-outwire-manualfuzz/') and cfmfn.endswith('bypout.pof.cfm'):
+        return
+
     print("Working on {}".format(cfmfn))
 
     with open(cfmfn, 'rb') as f:
