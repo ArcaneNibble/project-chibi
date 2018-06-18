@@ -1,20 +1,275 @@
-from cfmdump2 import getbox, getbit
+from cfmdump2 import getbox, getbit, LUTYLOCS
 import os
 import json
 import sys
 
 WORKDIRS = [
     'r4-to-lab-fuzz-cfm',
+    'c4-to-lab-fuzz-cfm',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
     if cfmfn.startswith('r4-to-lab-fuzz-cfm'):
         return cfmfn[:-11].replace('r4-to-lab-fuzz-cfm', 'r4-to-lab-fuzz-pofrcf') + 'rcf'
+    elif cfmfn.startswith('c4-to-lab-fuzz-cfm'):
+        return cfmfn[:-11].replace('c4-to-lab-fuzz-cfm', 'c4-to-lab-fuzz-pofrcf') + 'rcf'
     else:
+        raise Exception()
+
+def parse_xyi(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert ipos > ypos
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:ipos]), int(inp[ipos + 1:]))
+
+def parse_xysi(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    spos = inp.find('S')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert spos > ypos
+    assert ipos > spos
+
+    sval = int(inp[spos + 1:ipos])
+    assert sval == 0
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[ipos + 1:]))
+
+def anybits(bits):
+    for y in bits:
+        for x in y:
+            if not x:
+                return True
+    return False
+
+def extract_mux_bits(data, muxname):
+    if muxname.startswith("L:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(3, 9)
+        assert Y in range(1, 5)
+        assert I in range(8)
+
+        boxX = (X - 1) * 28 - 21
+        if I < 4:
+            boxY = LUTYLOCS[4 - Y] + I * 4 + 4
+        else:
+            boxY = LUTYLOCS[4 - Y] + (I - 4) * 4 + 28
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("L2:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X == 8
+        assert Y in range(1, 5)
+        assert I in range(8)
+        
+        boxX = (X - 1) * 28 - 17
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 6
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 14
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 18
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 26
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 30
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 38
+        elif I == 7:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("R:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(2, 8)
+        assert Y in range(1, 5)
+        assert I in range(8)
+        
+        boxX = (X - 1) * 28 - 17
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 6
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 14
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 18
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 26
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 30
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 38
+        elif I == 7:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("U:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(2, 9)
+        assert Y in range(1, 5)
+        assert I in range(7)
+        
+        if I == 0:
+            boxX = (X - 1) * 28 - 21
+        else:
+            boxX = (X - 1) * 28 - 17
+
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 4
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 10
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 16
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 32
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 36
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 42
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("D:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(2, 9)
+        assert Y in range(1, 5)
+        assert I in range(7)
+        
+        if I == 6:
+            boxX = (X - 1) * 28 - 21
+        else:
+            boxX = (X - 1) * 28 - 17
+
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 2
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 8
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 12
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 28
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 34
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 40
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("LOCAL_INTERCONNECT"):
+        X, Y, I = parse_xysi(muxname[19:])
+
+        assert X in range(1, 9)
+        if X == 1:
+            # Left IO
+            assert I in range(18)
+
+            boxX = 7
+            if I in range(9):
+                boxY = LUTYLOCS[4 - Y] + 2 * I + 2
+            else:
+                boxY = LUTYLOCS[4 - Y] + 2 * (17 - I) + 26
+
+            return getbox(data, boxX, boxY, 4, 2)
+
+        elif X == 8:
+            # Right IO
+            assert I in range(18)
+
+            boxX = 183
+            if I in range(9):
+                boxY = LUTYLOCS[4 - Y] + 2 * I + 2
+            else:
+                boxY = LUTYLOCS[4 - Y] + 2 * (17 - I) + 26
+
+            return getbox(data, boxX, boxY, 4, 2)
+
+        else:
+            assert Y in range(6)
+            if Y == 0:
+                # Bottom IO
+                assert I in range(10)
+
+                if I < 5:
+                    boxX = (X - 1) * 28 + 3
+                    boxY = 196 + 2 * (4 - I)
+                else:
+                    boxX = (X - 1) * 28 - 13
+                    boxY = 196 + 2 * (4 - (I - 5))
+
+                return getbox(data, boxX, boxY, 4, 2)
+            elif Y == 5:
+                # Top IO
+                assert I in range(10)
+
+                if I < 5:
+                    boxX = (X - 1) * 28 + 3
+                    boxY = 1 + 2 * I
+                else:
+                    boxX = (X - 1) * 28 - 13
+                    boxY = 1 + 2 * (I - 5)
+
+                return getbox(data, boxX, boxY, 4, 2)
+            else:
+                # Logic
+                assert I in range(26)
+
+                if I in range(0, 5) or I in range(13, 18):
+                    # To the right of the LUT
+                    boxX = (X - 1) * 28 + 7
+                    if I in range(0, 5):
+                        # Top half
+                        boxY = LUTYLOCS[4 - Y] + I * 4 + 2
+                    else:
+                        # Bottom half
+                        boxY = LUTYLOCS[4 - Y] + (17 - I) * 4 + 26
+                else:
+                    # To the left of the LUT
+                    boxX = (X - 1) * 28 - 13
+                    if I in range(5, 13):
+                        # Top half
+                        boxY = LUTYLOCS[4 - Y] + (I - 5) * 2
+                    else:
+                        # Bottom half
+                        boxY = LUTYLOCS[4 - Y] + (25 - I) * 2 + 30
+
+                return getbox(data, boxX, boxY, 4, 2)
+    else:
+        print("ERROR: Do not understand {}".format(muxname))
         raise Exception()
 
 def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
     print("Working on {}".format(cfmfn))
+
+    with open(cfmfn, 'rb') as f:
+        cfmdata = f.read()
 
     inside_signal = False
     current_path_lines = []
@@ -32,7 +287,7 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
                     assert current_path_lines[-1].startswith("dest = ")
                     del current_path_lines[-1]
 
-                    print(current_path_lines)
+                    # print(current_path_lines)
 
                     for i in range(1, len(current_path_lines)):
                         wire = current_path_lines[i]
@@ -63,18 +318,36 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
                             print("ERROR: Do not understand {}".format(wire))
                             raise Exception()
 
+                        # Skip manually-done IO wires
+                        if dstnode_my.startswith("R:X1Y"):
+                            # print("Skipping manual LH IO wire {}".format(dstnode_my))
+                            assert int(dstnode_my[7:]) in range(8)
+                            continue
+                        if dstnode_my[0:3] == 'U:X' and dstnode_my[4:7] == 'Y0I':
+                            # print("Skipping manual bottom IO wire {}".format(dstnode_my))
+                            assert int(dstnode_my[3]) in range(2, 8)
+                            assert int(dstnode_my[7:]) in range(10)
+                            continue
+                        if dstnode_my[0:3] == 'D:X' and dstnode_my[4:7] == 'Y5I':
+                            # print("Skipping manual top IO wire {}".format(dstnode_my))
+                            assert int(dstnode_my[3]) in range(2, 8)
+                            assert int(dstnode_my[7:]) in range(10)
+                            continue
+
                         # print("{} -> {}".format(srcnode, wire))
                         print("{} -> {}".format(srcnode_my, dstnode_my))
 
+                        mux_settings = extract_mux_bits(cfmdata, dstnode_my)
+                        assert anybits(mux_settings)
+
                         if dstnode_my not in nodes_to_sources_map:
-                            nodes_to_sources_map[dstnode_my] = {srcnode_my: "TODOTODO"}
+                            nodes_to_sources_map[dstnode_my] = {srcnode_my: mux_settings}
                         else:
                             dstnode_sources = nodes_to_sources_map[dstnode_my]
                             if srcnode_my in dstnode_sources:
-                                # TODO: Check that it's the same
-                                ...
+                                assert dstnode_sources[srcnode_my] == mux_settings
                             else:
-                                dstnode_sources[srcnode_my] = "TODOTODO"
+                                dstnode_sources[srcnode_my] = mux_settings
 
                     current_path_lines = []
                 else:
