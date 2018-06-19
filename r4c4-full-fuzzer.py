@@ -1,6 +1,11 @@
 import sys
 import json
 import random
+from runner import *
+import os
+import shutil
+import queue
+import threading
 
 def prep_all_routes(outfn, my_wire_to_quartus_wire):
     all_routes_to_try = {}
@@ -330,7 +335,63 @@ def inp_to_io(inpname):
     else:
         raise Exception()
 
+BASE_DIR = '/home/rqou/.local/share/lxc/altera-quartus-prime-lite-18/rootfs/home/rqou'
+
+QSF_TMPL = """set_global_assignment -name FAMILY "MAX V"
+set_global_assignment -name DEVICE 5M240ZT100C4
+set_global_assignment -name TOP_LEVEL_ENTITY maxvtest
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.0.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "03:45:37  MAY 30, 2018"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.0.0 Lite Edition"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR "-1"
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name VERILOG_FILE top.v
+set_location_assignment {} -to a
+set_location_assignment {} -to o
+set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
+"""
+
+def fuzz_a_route(workdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
+    with open(workdir + '/maxvtest.qsf', 'w') as f:
+        f.write(QSF_TMPL.format(inp, outp))
+
+    with open(workdir + '/maxvtest.rcf', 'w') as f:
+        f.write("signal_name = a {\n")
+        f.write("    zero_or_more, *;\n")
+        for pathelem in path:
+            if pathelem in my_wire_to_quartus_wire:
+                pathelem = my_wire_to_quartus_wire[pathelem]
+            f.write("    {};\n".format(pathelem))
+        f.write("    zero_or_more, *;\n")
+        f.write("    dest = ( o, DATAIN );\n")
+        f.write("}\n")
+
+    while True:
+        try:
+            run_one_flow("r4c4-full-fuzz/testing", True, True, False)
+            break
+        except Exception:
+            pass
+
+    success = True
+    with open(workdir + '/output_files/maxvtest.fit.rpt', 'r') as f:
+        rptdata = f.read()
+        if "Cannot route signal \"a\" to atom \"o\"" in rptdata:
+            success = False
+
+    if success:
+        shutil.copy(workdir + '/output_files/maxvtest.pof', 'r4c4-new-fuzz/from_{}_to_{}.pof'.format(srcname, dstname))
+        shutil.copy(workdir + '/maxvtest.rcf', 'r4c4-new-fuzz/from_{}_to_{}.rcf'.format(srcname, dstname))
+
+    return success
+
 def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
+    os.mkdir(BASE_DIR + '/r4c4-full-fuzz')
+
     with open(inp_state_fn, 'r') as f:
         fuzzing_state = json.load(f)
     with open(inp_route_fn, 'r') as f:
@@ -412,6 +473,13 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         assert io_for_outp != io_for_inp
 
         print(io_for_inp, io_for_outp)
+
+        MYDIR = BASE_DIR + '/r4c4-full-fuzz/testing'
+        shutil.copytree(BASE_DIR + '/route-fuzz-seed', MYDIR)
+
+        route_was_ok = fuzz_a_route(MYDIR, src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, my_wire_to_quartus_wire, src, dst)
+
+        print(route_was_ok)
 
         break
 
