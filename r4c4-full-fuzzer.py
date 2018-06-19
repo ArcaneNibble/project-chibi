@@ -444,54 +444,58 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
 
     # print(maybe_pairs_to_test)
 
-    # workqueue = queue.Queue(2 * NTHREADS)
-    workqueue = queue.Queue()
+    workqueue = queue.Queue(2 * NTHREADS)
+    # workqueue = queue.Queue()
     donequeue = queue.Queue()
 
-    # HACK
-    for _ in range(2 * NTHREADS):
-        workqueue.put(None)
+    # # HACK
+    # for _ in range(2 * NTHREADS):
+    #     workqueue.put(None)
 
     for threadi in range(NTHREADS):
         t = threading.Thread(target=threadfn, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
         t.start()
 
     while len(maybe_pairs_to_test):
-        doneitem = donequeue.get()
-        if doneitem is not None:
-            donesrc, donedst, donesuccess = doneitem
-            print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
+        while True:
+            try:
+                doneitem = donequeue.get(block=False)
+            except queue.Empty:
+                break
+                
+            if doneitem is not None:
+                donesrc, donedst, donesuccess = doneitem
+                print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
 
-            maybe_pairs_to_test.remove((donesrc, donedst))
-            num_maybe -= 1
-            fuzzing_state[donedst][donesrc] = donesuccess
-            if donesuccess:
-                num_worked += 1
-                if donedst not in routing_graph_dsts_srcs:
-                    routing_graph_dsts_srcs[donedst] = {donesrc: "TODO"}
+                maybe_pairs_to_test.remove((donesrc, donedst))
+                num_maybe -= 1
+                fuzzing_state[donedst][donesrc] = donesuccess
+                if donesuccess:
+                    num_worked += 1
+                    if donedst not in routing_graph_dsts_srcs:
+                        routing_graph_dsts_srcs[donedst] = {donesrc: "TODO"}
+                    else:
+                        routing_graph_dsts_srcs[donedst][donesrc] = "TODO"
+                    if donesrc not in routing_graph_srcs_dsts:
+                        routing_graph_srcs_dsts[donesrc] = set([donedst])
+                    else:
+                        routing_graph_srcs_dsts[donesrc].add(donedst)
                 else:
-                    routing_graph_dsts_srcs[donedst][donesrc] = "TODO"
-                if donesrc not in routing_graph_srcs_dsts:
-                    routing_graph_srcs_dsts[donesrc] = set([donedst])
-                else:
-                    routing_graph_srcs_dsts[donesrc].add(donedst)
-            else:
-                num_failed += 1
+                    num_failed += 1
 
-            os.remove('work-r4c4-state.json.bak')
-            os.remove('work-interconnect.json.bak')
-            shutil.move('work-r4c4-state.json', 'work-r4c4-state.json.bak')
-            shutil.move('work-interconnect.json', 'work-interconnect.json.bak')
+        os.remove('work-r4c4-state.json.bak')
+        os.remove('work-interconnect.json.bak')
+        shutil.move('work-r4c4-state.json', 'work-r4c4-state.json.bak')
+        shutil.move('work-interconnect.json', 'work-interconnect.json.bak')
 
-            with open("work-r4c4-state.json", 'w') as f:
-                json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
-            with open("work-interconnect.json", 'w') as f:
-                json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
+        with open("work-r4c4-state.json", 'w') as f:
+            json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
+        with open("work-interconnect.json", 'w') as f:
+            json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
 
         print("Currently, there are {} routes that worked, {} routes that failed, {} routes unknown".format(num_worked, num_failed, num_maybe))
 
         src, dst = random.choice(tuple(maybe_pairs_to_test))
-        print("Testing {} -> {}".format(src, dst))
 
         # TEST TEST TEST
         # maybe_pairs_to_test.remove((src, dst))
@@ -499,21 +503,21 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
 
         dst_to_out_path = route_to_output(routing_graph_srcs_dsts, dst)
         if dst_to_out_path is None:
-            workqueue.put(None)     # HACK
+            # workqueue.put(None)     # HACK
             continue
         src_to_in_path = route_to_input(routing_graph_dsts_srcs, src, dst_to_out_path)
         if src_to_in_path is None:
-            workqueue.put(None)     # HACK
+            # workqueue.put(None)     # HACK
             continue
         if dst in src_to_in_path:
-            workqueue.put(None)     # HACK
+            # workqueue.put(None)     # HACK
             continue
         if src in dst_to_out_path:
-            workqueue.put(None)     # HACK
+            # workqueue.put(None)     # HACK
             continue
         if len(set(dst_to_out_path) & set(src_to_in_path)) != 0:
             print("BUG!", dst_to_out_path, src_to_in_path)
-            workqueue.put(None)     # HACK
+            # workqueue.put(None)     # HACK
             continue
         src_to_in_path = src_to_in_path[::-1]
         # print(src_to_in_path, dst_to_out_path)
@@ -533,6 +537,7 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         # route_was_ok = fuzz_a_route(MYDIR, src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, my_wire_to_quartus_wire, src, dst)
 
         # print(route_was_ok)
+        print("Testing {} -> {}".format(src, dst))
         workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
 
         # break
