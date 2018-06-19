@@ -490,7 +490,10 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
                 donesrc, donedst, donesuccess = doneitem
                 print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
 
-                maybe_pairs_to_test.remove((donesrc, donedst))
+                if (donesrc, donedst) in maybe_pairs_to_test:
+                    maybe_pairs_to_test.remove((donesrc, donedst))
+                else:
+                    print("BUG", donesrc, donedst)
                 num_maybe -= 1
                 fuzzing_state[donedst][donesrc] = donesuccess
                 if donesuccess:
