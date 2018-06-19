@@ -14,6 +14,7 @@ WORKDIRS = [
     'rh-io-local-manualfuzz',
     'rh-io-outwire-manualfuzz',
     'top-io-local-manualfuzz',
+    'bot-io-outwire-manualfuzz',
     'manual-more-wire-names-fuzz',
     'manual-more-wire-names-fuzz-2',
     'manual-more-wire-names-fuzz-3',
@@ -45,6 +46,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('manual-more-wire-names-fuzz-2'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('manual-more-wire-names-fuzz-3'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('bot-io-outwire-manualfuzz'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
