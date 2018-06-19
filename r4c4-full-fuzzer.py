@@ -1,5 +1,6 @@
 import sys
 import json
+import random
 
 def prep_all_routes(outfn, my_wire_to_quartus_wire):
     all_routes_to_try = {}
@@ -177,6 +178,19 @@ def parse_xysi(inp):
 
     return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[ipos + 1:]))
 
+def parse_xysi2(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    spos = inp.find('S')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert spos > ypos
+    assert ipos > spos
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[spos + 1:ipos]), int(inp[ipos + 1:]))
+
 def route_to_output(routing_graph_srcs_dsts, node):
     fringe = []
     closed_set = set()
@@ -258,6 +272,64 @@ def route_to_input(routing_graph_dsts_srcs, node, extra_closed_nodes=[]):
 
     return None
 
+LEFT_MAX_IOS = [4, 4, 4, 4]
+RIGHT_MAX_IOS = [5, 4, 5, 5]
+TOP_MAX_IOS = [3, 4, 3, 4, 4, 4]
+BOT_MAX_IOS = [4, 4, 3, 4, 4, 3]
+
+def inp_to_io(inpname):
+    if inpname.startswith("R:"):
+        X, Y, I = parse_xyi(inpname)
+        assert X == 1
+        assert Y in range(1, 5)
+        if I == 0 or I == 1 or I == 4 or I == 5:
+            newI = 2
+        elif I == 2 or I == 3:
+            newI = 0
+        elif I == 6 or I == 7:
+            newI = 1
+        else:
+            raise Exception()
+        return "IOC_X{}_Y{}_N{}".format(X, Y, newI)
+    elif inpname.startswith("U:"):
+        X, Y, I = parse_xyi(inpname)
+        assert Y == 0
+        assert X in range(2, 8)
+        if (I % 5) == 0 or (I % 5) == 2 or (I % 5) == 4:
+            newI = 0
+        elif (I % 5) == 1:
+            newI = 1
+        elif (I % 5) == 3:
+            newI = 2
+        else:
+            raise Exception()
+        return "IOC_X{}_Y{}_N{}".format(X, Y, newI)
+    elif inpname.startswith("D:"):
+        X, Y, I = parse_xyi(inpname)
+        assert Y == 5
+        assert X in range(2, 8)
+        if (I % 5) == 0 or (I % 5) == 2 or (I % 5) == 4:
+            newI = 0
+        elif (I % 5) == 3:
+            newI = 1
+        elif (I % 5) == 1:
+            newI = 2
+        else:
+            raise Exception()
+        return "IOC_X{}_Y{}_N{}".format(X, Y, newI)
+    elif inpname.startswith("IO_DATAIN:"):
+        X, Y, S, I = parse_xysi2(inpname[10:])
+        assert I == 0
+        assert X == 8 or X == 1
+        assert Y in range(1, 5)
+        if X == 8:
+            assert S < RIGHT_MAX_IOS[Y - 1]
+        else:
+            assert S < LEFT_MAX_IOS[Y - 1]
+        return "IOC_X{}_Y{}_N{}".format(X, Y, S)
+    else:
+        raise Exception()
+
 def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     with open(inp_state_fn, 'r') as f:
         fuzzing_state = json.load(f)
@@ -282,14 +354,66 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     with open("debug-invert-graph.json", 'w') as f:
         json.dump({k: list(v) for k, v in routing_graph_srcs_dsts.items()}, f, sort_keys=True, indent=4, separators=(',', ': '))
 
-    print(route_to_output(routing_graph_srcs_dsts, "LOCAL_INTERCONNECT:X2Y0S0I9"))
-    print(route_to_output(routing_graph_srcs_dsts, "D:X2Y1I0"))
-    print(route_to_output(routing_graph_srcs_dsts, "L:X3Y1I0"))
+    # print(route_to_output(routing_graph_srcs_dsts, "LOCAL_INTERCONNECT:X2Y0S0I9"))
+    # print(route_to_output(routing_graph_srcs_dsts, "D:X2Y1I0"))
+    # print(route_to_output(routing_graph_srcs_dsts, "L:X3Y1I0"))
 
-    print(route_to_input(routing_graph_dsts_srcs, "R:X1Y1I0"))
-    print(route_to_input(routing_graph_dsts_srcs, "R:X4Y1I1"))
-    print(route_to_input(routing_graph_dsts_srcs, "U:X8Y1I3"))
-    print(route_to_input(routing_graph_dsts_srcs, "U:X8Y1I3", ["R:X4Y1I1"]))
+    # print(route_to_input(routing_graph_dsts_srcs, "R:X1Y1I0"))
+    # print(route_to_input(routing_graph_dsts_srcs, "R:X4Y1I1"))
+    # print(route_to_input(routing_graph_dsts_srcs, "U:X8Y1I3"))
+    # print(route_to_input(routing_graph_dsts_srcs, "U:X8Y1I3", ["R:X4Y1I1"]))
+
+    # For stats, and a cache
+    num_worked = 0
+    num_failed = 0
+    num_maybe = 0
+    maybe_pairs_to_test = set()
+    for dst, srcs in fuzzing_state.items():
+        for src, state in srcs.items():
+            if state == True:
+                num_worked += 1
+            elif state == False:
+                num_failed += 1
+            elif state == "maybe":
+                num_maybe += 1
+                maybe_pairs_to_test.add((src, dst))
+            else:
+                raise Exception()
+
+    # print(maybe_pairs_to_test)
+
+    while len(maybe_pairs_to_test):
+        print("Currently, there are {} routes that worked, {} routes that failed, {} routes unknown".format(num_worked, num_failed, num_maybe))
+
+        src, dst = random.choice(tuple(maybe_pairs_to_test))
+        print("Testing {} -> {}".format(src, dst))
+
+        # TEST TEST TEST
+        # maybe_pairs_to_test.remove((src, dst))
+        # num_maybe -= 1
+
+        dst_to_out_path = route_to_output(routing_graph_srcs_dsts, dst)
+        if dst_to_out_path is None:
+            continue
+        src_to_in_path = route_to_input(routing_graph_dsts_srcs, src, dst_to_out_path)
+        if src_to_in_path is None:
+            continue
+        src_to_in_path = src_to_in_path[::-1]
+        print(src_to_in_path, dst_to_out_path)
+
+        io_for_inp = inp_to_io(src_to_in_path[0])
+
+        outp_local_int = dst_to_out_path[-1]
+        assert outp_local_int.startswith("LOCAL_INTERCONNECT")
+        outpX, outpY, _ = parse_xysi(outp_local_int[19:])
+        io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 0)
+        if io_for_outp == io_for_inp:
+            io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 1)
+        assert io_for_outp != io_for_inp
+
+        print(io_for_inp, io_for_outp)
+
+        break
 
 def main():
     with open('my_wire_to_quartus_wire.json', 'r') as f:
