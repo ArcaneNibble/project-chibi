@@ -509,7 +509,7 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
                 else:
                     num_failed += 1
 
-        if time.time() - last_save_time >= 5:
+        if (time.time() - last_save_time >= 5) or (len(maybe_pairs_to_test) == 0):
             os.remove('work-r4c4-state.json.bak')
             os.remove('work-interconnect.json.bak')
             shutil.move('work-r4c4-state.json', 'work-r4c4-state.json.bak')
@@ -523,6 +523,9 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             last_save_time = time.time()
 
         print("Currently, there are {} routes that worked, {} routes that failed, {} routes unknown".format(num_worked, num_failed, num_maybe))
+
+        if len(maybe_pairs_to_test) == 0:
+            break
 
         src, dst = random.choice(tuple(maybe_pairs_to_test))
 
