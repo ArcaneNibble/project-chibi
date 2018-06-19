@@ -6,6 +6,7 @@ import os
 import shutil
 import queue
 import threading
+from initial_interconnect_survey import parse_xyi, parse_xysi
 
 def prep_all_routes(outfn, my_wire_to_quartus_wire):
     all_routes_to_try = {}
@@ -155,33 +156,6 @@ def prep_all_routes(outfn, my_wire_to_quartus_wire):
     # print(all_routes_to_try)
     with open(outfn, 'w') as f:
         json.dump(all_routes_to_try, f, sort_keys=True, indent=4, separators=(',', ': '))
-
-def parse_xyi(inp):
-    xpos = inp.find('X')
-    ypos = inp.find('Y')
-    ipos = inp.find('I')
-
-    assert xpos >= 0
-    assert ypos > xpos
-    assert ipos > ypos
-
-    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:ipos]), int(inp[ipos + 1:]))
-
-def parse_xysi(inp):
-    xpos = inp.find('X')
-    ypos = inp.find('Y')
-    spos = inp.find('S')
-    ipos = inp.find('I')
-
-    assert xpos >= 0
-    assert ypos > xpos
-    assert spos > ypos
-    assert ipos > spos
-
-    sval = int(inp[spos + 1:ipos])
-    assert sval == 0
-
-    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[ipos + 1:]))
 
 def parse_xysi2(inp):
     xpos = inp.find('X')
@@ -355,7 +329,9 @@ set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
 """
 
-def fuzz_a_route(workdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
+NTHREADS = 40
+
+def fuzz_a_route(workdir, vmdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
     with open(workdir + '/maxvtest.qsf', 'w') as f:
         f.write(QSF_TMPL.format(inp, outp))
 
@@ -372,7 +348,7 @@ def fuzz_a_route(workdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dst
 
     while True:
         try:
-            run_one_flow("r4c4-full-fuzz/testing", True, True, False)
+            run_one_flow(vmdir, False, True, False)
             break
         except Exception:
             pass
@@ -382,12 +358,32 @@ def fuzz_a_route(workdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dst
         rptdata = f.read()
         if "Cannot route signal \"a\" to atom \"o\"" in rptdata:
             success = False
+        assert "multiple usages of a single routing resource" not in rptdata
 
     if success:
+        shutil.copy(workdir + '/output_files/maxvtest.fit.rpt', 'r4c4-new-fuzz/from_{}_to_{}.fit.rpt'.format(srcname, dstname))
         shutil.copy(workdir + '/output_files/maxvtest.pof', 'r4c4-new-fuzz/from_{}_to_{}.pof'.format(srcname, dstname))
         shutil.copy(workdir + '/maxvtest.rcf', 'r4c4-new-fuzz/from_{}_to_{}.rcf'.format(srcname, dstname))
 
     return success
+
+def threadfn(workqueue, donequeue, my_wire_to_quartus_wire, threadi):
+    MYDIR = BASE_DIR + '/r4c4-full-fuzz/thread{}'.format(threadi)
+    VMDIR = "r4c4-full-fuzz/thread{}".format(threadi)
+    shutil.copytree(BASE_DIR + '/route-fuzz-seed', MYDIR)
+
+    while True:
+        try:
+            x = workqueue.get()
+            if x is None:
+                donequeue.put(None)
+                continue
+            path, inp, outp, srcname, dstname = x
+        except queue.Empty:
+            return
+
+        success = fuzz_a_route(MYDIR, VMDIR, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname)
+        donequeue.put((srcname, dstname, success))
 
 def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     os.mkdir(BASE_DIR + '/r4c4-full-fuzz')
@@ -414,6 +410,11 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     # print(routing_graph_srcs_dsts)
     with open("debug-invert-graph.json", 'w') as f:
         json.dump({k: list(v) for k, v in routing_graph_srcs_dsts.items()}, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+    with open("work-r4c4-state.json", 'w') as f:
+        json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
+    with open("work-interconnect.json", 'w') as f:
+        json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
 
     # print(route_to_output(routing_graph_srcs_dsts, "LOCAL_INTERCONNECT:X2Y0S0I9"))
     # print(route_to_output(routing_graph_srcs_dsts, "D:X2Y1I0"))
@@ -443,7 +444,50 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
 
     # print(maybe_pairs_to_test)
 
+    # workqueue = queue.Queue(2 * NTHREADS)
+    workqueue = queue.Queue()
+    donequeue = queue.Queue()
+
+    # HACK
+    for _ in range(2 * NTHREADS):
+        workqueue.put(None)
+
+    for threadi in range(NTHREADS):
+        t = threading.Thread(target=threadfn, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
+        t.start()
+
     while len(maybe_pairs_to_test):
+        doneitem = donequeue.get()
+        if doneitem is not None:
+            donesrc, donedst, donesuccess = doneitem
+            print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
+
+            maybe_pairs_to_test.remove((donesrc, donedst))
+            num_maybe -= 1
+            fuzzing_state[donedst][donesrc] = donesuccess
+            if donesuccess:
+                num_worked += 1
+                if donedst not in routing_graph_dsts_srcs:
+                    routing_graph_dsts_srcs[donedst] = {donesrc: "TODO"}
+                else:
+                    routing_graph_dsts_srcs[donedst][donesrc] = "TODO"
+                if donesrc not in routing_graph_srcs_dsts:
+                    routing_graph_srcs_dsts[donesrc] = set([donedst])
+                else:
+                    routing_graph_srcs_dsts[donesrc].add(donedst)
+            else:
+                num_failed += 1
+
+            os.remove('work-r4c4-state.json.bak')
+            os.remove('work-interconnect.json.bak')
+            shutil.move('work-r4c4-state.json', 'work-r4c4-state.json.bak')
+            shutil.move('work-interconnect.json', 'work-interconnect.json.bak')
+
+            with open("work-r4c4-state.json", 'w') as f:
+                json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
+            with open("work-interconnect.json", 'w') as f:
+                json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
+
         print("Currently, there are {} routes that worked, {} routes that failed, {} routes unknown".format(num_worked, num_failed, num_maybe))
 
         src, dst = random.choice(tuple(maybe_pairs_to_test))
@@ -459,8 +503,13 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         src_to_in_path = route_to_input(routing_graph_dsts_srcs, src, dst_to_out_path)
         if src_to_in_path is None:
             continue
+        if dst in src_to_in_path:
+            continue
+        if len(set(dst_to_out_path) & set(src_to_in_path)) != 0:
+            print("BUG!", dst_to_out_path, src_to_in_path)
+            continue
         src_to_in_path = src_to_in_path[::-1]
-        print(src_to_in_path, dst_to_out_path)
+        # print(src_to_in_path, dst_to_out_path)
 
         io_for_inp = inp_to_io(src_to_in_path[0])
 
@@ -472,16 +521,14 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 1)
         assert io_for_outp != io_for_inp
 
-        print(io_for_inp, io_for_outp)
+        # print(io_for_inp, io_for_outp)
 
-        MYDIR = BASE_DIR + '/r4c4-full-fuzz/testing'
-        shutil.copytree(BASE_DIR + '/route-fuzz-seed', MYDIR)
+        # route_was_ok = fuzz_a_route(MYDIR, src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, my_wire_to_quartus_wire, src, dst)
 
-        route_was_ok = fuzz_a_route(MYDIR, src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, my_wire_to_quartus_wire, src, dst)
+        # print(route_was_ok)
+        workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
 
-        print(route_was_ok)
-
-        break
+        # break
 
 def main():
     with open('my_wire_to_quartus_wire.json', 'r') as f:
