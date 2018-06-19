@@ -380,7 +380,7 @@ def threadfn(workqueue, donequeue, my_wire_to_quartus_wire, threadi):
                 continue
             path, inp, outp, srcname, dstname = x
         except queue.Empty:
-            return
+            continue
 
         success = fuzz_a_route(MYDIR, VMDIR, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname)
         donequeue.put((srcname, dstname, success))
@@ -504,6 +504,8 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         if src_to_in_path is None:
             continue
         if dst in src_to_in_path:
+            continue
+        if src in dst_to_out_path:
             continue
         if len(set(dst_to_out_path) & set(src_to_in_path)) != 0:
             print("BUG!", dst_to_out_path, src_to_in_path)

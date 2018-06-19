@@ -18,6 +18,7 @@ WORKDIRS = [
     'manual-more-wire-names-fuzz',
     'manual-more-wire-names-fuzz-2',
     'manual-more-wire-names-fuzz-3',
+    'r4c4-new-fuzz',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -48,6 +49,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('manual-more-wire-names-fuzz-3'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('bot-io-outwire-manualfuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('r4c4-new-fuzz'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
@@ -400,7 +403,11 @@ def main():
     quartus_wire_to_my_wire = {v: k for (k, v) in my_wire_to_quartus_wire.items()}
     # print(quartus_wire_to_my_wire)
 
-    nodes_to_sources_map = {}
+    if len(sys.argv) >= 3:
+        with open(sys.argv[2], 'r') as f:
+            nodes_to_sources_map = json.load(f)
+    else:
+        nodes_to_sources_map = {}
 
     for workdir_cfm in WORKDIRS:
         print("Working in {}".format(workdir_cfm))
