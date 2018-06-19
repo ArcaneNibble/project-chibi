@@ -7,6 +7,7 @@ import shutil
 import queue
 import threading
 from initial_interconnect_survey import parse_xyi, parse_xysi
+import time
 
 def prep_all_routes(outfn, my_wire_to_quartus_wire):
     all_routes_to_try = {}
@@ -141,6 +142,26 @@ def prep_all_routes(outfn, my_wire_to_quartus_wire):
 
     # What do we already know?
     with open('initial-interconnect.json', 'r') as f:
+        initial_interconnect_map = json.load(f)
+
+    for dstnode, srcnodes in initial_interconnect_map.items():
+        if dstnode.startswith("LOCAL_INTERCONNECT") and dstnode not in all_routes_to_try:
+            continue
+        for srcnode in srcnodes:
+            if srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER"):
+                continue
+            # print(dstnode, srcnode)
+            assert all_routes_to_try[dstnode][srcnode] != False
+            all_routes_to_try[dstnode][srcnode] = True
+
+    # print(all_routes_to_try)
+    with open(outfn, 'w') as f:
+        json.dump(all_routes_to_try, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+def update_state(old_state_fn, new_interconnect_fn, outfn):
+    with open(old_state_fn, 'r') as f:
+        all_routes_to_try = json.load(f)
+    with open(new_interconnect_fn, 'r') as f:
         initial_interconnect_map = json.load(f)
 
     for dstnode, srcnodes in initial_interconnect_map.items():
@@ -452,6 +473,8 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     # for _ in range(2 * NTHREADS):
     #     workqueue.put(None)
 
+    last_save_time = time.time()
+
     for threadi in range(NTHREADS):
         t = threading.Thread(target=threadfn, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
         t.start()
@@ -462,7 +485,7 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
                 doneitem = donequeue.get(block=False)
             except queue.Empty:
                 break
-                
+
             if doneitem is not None:
                 donesrc, donedst, donesuccess = doneitem
                 print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
@@ -483,15 +506,18 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
                 else:
                     num_failed += 1
 
-        os.remove('work-r4c4-state.json.bak')
-        os.remove('work-interconnect.json.bak')
-        shutil.move('work-r4c4-state.json', 'work-r4c4-state.json.bak')
-        shutil.move('work-interconnect.json', 'work-interconnect.json.bak')
+        if time.time() - last_save_time >= 5:
+            os.remove('work-r4c4-state.json.bak')
+            os.remove('work-interconnect.json.bak')
+            shutil.move('work-r4c4-state.json', 'work-r4c4-state.json.bak')
+            shutil.move('work-interconnect.json', 'work-interconnect.json.bak')
 
-        with open("work-r4c4-state.json", 'w') as f:
-            json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
-        with open("work-interconnect.json", 'w') as f:
-            json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
+            with open("work-r4c4-state.json", 'w') as f:
+                json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
+            with open("work-interconnect.json", 'w') as f:
+                json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+            last_save_time = time.time()
 
         print("Currently, there are {} routes that worked, {} routes that failed, {} routes unknown".format(num_worked, num_failed, num_maybe))
 
@@ -552,6 +578,8 @@ def main():
         prep_all_routes(sys.argv[2], my_wire_to_quartus_wire)
     elif cmd=='fuzz':
         do_fuzz(sys.argv[2], sys.argv[3], my_wire_to_quartus_wire)
+    elif cmd=='update':
+        update_state(sys.argv[2], sys.argv[3], sys.argv[4])
     else:
         raise Exception()
 
