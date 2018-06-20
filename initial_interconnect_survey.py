@@ -19,6 +19,7 @@ WORKDIRS = [
     'manual-more-wire-names-fuzz-2',
     'manual-more-wire-names-fuzz-3',
     'r4c4-new-fuzz',
+    'lutfuzz2',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -51,6 +52,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('bot-io-outwire-manualfuzz'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('r4c4-new-fuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('lutfuzz2'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
@@ -357,6 +360,9 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
                             dstnode_my = quartus_wire_to_my_wire[wire]
                         elif wire.startswith("LOCAL_INTERCONNECT"):
                             dstnode_my = wire
+                        elif wire.startswith("IO_BYPASS_OUT"):
+                            # HACK
+                            continue
                         else:
                             print("ERROR: Do not understand {}".format(wire))
                             raise Exception()
