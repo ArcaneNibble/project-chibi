@@ -140,6 +140,12 @@ def prep_all_routes(outfn, my_wire_to_quartus_wire):
                 print(k)
             assert k in my_wire_to_quartus_wire
 
+    # Remove self-routes lol
+    for dst, srcs in all_routes_to_try.items():
+        if dst in srcs:
+            assert srcs[dst] != True
+            del srcs[dst]
+
     # What do we already know?
     with open('initial-interconnect.json', 'r') as f:
         initial_interconnect_map = json.load(f)
@@ -163,6 +169,12 @@ def update_state(old_state_fn, new_interconnect_fn, outfn):
         all_routes_to_try = json.load(f)
     with open(new_interconnect_fn, 'r') as f:
         initial_interconnect_map = json.load(f)
+
+    # Remove self-routes lol
+    for dst, srcs in all_routes_to_try.items():
+        if dst in srcs:
+            assert srcs[dst] != True
+            del srcs[dst]
 
     for dstnode, srcnodes in initial_interconnect_map.items():
         if dstnode.startswith("LOCAL_INTERCONNECT") and dstnode not in all_routes_to_try:
