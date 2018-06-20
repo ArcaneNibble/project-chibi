@@ -98366,6 +98366,20 @@
                 true
             ]
         ],
+        "L:X4Y3I6": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                false
+            ]
+        ],
         "L:X5Y3I6": [
             [
                 false,

@@ -474,6 +474,7 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     #     workqueue.put(None)
 
     last_save_time = time.time()
+    outstanding_tests = set()
 
     for threadi in range(NTHREADS):
         t = threading.Thread(target=threadfn, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
@@ -490,6 +491,7 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
                 donesrc, donedst, donesuccess = doneitem
                 print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
 
+                outstanding_tests.remove((donesrc, donedst))
                 if (donesrc, donedst) in maybe_pairs_to_test:
                     maybe_pairs_to_test.remove((donesrc, donedst))
                 else:
@@ -528,6 +530,10 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             break
 
         src, dst = random.choice(tuple(maybe_pairs_to_test))
+
+        if (src, dst) in outstanding_tests:
+            continue
+        outstanding_tests.add((src, dst))
 
         # TEST TEST TEST
         # maybe_pairs_to_test.remove((src, dst))
