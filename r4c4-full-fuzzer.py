@@ -373,11 +373,12 @@ def route_to_output(routing_graph_srcs_dsts, node):
             return cur_path + [work_node]
 
         # Not an output
-        for dst in routing_graph_srcs_dsts[work_node]:
-            if dst not in closed_set:
-                fringe.append((dst, cur_path + [work_node]))
+        if work_node in routing_graph_srcs_dsts:
+            for dst in routing_graph_srcs_dsts[work_node]:
+                if dst not in closed_set:
+                    fringe.append((dst, cur_path + [work_node]))
 
-        closed_set.add(dst)
+                closed_set.add(dst)
 
     return None
 
@@ -416,11 +417,12 @@ def route_to_input(routing_graph_dsts_srcs, node, extra_closed_nodes=[]):
             return cur_path + [work_node]
 
         # Not an input
-        for src in routing_graph_dsts_srcs[work_node]:
-            if src not in closed_set:
-                fringe.append((src, cur_path + [work_node]))
+        if work_node in routing_graph_dsts_srcs:
+            for src in routing_graph_dsts_srcs[work_node]:
+                if src not in closed_set:
+                    fringe.append((src, cur_path + [work_node]))
 
-        closed_set.add(src)
+                closed_set.add(src)
 
     return None
 
@@ -502,7 +504,7 @@ set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
 """
 
-NTHREADS = 40
+NTHREADS = 20
 
 def fuzz_a_route(workdir, vmdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
     with open(workdir + '/maxvtest.qsf', 'w') as f:
@@ -732,6 +734,173 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
 
         # break
 
+def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
+    with open(inp_state_fn, 'r') as f:
+        fuzzing_state = json.load(f)
+    with open(inp_route_fn, 'r') as f:
+        # Index first by dst, then by src
+        # Lists ways to get _onto_ a wire
+        routing_graph_dsts_srcs = json.load(f)
+
+    # Invert the routing graph
+    routing_graph_srcs_dsts = {}
+    for dst, srcs in routing_graph_dsts_srcs.items():
+        for src in srcs:
+            if src not in routing_graph_srcs_dsts:
+                routing_graph_srcs_dsts[src] = {dst}
+            else:
+                routing_graph_srcs_dsts[src].add(dst)
+
+    with open("debug-invert-graph.json", 'w') as f:
+        json.dump({k: list(v) for k, v in routing_graph_srcs_dsts.items()}, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+    # For stats, and a cache
+    num_worked = 0
+    num_failed = 0
+    num_maybe = 0
+    maybe_pairs_to_test = set()
+    for dst, srcs in fuzzing_state.items():
+        for src, state in srcs.items():
+            if state == True:
+                num_worked += 1
+            elif state == False:
+                num_failed += 1
+            elif state == "maybe":
+                num_maybe += 1
+                maybe_pairs_to_test.add((src, dst))
+            else:
+                raise Exception()
+
+    src, dst = random.choice(tuple(maybe_pairs_to_test))
+    src_is_lut = src.startswith("LE_BUFFER")
+    dst_is_lut = dst.startswith("LOCAL_INTERCONNECT")
+    assert src_is_lut or dst_is_lut
+    assert not (src_is_lut and dst_is_lut)
+    print(src, dst, src_is_lut, dst_is_lut)
+
+    if src_is_lut:
+        lutX, lutY, _ = parse_xysi(src[10:])
+        dst_to_out_path = route_to_output(routing_graph_srcs_dsts, dst)
+        if dst_to_out_path is None:
+            ...
+        # print(dst_to_out_path)
+
+        src_A_to_in_path = None
+        src_A_li_I = None
+        for li_I in range(26):
+            src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), dst_to_out_path)
+            if src_to_in_path is not None:
+                src_A_to_in_path = src_to_in_path
+                src_A_li_I = li_I
+                break
+        if src_A_to_in_path is None:
+            ...
+        # print(src_A_to_in_path)
+
+        src_B_to_in_path = None
+        for li_I in range(26):
+            if li_I == src_A_li_I:
+                continue
+            src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), dst_to_out_path + src_A_to_in_path)
+            if src_to_in_path is not None:
+                src_B_to_in_path = src_to_in_path
+                break
+        if src_B_to_in_path is None:
+            ...
+        # print(src_B_to_in_path)
+
+        if len(set(dst_to_out_path) & set(src_A_to_in_path)) != 0:
+            print("BUG!", dst_to_out_path, src_A_to_in_path)
+            ...
+        if len(set(dst_to_out_path) & set(src_B_to_in_path)) != 0:
+            print("BUG!", dst_to_out_path, src_B_to_in_path)
+            ...
+        if len(set(src_B_to_in_path) & set(src_A_to_in_path)) != 0:
+            print("BUG!", src_B_to_in_path, src_A_to_in_path)
+            ...
+
+        src_A_to_in_path = src_A_to_in_path[::-1]
+        src_B_to_in_path = src_B_to_in_path[::-1]
+
+        io_A_for_inp = inp_to_io(src_A_to_in_path[0])
+        io_B_for_inp = inp_to_io(src_B_to_in_path[0])
+        if io_A_for_inp == io_B_for_inp:
+            ...
+
+        outp_local_int = dst_to_out_path[-1]
+        assert outp_local_int.startswith("LOCAL_INTERCONNECT")
+        outpX, outpY, _ = parse_xysi(outp_local_int[19:])
+        io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 0)
+        if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
+            io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 1)
+        if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
+            ...
+
+        # Finally ready to commit to paths
+        print("Testing {} -> {} ({}; {}; {})".format(src, dst, src_A_to_in_path, src_B_to_in_path, dst_to_out_path))
+        # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
+    else:
+        lutX, lutY, li_A_I = parse_xysi(dst[19:])
+        dst_to_out_path = None
+        lutI = None
+        for II in range(20):
+            maybe_dst_to_out_path = route_to_output(routing_graph_srcs_dsts, "LE_BUFFER:X{}Y{}S0I{}".format(lutX, lutY, II))
+            if maybe_dst_to_out_path is not None:
+                dst_to_out_path = maybe_dst_to_out_path
+                lutI = II // 2
+                break
+        if dst_to_out_path is None:
+            ...
+        # print(dst_to_out_path, lutI)
+
+        src_A_to_in_path = route_to_input(routing_graph_dsts_srcs, src, dst_to_out_path)
+        if src_A_to_in_path is None:
+            ...
+        # print(src_A_to_in_path)
+
+        src_B_to_in_path = None
+        for li_I in range(26):
+            if li_I == li_A_I:
+                continue
+            src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), dst_to_out_path + src_A_to_in_path)
+            if src_to_in_path is not None:
+                src_B_to_in_path = src_to_in_path
+                break
+        if src_B_to_in_path is None:
+            ...
+        # print(src_B_to_in_path)
+
+        if len(set(dst_to_out_path) & set(src_A_to_in_path)) != 0:
+            print("BUG!", dst_to_out_path, src_A_to_in_path)
+            ...
+        if len(set(dst_to_out_path) & set(src_B_to_in_path)) != 0:
+            print("BUG!", dst_to_out_path, src_B_to_in_path)
+            ...
+        if len(set(src_B_to_in_path) & set(src_A_to_in_path)) != 0:
+            print("BUG!", src_B_to_in_path, src_A_to_in_path)
+            ...
+
+        src_A_to_in_path = src_A_to_in_path[::-1]
+        src_B_to_in_path = src_B_to_in_path[::-1]
+
+        io_A_for_inp = inp_to_io(src_A_to_in_path[0])
+        io_B_for_inp = inp_to_io(src_B_to_in_path[0])
+        if io_A_for_inp == io_B_for_inp:
+            ...
+
+        outp_local_int = dst_to_out_path[-1]
+        assert outp_local_int.startswith("LOCAL_INTERCONNECT")
+        outpX, outpY, _ = parse_xysi(outp_local_int[19:])
+        io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 0)
+        if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
+            io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 1)
+        if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
+            ...
+
+        # Finally ready to commit to paths
+        print("Testing {} -> {} ({}; {}; {})".format(src, dst, src_A_to_in_path, src_B_to_in_path, dst_to_out_path))
+        # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
+
 def main():
     with open('my_wire_to_quartus_wire.json', 'r') as f:
         my_wire_to_quartus_wire = json.load(f)
@@ -746,6 +915,8 @@ def main():
         update_state(sys.argv[2], sys.argv[3], sys.argv[4])
     elif cmd=='prep2':
         prep_all_routes_lab(sys.argv[2], my_wire_to_quartus_wire)
+    elif cmd=='fuzz2':
+        do_fuzz_lab(sys.argv[2], sys.argv[3], my_wire_to_quartus_wire)
     else:
         raise Exception()
 
