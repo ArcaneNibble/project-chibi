@@ -504,7 +504,7 @@ set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
 """
 
-NTHREADS = 1
+NTHREADS = 20
 
 def fuzz_a_route(workdir, vmdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
     with open(workdir + '/maxvtest.qsf', 'w') as f:
@@ -734,6 +734,98 @@ def do_fuzz(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
 
         # break
 
+QSF_TMPL2 = """set_global_assignment -name FAMILY "MAX V"
+set_global_assignment -name DEVICE 5M240ZT100C4
+set_global_assignment -name TOP_LEVEL_ENTITY maxvtest
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.0.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "03:45:37  MAY 30, 2018"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.0.0 Lite Edition"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR "-1"
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name VERILOG_FILE top.v
+set_location_assignment {} -to a
+set_location_assignment {} -to b
+set_location_assignment {} -to o
+set_location_assignment LC_X{}_Y{}_N{} -to my_lcell
+set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
+"""
+
+def fuzz_a_route2(workdir, vmdir, my_wire_to_quartus_wire, pathA, pathB, pathO, inpA, inpB, outp, lutX, lutY, lutN, srcname, dstname):
+    with open(workdir + '/maxvtest.qsf', 'w') as f:
+        f.write(QSF_TMPL2.format(inpA, inpB, outp, lutX, lutY, lutN))
+
+    with open(workdir + '/maxvtest.rcf', 'w') as f:
+        f.write("signal_name = a {\n")
+        f.write("    zero_or_more, *;\n")
+        for pathelem in pathA:
+            if pathelem in my_wire_to_quartus_wire:
+                pathelem = my_wire_to_quartus_wire[pathelem]
+            f.write("    {};\n".format(pathelem))
+        f.write("    dest = ( my_lcell, DATAA );\n")
+        f.write("}\n")
+
+        f.write("signal_name = b {\n")
+        f.write("    zero_or_more, *;\n")
+        for pathelem in pathB:
+            if pathelem in my_wire_to_quartus_wire:
+                pathelem = my_wire_to_quartus_wire[pathelem]
+            f.write("    {};\n".format(pathelem))
+        f.write("    dest = ( my_lcell, DATAB );\n")
+        f.write("}\n")
+
+        f.write("signal_name = my_lcell {\n")
+        for pathelem in pathO:
+            if pathelem in my_wire_to_quartus_wire:
+                pathelem = my_wire_to_quartus_wire[pathelem]
+            f.write("    {};\n".format(pathelem))
+        f.write("    zero_or_more, *;\n")
+        f.write("    dest = ( o, DATAIN );\n")
+        f.write("}\n")
+
+    while True:
+        try:
+            run_one_flow(vmdir, False, True, False)
+            break
+        except Exception:
+            pass
+
+    success = True
+    with open(workdir + '/output_files/maxvtest.fit.rpt', 'r') as f:
+        rptdata = f.read()
+        if "Cannot route signal " in rptdata:
+            success = False
+        assert "multiple usages of a single routing resource" not in rptdata
+
+    if success:
+        shutil.copy(workdir + '/output_files/maxvtest.fit.rpt', 'labr4c4-new-fuzz/from_{}_to_{}.fit.rpt'.format(srcname, dstname))
+        shutil.copy(workdir + '/output_files/maxvtest.pof', 'labr4c4-new-fuzz/from_{}_to_{}.pof'.format(srcname, dstname))
+        shutil.copy(workdir + '/maxvtest.rcf', 'labr4c4-new-fuzz/from_{}_to_{}.rcf'.format(srcname, dstname))
+
+    return success
+
+def threadfn2(workqueue, donequeue, my_wire_to_quartus_wire, threadi):
+    MYDIR = BASE_DIR + '/labr4c4-full-fuzz/thread{}'.format(threadi)
+    VMDIR = "labr4c4-full-fuzz/thread{}".format(threadi)
+    shutil.copytree(BASE_DIR + '/labr4c4-seed', MYDIR)
+
+    while True:
+        try:
+            x = workqueue.get()
+            if x is None:
+                donequeue.put(None)
+                continue
+            pathA, pathB, pathO, inpA, inpB, outp, lutX, lutY, lutN, srcname, dstname = x
+        except queue.Empty:
+            continue
+
+        # print(pathA, pathB, pathO, inpA, inpB, outp, lutX, lutY, lutN, srcname, dstname)
+        success = fuzz_a_route2(MYDIR, VMDIR, my_wire_to_quartus_wire, pathA, pathB, pathO, inpA, inpB, outp, lutX, lutY, lutN, srcname, dstname)
+        donequeue.put((srcname, dstname, success))
+
 def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     os.mkdir(BASE_DIR + '/labr4c4-full-fuzz')
 
@@ -784,11 +876,41 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
     last_save_time = time.time()
     outstanding_tests = set()
 
-    # for threadi in range(NTHREADS):
-    #     t = threading.Thread(target=threadfn, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
-    #     t.start()
+    for threadi in range(NTHREADS):
+        t = threading.Thread(target=threadfn2, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
+        t.start()
 
     while len(maybe_pairs_to_test):
+        while True:
+            try:
+                doneitem = donequeue.get(block=False)
+            except queue.Empty:
+                break
+
+            if doneitem is not None:
+                donesrc, donedst, donesuccess = doneitem
+                print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
+
+                outstanding_tests.remove((donesrc, donedst))
+                if (donesrc, donedst) in maybe_pairs_to_test:
+                    maybe_pairs_to_test.remove((donesrc, donedst))
+                else:
+                    print("BUG", donesrc, donedst)
+                num_maybe -= 1
+                fuzzing_state[donedst][donesrc] = donesuccess
+                if donesuccess:
+                    num_worked += 1
+                    if donedst not in routing_graph_dsts_srcs:
+                        routing_graph_dsts_srcs[donedst] = {donesrc: "TODO"}
+                    else:
+                        routing_graph_dsts_srcs[donedst][donesrc] = "TODO"
+                    if donesrc not in routing_graph_srcs_dsts:
+                        routing_graph_srcs_dsts[donesrc] = set([donedst])
+                    else:
+                        routing_graph_srcs_dsts[donesrc].add(donedst)
+                else:
+                    num_failed += 1
+
         if (time.time() - last_save_time >= 5) or (len(maybe_pairs_to_test) == 0):
             try:
                 os.remove('work-lab-state.json.bak')
@@ -825,7 +947,7 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         print(src, dst, src_is_lut, dst_is_lut)
 
         if src_is_lut:
-            lutX, lutY, _ = parse_xysi(src[10:])
+            lutX, lutY, lutII = parse_xysi(src[10:])
             dst_to_out_path = route_to_output(routing_graph_srcs_dsts, dst)
             if dst_to_out_path is None:
                 continue
@@ -886,6 +1008,7 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             # Finally ready to commit to paths
             print("Testing {} -> {} ({}; {}; {})".format(src, dst, src_A_to_in_path, src_B_to_in_path, dst_to_out_path))
             outstanding_tests.add((src, dst))
+            workqueue.put((src_A_to_in_path, src_B_to_in_path, dst_to_out_path, io_A_for_inp, io_B_for_inp, io_for_outp, lutX, lutY, lutI // 2, src, dst))
             # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
         else:
             lutX, lutY, li_A_I = parse_xysi(dst[19:])
@@ -949,6 +1072,7 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             # Finally ready to commit to paths
             print("Testing {} -> {} ({}; {}; {})".format(src, dst, src_A_to_in_path, src_B_to_in_path, dst_to_out_path))
             outstanding_tests.add((src, dst))
+            workqueue.put((src_A_to_in_path, src_B_to_in_path, dst_to_out_path, io_A_for_inp, io_B_for_inp, io_for_outp, lutX, lutY, lutI, src, dst))
             # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
 
 def main():
