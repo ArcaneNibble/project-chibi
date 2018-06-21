@@ -320,7 +320,9 @@ def update_state(old_state_fn, new_interconnect_fn, outfn):
         if dstnode.startswith("LOCAL_INTERCONNECT") and dstnode not in all_routes_to_try:
             continue
         for srcnode in srcnodes:
-            if srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER"):
+            if srcnode.startswith("IO_DATAIN"):
+                continue
+            if srcnode not in all_routes_to_try[dstnode]:
                 continue
             # print(dstnode, srcnode)
             assert all_routes_to_try[dstnode][srcnode] != False
@@ -944,7 +946,7 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         dst_is_lut = dst.startswith("LOCAL_INTERCONNECT")
         assert src_is_lut or dst_is_lut
         assert not (src_is_lut and dst_is_lut)
-        print(src, dst, src_is_lut, dst_is_lut)
+        # print(src, dst, src_is_lut, dst_is_lut)
 
         if src_is_lut:
             lutX, lutY, lutII = parse_xysi(src[10:])

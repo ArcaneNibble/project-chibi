@@ -20,6 +20,7 @@ WORKDIRS = [
     'manual-more-wire-names-fuzz-3',
     'r4c4-new-fuzz',
     'lutfuzz2',
+    'labr4c4-new-fuzz',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -54,6 +55,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('r4c4-new-fuzz'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('lutfuzz2'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('labr4c4-new-fuzz'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
