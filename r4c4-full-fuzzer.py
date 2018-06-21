@@ -506,7 +506,7 @@ set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 1
 """
 
-NTHREADS = 40
+NTHREADS = 30
 
 def fuzz_a_route(workdir, vmdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
     with open(workdir + '/maxvtest.qsf', 'w') as f:
