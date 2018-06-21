@@ -1010,7 +1010,7 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             # Finally ready to commit to paths
             print("Testing {} -> {} ({}; {}; {})".format(src, dst, src_A_to_in_path, src_B_to_in_path, dst_to_out_path))
             outstanding_tests.add((src, dst))
-            workqueue.put((src_A_to_in_path, src_B_to_in_path, dst_to_out_path, io_A_for_inp, io_B_for_inp, io_for_outp, lutX, lutY, lutI // 2, src, dst))
+            workqueue.put((src_A_to_in_path, src_B_to_in_path, dst_to_out_path, io_A_for_inp, io_B_for_inp, io_for_outp, lutX, lutY, lutII // 2, src, dst))
             # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
         else:
             lutX, lutY, li_A_I = parse_xysi(dst[19:])
