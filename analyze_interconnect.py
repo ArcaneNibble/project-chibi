@@ -142,7 +142,7 @@ def fliph(muxbits):
 # for _ in range(7):
 #     uniq_u_muxes.append(set())
 
-# for X in range(2, 9):
+# for X in [8]:#range(2, 8):
 #     for Y in range(1, 5):
 #         for N in range(7):
 #             mux = "U:X{}Y{}I{}".format(X, Y, N)
@@ -161,7 +161,7 @@ def fliph(muxbits):
 # for _ in range(7):
 #     uniq_d_muxes.append(set())
 
-# for X in range(2, 9):
+# for X in [8]:#range(2, 8):
 #     for Y in range(1, 5):
 #         for N in range(7):
 #             mux = "D:X{}Y{}I{}".format(X, Y, N)
@@ -205,10 +205,29 @@ for dst, srcs in x.items():
             muxbits = fliph(muxbits)
             if I >= 4:
                 muxbits = flipv(muxbits)
+        elif dst.startswith("U:"):
+            X, _, I = parse_xyi(dst)
+            if X == 8:
+                muxbits = fliph(muxbits)
+
+            if I == 0 and X != 8:
+                muxbits = fliph(muxbits)
+            if I >= 4:
+                muxbits = flipv(muxbits)
+        elif dst.startswith("D:"):
+            X, _, I = parse_xyi(dst)
+            if X == 8:
+                muxbits = fliph(muxbits)
+
+            if I == 6 and X != 8:
+                muxbits = fliph(muxbits)
+            if I >= 3:
+                muxbits = flipv(muxbits)
         else:
             continue
 
         muxidx = decodemux(muxbits)
+
         if srcs_decoded[muxidx] is not None:
             print(dst, src, srcs_decoded[muxidx])
         assert srcs_decoded[muxidx] is None
