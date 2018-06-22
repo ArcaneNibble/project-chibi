@@ -68000,6 +68000,20 @@
         ]
     },
     "LOCAL_INTERCONNECT:X2Y1S0I18": {
+        "D:X2Y2I6": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                false
+            ]
+        ],
         "D:X2Y3I6": [
             [
                 false,
@@ -72803,6 +72817,20 @@
                 true,
                 true
             ]
+        ],
+        "U:X3Y2I2": [
+            [
+                true,
+                false,
+                false,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
         ]
     },
     "LOCAL_INTERCONNECT:X2Y3S0I10": {
@@ -74100,12 +74128,40 @@
                 true
             ]
         ],
+        "U:X2Y0I7": [
+            [
+                true,
+                false,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
         "U:X3Y1I2": [
             [
                 false,
                 true,
                 false,
                 true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
+        "U:X3Y2I2": [
+            [
+                false,
+                true,
+                true,
+                false
             ],
             [
                 true,
@@ -74313,6 +74369,34 @@
                 true,
                 true
             ]
+        ],
+        "U:X2Y1I5": [
+            [
+                false,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
+        "U:X2Y2I5": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                false,
+                true
+            ]
         ]
     },
     "LOCAL_INTERCONNECT:X2Y3S0I22": {
@@ -74397,6 +74481,48 @@
                 true,
                 false,
                 true,
+                true
+            ]
+        ],
+        "U:X2Y0I2": [
+            [
+                true,
+                true,
+                true,
+                false
+            ],
+            [
+                false,
+                true,
+                true,
+                true
+            ]
+        ],
+        "U:X2Y1I5": [
+            [
+                false,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
+        "U:X2Y2I5": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                false,
                 true
             ]
         ]
@@ -74498,6 +74624,34 @@
                 true,
                 false,
                 true
+            ]
+        ],
+        "U:X2Y0I2": [
+            [
+                true,
+                true,
+                true,
+                false
+            ],
+            [
+                false,
+                true,
+                true,
+                true
+            ]
+        ],
+        "U:X2Y2I5": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                false
             ]
         ]
     },
@@ -74690,6 +74844,20 @@
             [
                 true,
                 false,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
+        "R:X2Y3I6": [
+            [
+                false,
+                true,
                 true,
                 true
             ],
@@ -74928,6 +75096,20 @@
                 false
             ]
         ],
+        "R:X2Y3I2": [
+            [
+                true,
+                false,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
         "U:X3Y0I4": [
             [
                 false,
@@ -74958,6 +75140,20 @@
         ]
     },
     "LOCAL_INTERCONNECT:X2Y3S0I5": {
+        "D:X2Y4I0": [
+            [
+                false,
+                true,
+                false,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "R:X1Y3I1": [
             [
                 true,
@@ -74981,6 +75177,48 @@
             ],
             [
                 false,
+                true,
+                true,
+                true
+            ]
+        ],
+        "U:X2Y0I0": [
+            [
+                true,
+                true,
+                false,
+                true
+            ],
+            [
+                false,
+                true,
+                true,
+                true
+            ]
+        ],
+        "U:X2Y1I0": [
+            [
+                true,
+                true,
+                false,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                true
+            ]
+        ],
+        "U:X2Y2I0": [
+            [
+                false,
+                true,
+                true,
+                false
+            ],
+            [
+                true,
                 true,
                 true,
                 true
@@ -101938,6 +102176,20 @@
         ]
     },
     "LOCAL_INTERCONNECT:X4Y2S0I18": {
+        "D:X4Y3I6": [
+            [
+                false,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
         "D:X4Y5I1": [
             [
                 true,
@@ -138178,6 +138430,20 @@
                 false
             ]
         ],
+        "R:X6Y4I0": [
+            [
+                false,
+                true,
+                false,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "U:X7Y3I1": [
             [
                 true,
@@ -138804,6 +139070,20 @@
                 true
             ]
         ],
+        "R:X6Y4I7": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                false,
+                true,
+                true,
+                false
+            ]
+        ],
         "U:X7Y1I5": [
             [
                 true,
@@ -139218,6 +139498,20 @@
                 true
             ]
         ],
+        "U:X6Y1I6": [
+            [
+                false,
+                true,
+                true,
+                false
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "U:X6Y2I6": [
             [
                 true,
@@ -139248,6 +139542,20 @@
         ]
     },
     "LOCAL_INTERCONNECT:X6Y4S0I19": {
+        "D:X6Y5I1": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                false
+            ]
+        ],
         "D:X6Y5I2": [
             [
                 true,
@@ -139490,6 +139798,20 @@
         ]
     },
     "LOCAL_INTERCONNECT:X6Y4S0I20": {
+        "D:X6Y5I1": [
+            [
+                true,
+                true,
+                true,
+                false
+            ],
+            [
+                true,
+                false,
+                true,
+                true
+            ]
+        ],
         "D:X6Y5I2": [
             [
                 true,
@@ -139744,6 +140066,20 @@
                 false,
                 true,
                 true
+            ]
+        ],
+        "R:X6Y4I7": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                false
             ]
         ],
         "U:X6Y0I2": [
@@ -140982,6 +141318,20 @@
                 true,
                 true,
                 true
+            ]
+        ],
+        "R:X6Y4I0": [
+            [
+                false,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                false
             ]
         ],
         "U:X6Y1I2": [
@@ -171050,6 +171400,20 @@
                 true
             ]
         ],
+        "LE_BUFFER:X3Y4S0I0": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
+            ]
+        ],
         "R:X1Y4I1": [
             [
                 false,
@@ -191230,6 +191594,20 @@
                 true
             ]
         ],
+        "LE_BUFFER:X2Y4S0I0": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                false,
+                true,
+                true
+            ]
+        ],
         "U:X2Y0I0": [
             [
                 true,
@@ -191342,6 +191720,20 @@
                 false,
                 true,
                 false
+            ]
+        ],
+        "LE_BUFFER:X2Y4S0I2": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                false,
+                true
             ]
         ],
         "R:X1Y4I0": [
@@ -191470,6 +191862,20 @@
                 true,
                 true,
                 false
+            ]
+        ],
+        "LE_BUFFER:X2Y4S0I6": [
+            [
+                false,
+                true,
+                false,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
             ]
         ],
         "U:X2Y1I2": [
@@ -191828,6 +192234,20 @@
                 true
             ]
         ],
+        "LE_BUFFER:X2Y4S0I14": [
+            [
+                true,
+                true,
+                false,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "U:X2Y0I2": [
             [
                 false,
@@ -191923,6 +192343,34 @@
             ],
             [
                 true,
+                true,
+                false,
+                true
+            ]
+        ],
+        "LE_BUFFER:X2Y4S0I10": [
+            [
+                true,
+                true,
+                true,
+                false
+            ],
+            [
+                true,
+                false,
+                true,
+                true
+            ]
+        ],
+        "LE_BUFFER:X2Y4S0I12": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                false,
                 true,
                 false,
                 true
@@ -194870,6 +195318,20 @@
                 false
             ]
         ],
+        "LE_BUFFER:X2Y4S0I1": [
+            [
+                true,
+                false,
+                true,
+                false
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "LE_BUFFER:X3Y4S0I0": [
             [
                 true,
@@ -195238,6 +195700,34 @@
                 true
             ]
         ],
+        "LE_BUFFER:X3Y4S0I4": [
+            [
+                false,
+                true,
+                true,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                false
+            ]
+        ],
+        "LE_BUFFER:X3Y4S0I6": [
+            [
+                false,
+                true,
+                false,
+                true
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "U:X2Y0I7": [
             [
                 true,
@@ -195350,6 +195840,20 @@
                 true,
                 true,
                 true
+            ]
+        ],
+        "LE_BUFFER:X2Y4S0I7": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                false,
+                true,
+                true,
+                false
             ]
         ],
         "LE_BUFFER:X3Y4S0I8": [
@@ -199156,6 +199660,20 @@
                 false
             ]
         ],
+        "LE_BUFFER:X3Y4S0I1": [
+            [
+                false,
+                true,
+                true,
+                false
+            ],
+            [
+                true,
+                true,
+                true,
+                true
+            ]
+        ],
         "LE_BUFFER:X3Y4S0I3": [
             [
                 true,
@@ -199848,6 +200366,20 @@
                 false,
                 true,
                 true
+            ]
+        ],
+        "LE_BUFFER:X3Y4S0I13": [
+            [
+                true,
+                true,
+                true,
+                true
+            ],
+            [
+                false,
+                true,
+                true,
+                false
             ]
         ],
         "R:X1Y4I6": [

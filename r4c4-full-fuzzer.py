@@ -1001,9 +1001,14 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             outp_local_int = dst_to_out_path[-1]
             assert outp_local_int.startswith("LOCAL_INTERCONNECT")
             outpX, outpY, _ = parse_xysi(outp_local_int[19:])
-            io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 0)
-            if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
-                io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 1)
+            io_for_outp = None
+            for II in range(4):
+                maybe_io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, II)
+                if maybe_io_for_outp != io_A_for_inp and maybe_io_for_outp != io_B_for_inp:
+                    io_for_outp = maybe_io_for_outp
+                    break
+            if io_for_outp is None:
+                continue
             if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
                 continue
 
@@ -1065,9 +1070,14 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             outp_local_int = dst_to_out_path[-1]
             assert outp_local_int.startswith("LOCAL_INTERCONNECT")
             outpX, outpY, _ = parse_xysi(outp_local_int[19:])
-            io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 0)
-            if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
-                io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, 1)
+            io_for_outp = None
+            for II in range(4):
+                maybe_io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, II)
+                if maybe_io_for_outp != io_A_for_inp and maybe_io_for_outp != io_B_for_inp:
+                    io_for_outp = maybe_io_for_outp
+                    break
+            if io_for_outp is None:
+                continue
             if io_for_outp == io_A_for_inp or io_for_outp == io_B_for_inp:
                 continue
 
