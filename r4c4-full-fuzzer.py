@@ -345,9 +345,11 @@ def parse_xysi2(inp):
 
     return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[spos + 1:ipos]), int(inp[ipos + 1:]))
 
-def route_to_output(routing_graph_srcs_dsts, node):
+def route_to_output(routing_graph_srcs_dsts, node, extra_closed_nodes=[]):
     fringe = []
     closed_set = set()
+
+    closed_set |= set(extra_closed_nodes)
 
     fringe.append((node, []))
 
@@ -957,25 +959,24 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             # print(dst_to_out_path)
 
             src_A_to_in_path = None
-            src_A_li_I = None
-            for li_I in range(26):
-                src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), dst_to_out_path)
-                if src_to_in_path is not None:
-                    src_A_to_in_path = src_to_in_path
-                    src_A_li_I = li_I
-                    break
-            if src_A_to_in_path is None:
-                continue
+            src_B_to_in_path = None
+
+            for li_I_A in range(26):
+                for li_I_B in range(26):
+                    if li_I_A == li_I_B:
+                        continue
+
+                    maybe_A_src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I_A), dst_to_out_path)
+                    maybe_B_src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I_B), dst_to_out_path + maybe_A_src_to_in_path)
+                    if maybe_A_src_to_in_path is not None and maybe_B_src_to_in_path is not None:
+                        if len(set(dst_to_out_path) & set(maybe_A_src_to_in_path)) == 0 and len(set(dst_to_out_path) & set(maybe_B_src_to_in_path)) == 0 and len(set(maybe_A_src_to_in_path) & set(maybe_B_src_to_in_path)) == 0:
+                            src_A_to_in_path = maybe_A_src_to_in_path
+                            src_B_to_in_path = maybe_B_src_to_in_path
+                            break
             # print(src_A_to_in_path)
 
-            src_B_to_in_path = None
-            for li_I in range(26):
-                if li_I == src_A_li_I:
-                    continue
-                src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), dst_to_out_path + src_A_to_in_path)
-                if src_to_in_path is not None:
-                    src_B_to_in_path = src_to_in_path
-                    break
+            if src_A_to_in_path is None:
+                continue
             if src_B_to_in_path is None:
                 continue
             # print(src_B_to_in_path)
@@ -1019,17 +1020,6 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
         else:
             lutX, lutY, li_A_I = parse_xysi(dst[19:])
-            dst_to_out_path = None
-            lutI = None
-            for II in range(20):
-                maybe_dst_to_out_path = route_to_output(routing_graph_srcs_dsts, "LE_BUFFER:X{}Y{}S0I{}".format(lutX, lutY, II))
-                if maybe_dst_to_out_path is not None:
-                    dst_to_out_path = maybe_dst_to_out_path
-                    lutI = II // 2
-                    break
-            if dst_to_out_path is None:
-                continue
-            # print(dst_to_out_path, lutI)
 
             src_A_to_in_path = route_to_input(routing_graph_dsts_srcs, src, dst_to_out_path)
             if src_A_to_in_path is None:
@@ -1037,14 +1027,26 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             src_A_to_in_path = [dst] + src_A_to_in_path
             # print(src_A_to_in_path)
 
+            dst_to_out_path = None
             src_B_to_in_path = None
-            for li_I in range(26):
-                if li_I == li_A_I:
-                    continue
-                src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), dst_to_out_path + src_A_to_in_path)
-                if src_to_in_path is not None:
-                    src_B_to_in_path = src_to_in_path
-                    break
+
+            lutI = None
+            for II in range(20):
+                for li_I in range(26):
+                    if li_I == li_A_I:
+                        continue
+
+                    maybe_dst_to_out_path = route_to_output(routing_graph_srcs_dsts, "LE_BUFFER:X{}Y{}S0I{}".format(lutX, lutY, II), src_A_to_in_path)
+                    maybe_B_src_to_in_path = route_to_input(routing_graph_dsts_srcs, "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(lutX, lutY, li_I), maybe_dst_to_out_path + src_A_to_in_path)
+                    if maybe_dst_to_out_path is not None and maybe_B_src_to_in_path is not None:
+                        if len(set(maybe_dst_to_out_path) & set(src_A_to_in_path)) == 0 and len(set(maybe_dst_to_out_path) & set(maybe_B_src_to_in_path)) == 0 and len(set(src_A_to_in_path) & set(maybe_B_src_to_in_path)) == 0:
+                            dst_to_out_path = maybe_dst_to_out_path
+                            src_B_to_in_path = maybe_B_src_to_in_path
+                            lutI = II // 2
+                            break
+
+            if dst_to_out_path is None:
+                continue
             if src_B_to_in_path is None:
                 continue
             # print(src_B_to_in_path)
