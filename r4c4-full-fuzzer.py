@@ -530,6 +530,13 @@ def inp_to_io2(inpname):
             newI_2 = 1
         else:
             raise Exception()
+
+        if X == 4 or X == 7:
+            if newI_2 == 3:
+                newI_2 = None
+
+        if newI_2 is None:
+            return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1)]
         return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1), "IOC_X{}_Y{}_N{}".format(X, Y, newI_2)]
     elif inpname.startswith("D:"):
         X, Y, I = parse_xyi(inpname)
@@ -551,6 +558,13 @@ def inp_to_io2(inpname):
             newI_2 = 1
         else:
             raise Exception()
+
+        if X == 4 or X == 2:
+            if newI_2 == 3:
+                newI_2 = None
+
+        if newI_2 is None:
+            return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1)]
         return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1), "IOC_X{}_Y{}_N{}".format(X, Y, newI_2)]
     elif inpname.startswith("IO_DATAIN:"):
         X, Y, S, I = parse_xysi2(inpname[10:])
