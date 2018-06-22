@@ -29,6 +29,22 @@ def parse_xyi(inp):
 
     return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:ipos]), int(inp[ipos + 1:]))
 
+def parse_xysi(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    spos = inp.find('S')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert spos > ypos
+    assert ipos > spos
+
+    sval = int(inp[spos + 1:ipos])
+    assert sval == 0
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[ipos + 1:]))
+
 def anybits(bits):
     for y in bits:
         for x in y:
@@ -48,6 +64,8 @@ def decodemux(bits):
 
     assert G + C + D + H == 1
     assert A + B + E + F == 1 or (A + B + E + F == 0 and G)
+    if G:
+        assert A + B + C + D + E + F + H == 0
 
     if G:
         return 0
@@ -176,6 +194,61 @@ def fliph(muxbits):
 #     for xx in sorted(list(uniq_d_muxes[N])):
 #         print(xx)
 
+# uniq_l_li_muxes = []
+# for _ in range(18):
+#     uniq_l_li_muxes.append(set())
+
+# for Y in range(1, 5):
+#     for N in range(18):
+#         mux = "LOCAL_INTERCONNECT:X1Y{}S0I{}".format(Y, N)
+#         muxvals = x[mux]
+#         # print(muxvals)
+#         for muxsrc, muxbits in muxvals.items():
+#             uniq_l_li_muxes[N].add(bits2str(muxbits))
+
+# # print(uniq_r_muxes)
+# for N in range(18):
+#     print("~~~~~ LOCAL_INTERCONNECT:X1 {} ~~~~~".format(N))
+#     for xx in sorted(list(uniq_l_li_muxes[N])):
+#         print(xx)
+
+# uniq_li_muxes = []
+# for _ in range(26):
+#     uniq_li_muxes.append(set())
+
+# for X in range(2, 8):
+#     for Y in range(1, 5):
+#         for N in range(26):
+#             mux = "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(X, Y, N)
+#             muxvals = x[mux]
+#             # print(muxvals)
+#             for muxsrc, muxbits in muxvals.items():
+#                 uniq_li_muxes[N].add(bits2str(muxbits))
+
+# # print(uniq_r_muxes)
+# for N in range(26):
+#     print("~~~~~ LOCAL_INTERCONNECT:X1 {} ~~~~~".format(N))
+#     for xx in sorted(list(uniq_li_muxes[N])):
+#         print(xx)
+
+# uniq_top_li_muxes = []
+# for _ in range(10):
+#     uniq_top_li_muxes.append(set())
+
+# for X in range(2, 8):
+#     for N in range(10):
+#         mux = "LOCAL_INTERCONNECT:X{}Y5S0I{}".format(X, N)
+#         muxvals = x[mux]
+#         # print(muxvals)
+#         for muxsrc, muxbits in muxvals.items():
+#             uniq_top_li_muxes[N].add(bits2str(muxbits))
+
+# # print(uniq_r_muxes)
+# for N in range(10):
+#     print("~~~~~ LOCAL_INTERCONNECT:Y5 {} ~~~~~".format(N))
+#     for xx in sorted(list(uniq_top_li_muxes[N])):
+#         print(xx)
+
 LABELS = [
     "|G|C|D|H|A|B|E|F|",
     "|0| | | | | | | |       ",
@@ -223,6 +296,26 @@ for dst, srcs in x.items():
                 muxbits = fliph(muxbits)
             if I >= 3:
                 muxbits = flipv(muxbits)
+        elif dst.startswith("LOCAL_INTERCONNECT:"):
+            X, Y, I = parse_xysi(dst[19:])
+            if X == 1:
+                muxbits = fliph(muxbits)
+                if I > 8:
+                    muxbits = flipv(muxbits)
+            elif X == 8:
+                if I > 8:
+                    muxbits = flipv(muxbits)
+            else:
+                if Y == 0 or Y == 5:
+                    if Y == 0:
+                        muxbits = flipv(muxbits)
+                    if I < 5:
+                        muxbits = fliph(muxbits)
+                else:
+                    if I in range(0, 5) or I in range(13, 18):
+                        muxbits = fliph(muxbits)
+                    if I >= 13:
+                        muxbits = flipv(muxbits)
         else:
             continue
 
