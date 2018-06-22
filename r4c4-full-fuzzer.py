@@ -488,6 +488,83 @@ def inp_to_io(inpname):
     else:
         raise Exception()
 
+def inp_to_io2(inpname):
+    if inpname.startswith("R:"):
+        X, Y, I = parse_xyi(inpname)
+        assert X == 1
+        assert Y in range(1, 5)
+        if I == 0 or I == 1:
+            newI_1 = 2
+            newI_2 = 3
+        elif I == 2 or I == 3:
+            newI_1 = 0
+            newI_2 = None
+        elif I == 4 or I == 5:
+            newI_1 = 2
+            newI_2 = None
+        elif I == 6 or I == 7:
+            newI_1 = 1
+            newI_2 = None
+        else:
+            raise Exception()
+        if newI_2 is None:
+            return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1)]
+        return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1), "IOC_X{}_Y{}_N{}".format(X, Y, newI_2)]
+    elif inpname.startswith("U:"):
+        X, Y, I = parse_xyi(inpname)
+        assert Y == 0
+        assert X in range(2, 8)
+        if (I % 5) == 0 or (I % 5) == 2 or (I % 5) == 4:
+            newI_1 = 0
+        elif (I % 5) == 1:
+            newI_1 = 1
+        elif (I % 5) == 3:
+            newI_1 = 2
+        else:
+            raise Exception()
+        if (I % 5) == 0 or (I % 5) == 1 or (I % 5) == 3:
+            newI_2 = 3
+        elif (I % 5) == 2:
+            newI_2 = 2
+        elif (I % 5) == 4:
+            newI_2 = 1
+        else:
+            raise Exception()
+        return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1), "IOC_X{}_Y{}_N{}".format(X, Y, newI_2)]
+    elif inpname.startswith("D:"):
+        X, Y, I = parse_xyi(inpname)
+        assert Y == 5
+        assert X in range(2, 8)
+        if (I % 5) == 0 or (I % 5) == 2 or (I % 5) == 4:
+            newI_1 = 0
+        elif (I % 5) == 3:
+            newI_1 = 1
+        elif (I % 5) == 1:
+            newI_1 = 2
+        else:
+            raise Exception()
+        if (I % 5) == 4 or (I % 5) == 3 or (I % 5) == 1:
+            newI_2 = 3
+        elif (I % 5) == 2:
+            newI_2 = 2
+        elif (I % 5) == 0:
+            newI_2 = 1
+        else:
+            raise Exception()
+        return ["IOC_X{}_Y{}_N{}".format(X, Y, newI_1), "IOC_X{}_Y{}_N{}".format(X, Y, newI_2)]
+    elif inpname.startswith("IO_DATAIN:"):
+        X, Y, S, I = parse_xysi2(inpname[10:])
+        assert I == 0
+        assert X == 8 or X == 1
+        assert Y in range(1, 5)
+        if X == 8:
+            assert S < RIGHT_MAX_IOS[Y - 1]
+        else:
+            assert S < LEFT_MAX_IOS[Y - 1]
+        return ["IOC_X{}_Y{}_N{}".format(X, Y, S)]
+    else:
+        raise Exception()
+
 BASE_DIR = '/home/rqou/.local/share/lxc/altera-quartus-prime-lite-18/rootfs/home/rqou'
 
 QSF_TMPL = """set_global_assignment -name FAMILY "MAX V"
@@ -994,9 +1071,17 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             src_A_to_in_path = src_A_to_in_path[::-1]
             src_B_to_in_path = src_B_to_in_path[::-1]
 
-            io_A_for_inp = inp_to_io(src_A_to_in_path[0])
-            io_B_for_inp = inp_to_io(src_B_to_in_path[0])
-            if io_A_for_inp == io_B_for_inp:
+            io_A_for_inp = None
+            io_B_for_inp = None
+            ios_A_for_inp = inp_to_io2(src_A_to_in_path[0])
+            ios_B_for_inp = inp_to_io2(src_B_to_in_path[0])
+            for aainp in ios_A_for_inp:
+                for bbinp in ios_B_for_inp:
+                    if aainp != bbinp:
+                        io_A_for_inp = aainp
+                        io_B_for_inp = bbinp
+                        break
+            if io_A_for_inp is None or io_B_for_inp is None or io_A_for_inp == io_B_for_inp:
                 continue
 
             outp_local_int = dst_to_out_path[-1]
@@ -1021,7 +1106,7 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
         else:
             lutX, lutY, li_A_I = parse_xysi(dst[19:])
 
-            src_A_to_in_path = route_to_input(routing_graph_dsts_srcs, src, dst_to_out_path)
+            src_A_to_in_path = route_to_input(routing_graph_dsts_srcs, src)
             if src_A_to_in_path is None:
                 continue
             src_A_to_in_path = [dst] + src_A_to_in_path
@@ -1064,9 +1149,17 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             src_A_to_in_path = src_A_to_in_path[::-1]
             src_B_to_in_path = src_B_to_in_path[::-1]
 
-            io_A_for_inp = inp_to_io(src_A_to_in_path[0])
-            io_B_for_inp = inp_to_io(src_B_to_in_path[0])
-            if io_A_for_inp == io_B_for_inp:
+            io_A_for_inp = None
+            io_B_for_inp = None
+            ios_A_for_inp = inp_to_io2(src_A_to_in_path[0])
+            ios_B_for_inp = inp_to_io2(src_B_to_in_path[0])
+            for aainp in ios_A_for_inp:
+                for bbinp in ios_B_for_inp:
+                    if aainp != bbinp:
+                        io_A_for_inp = aainp
+                        io_B_for_inp = bbinp
+                        break
+            if io_A_for_inp is None or io_B_for_inp is None or io_A_for_inp == io_B_for_inp:
                 continue
 
             outp_local_int = dst_to_out_path[-1]
