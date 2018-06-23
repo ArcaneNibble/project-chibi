@@ -454,6 +454,135 @@ def prep_all_routes_lab2(outfn, my_wire_to_quartus_wire):
     with open(outfn, 'w') as f:
         json.dump(all_routes_to_try, f, sort_keys=True, indent=4, separators=(',', ': '))
 
+def prep_all_routes_lab3(outfn, my_wire_to_quartus_wire):
+    all_routes_to_try = {}
+
+    for labX in range(2, 8):
+        for labY in range(1, 5):
+            # Outputs from LAB
+            for II in range(20):
+                # Again for row above
+                if labY != 4:
+                    # Right wires (this and the one to the right)
+                    for dstI in range(8):
+                        dstwire = "R:X{}Y{}I{}".format(labX, labY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+                    if labX !=  7:
+                        for dstI in range(8):
+                            dstwire = "R:X{}Y{}I{}".format(labX + 1, labY + 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+
+                    # Left wires (this and the one to the right)
+                    if labX != 2:
+                        for dstI in range(8):
+                            dstwire = "L:X{}Y{}I{}".format(labX, labY + 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+                    for dstI in range(8):
+                        dstwire = "L:X{}Y{}I{}".format(labX + 1, labY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+                    if labX == 7:
+                        for dstI in range(8):
+                            dstwire = "L2:X{}Y{}I{}".format(labX + 1, labY + 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+
+                    # Up wires (this and the one to the right)
+                    for dstI in range(7):
+                        dstwire = "U:X{}Y{}I{}".format(labX, labY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+                    for dstI in range(7):
+                        dstwire = "U:X{}Y{}I{}".format(labX + 1, labY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+
+                    # Down wires (this and the one to the right)
+                    for dstI in range(7):
+                        dstwire = "D:X{}Y{}I{}".format(labX, labY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+                    for dstI in range(7):
+                        dstwire = "D:X{}Y{}I{}".format(labX + 1, labY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["LE_BUFFER:X{}Y{}S0I{}".format(labX, labY, II)] = "maybe"
+
+    for k, v in all_routes_to_try.items():
+        if k.startswith("LOCAL_INTERCONNECT"):
+            continue
+        if k not in my_wire_to_quartus_wire:
+            print(k)
+        assert k in my_wire_to_quartus_wire
+        for k in v:
+            if k.startswith("LE_BUFFER"):
+                continue
+            if k not in my_wire_to_quartus_wire:
+                print(k)
+            assert k in my_wire_to_quartus_wire
+
+    # What do we already know?
+    with open('initial-interconnect.json', 'r') as f:
+        initial_interconnect_map = json.load(f)
+
+    for dstnode, srcnodes in initial_interconnect_map.items():
+        if dstnode not in all_routes_to_try:
+            continue
+        for srcnode in srcnodes:
+            if srcnode.startswith("IO_DATAIN"):
+                continue
+            if srcnode not in all_routes_to_try[dstnode]:
+                continue
+            print(dstnode, srcnode)
+            assert all_routes_to_try[dstnode][srcnode] != False
+            all_routes_to_try[dstnode][srcnode] = True
+
+    with open('initial-lab-state.json', 'r') as f:
+        old_lab_state = json.load(f)
+
+    for dstnode, srcnodes in old_lab_state.items():
+        if dstnode not in all_routes_to_try:
+            continue
+        for srcnode, works in srcnodes.items():
+            if srcnode not in all_routes_to_try[dstnode]:
+                continue
+            print(dstnode, srcnode, works)
+            if works == False:
+                assert all_routes_to_try[dstnode][srcnode] != True
+                all_routes_to_try[dstnode][srcnode] = False
+            elif works == True:
+                assert all_routes_to_try[dstnode][srcnode] == True
+
+    with open('initial-lab2-state.json', 'r') as f:
+        old_lab_state = json.load(f)
+
+    for dstnode, srcnodes in old_lab_state.items():
+        if dstnode not in all_routes_to_try:
+            continue
+        for srcnode, works in srcnodes.items():
+            if srcnode not in all_routes_to_try[dstnode]:
+                continue
+            print(dstnode, srcnode, works)
+            if works == False:
+                assert all_routes_to_try[dstnode][srcnode] != True
+                all_routes_to_try[dstnode][srcnode] = False
+            elif works == True:
+                assert all_routes_to_try[dstnode][srcnode] == True
+
+    with open(outfn, 'w') as f:
+        json.dump(all_routes_to_try, f, sort_keys=True, indent=4, separators=(',', ': '))
+
 def update_state(old_state_fn, new_interconnect_fn, outfn):
     with open(old_state_fn, 'r') as f:
         all_routes_to_try = json.load(f)
@@ -467,7 +596,7 @@ def update_state(old_state_fn, new_interconnect_fn, outfn):
             del srcs[dst]
 
     for dstnode, srcnodes in initial_interconnect_map.items():
-        if dstnode.startswith("LOCAL_INTERCONNECT") and dstnode not in all_routes_to_try:
+        if dstnode not in all_routes_to_try:
             continue
         for srcnode in srcnodes:
             if srcnode.startswith("IO_DATAIN"):
@@ -1057,6 +1186,9 @@ def threadfn2(workqueue, donequeue, my_wire_to_quartus_wire, threadi):
     VMDIR = "labr4c4-full-fuzz/thread{}".format(threadi)
     shutil.copytree(BASE_DIR + '/labr4c4-seed', MYDIR)
 
+    if threadi >= NTHREADS // 2:
+        time.sleep(10)
+
     while True:
         try:
             x = workqueue.get()
@@ -1364,6 +1496,8 @@ def main():
         do_fuzz_lab(sys.argv[2], sys.argv[3], my_wire_to_quartus_wire)
     elif cmd=='prep3':
         prep_all_routes_lab2(sys.argv[2], my_wire_to_quartus_wire)
+    elif cmd=='prep4':
+        prep_all_routes_lab3(sys.argv[2], my_wire_to_quartus_wire)
     else:
         raise Exception()
 

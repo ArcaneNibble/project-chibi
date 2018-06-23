@@ -1256,3 +1256,38 @@ right
 8R      N3
 9L      N0
 9R      N1
+
+
+~~~~~ R: I0 ~~~~~
+|G|C|D|H|A|B|E|F|
+|0| | | | | | | |       LE_BUFFER:X{x}Y{y}S0I0
+| |0| | |0| | | |       LE_BUFFER:X{x-1}Y{y}S0I1 ??? or IOs ???
+| |0| | | |0| | |       D:X{x}Y{y+1}I0
+| |0| | | | |0| |       U:X{x}Y{y-4}I xxxx TODO IOs xxxx
+| |0| | | | | |0|       R:X{x-4}Y{y}LogicalI0
+| | |0| |0| | | |       U:X{x}Y{y-3}I0
+| | |0| | |0| | |       D:X{x}Y{y+3}I0
+| | |0| | | |0| |       D:X{x}Y{y+2}I0
+| | |0| | | | |0|       L:X{x+1}Y{y}LogicalI8
+| | | |0|0| | | |       R:X{x-2}Y{y}LogicalI0
+| | | |0| |0| | |       LE_BUFFER:X{x}Y{y+1}S0I10 or U:X{x}Y3I0
+| | | |0| | |0| |       R:X{x-3}Y{y}LogicalI0
+| | | |0| | | |0|       U:X{x}Y{y-2}I0
+
+~~~~~ R: I1 ~~~~~
+|G|C|D|H|A|B|E|F|
+|0| | | | | | | |       LE_BUFFER:X{x-1}Y{y}S0I3 ??? or IOs ???
+| |0| | |0| | | |       LE_BUFFER:X{x}Y{y}S0I4
+| |0| | | |0| | |       D:X{x}Y{y+3}I1
+| |0| | | | |0| |       D:X{x}Y{y+2}I1
+| |0| | | | | |0|       L:X{x+1}Y{y}LogicalI9
+| | |0| |0| | | |       D:X{x}Y{y+1}I1
+| | |0| | |0| | |       D:X{x}Y{y+4}I xxxx TODO IOs xxxx
+| | |0| | | |0| |       R:X{x-2}Y{y}LogicalI1
+| | |0| | | | |0|       R:X{x-3}Y{y}LogicalI1
+| | | |0|0| | | |       U:X{x}Y{y-1}I1
+| | | |0| |0| | |       LE_BUFFER:X{x}Y{y}S0I2
+| | | |0| | |0| |       U:X{x}Y{y-3}I1
+| | | |0| | | |0|       R:X{x-4}Y{y}LogicalI1
+
+
