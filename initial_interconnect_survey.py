@@ -21,6 +21,7 @@ WORKDIRS = [
     'r4c4-new-fuzz',
     'lutfuzz2',
     'labr4c4-new-fuzz',
+    'neigh-fuzz',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -57,6 +58,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('lutfuzz2'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('labr4c4-new-fuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('neigh-fuzz'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
@@ -311,10 +314,6 @@ def extract_mux_bits(data, muxname):
         raise Exception()
 
 def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
-    # HACKS
-    if cfmfn.startswith('rh-io-outwire-manualfuzz/') and cfmfn.endswith('bypout.pof.cfm'):
-        return
-
     print("Working on {}".format(cfmfn))
 
     with open(cfmfn, 'rb') as f:
