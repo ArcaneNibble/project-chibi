@@ -22,6 +22,7 @@ WORKDIRS = [
     'lutfuzz2',
     'labr4c4-new-fuzz',
     'neigh-fuzz',
+    'row-io-neigh',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -60,6 +61,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('labr4c4-new-fuzz'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('neigh-fuzz'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('row-io-neigh'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
