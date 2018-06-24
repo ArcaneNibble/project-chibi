@@ -675,15 +675,45 @@ def dump_left_ios(interconnect_map, data):
         for II in range(18):
             muxname = "LOCAL_INTERCONNECT:X1Y{}S0I{}".format(Y, II)
             muxbits = extract_mux_bits(data, muxname)
-            if anybits(muxbits):
-                found_name = None
-                for srcname, srcbits in interconnect_map[muxname].items():
-                    if srcbits == muxbits:
-                        assert found_name is None
-                        found_name = srcname
-                if found_name is None:
-                    raise Exception("Unknown mux setting")
-                print("Local {}: {}".format(II, found_name))
+
+            used_gclk = False
+            if II == 8:
+                if not getbit(data, 10, LUTYLOCS[4 - Y] + 20):
+                    if muxbits == [[True, True, True, True], [False, True, True, True]]:
+                        print("Local {}: GCLK0".format(II))
+                        used_gclk = True
+                    elif muxbits == [[False, True, True, True], [True, True, True, True]]:
+                        print("Local {}: GCLK1".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, False, True, True], [True, True, True, True]]:
+                        print("Local {}: GCLK2".format(II))
+                        used_gclk = True
+                    else:
+                        assert False
+            if II == 17:
+                if not getbit(data, 10, LUTYLOCS[4 - Y] + 25):
+                    if muxbits == [[False, True, True, True], [True, True, True, True]]:
+                        print("Local {}: GCLK0".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, True], [False, True, True, True]]:
+                        print("Local {}: GCLK1".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, True], [True, False, True, True]]:
+                        print("Local {}: GCLK3".format(II))
+                        used_gclk = True
+                    else:
+                        assert False
+
+            if not used_gclk:
+                if anybits(muxbits):
+                    found_name = None
+                    for srcname, srcbits in interconnect_map[muxname].items():
+                        if srcbits == muxbits:
+                            assert found_name is None
+                            found_name = srcname
+                    if found_name is None:
+                        raise Exception("Unknown mux setting")
+                    print("Local {}: {}".format(II, found_name))
         print()
 
         # Routing tracks
@@ -741,15 +771,45 @@ def dump_right_ios(interconnect_map, data):
         for II in range(18):
             muxname = "LOCAL_INTERCONNECT:X8Y{}S0I{}".format(Y, II)
             muxbits = extract_mux_bits(data, muxname)
-            if anybits(muxbits):
-                found_name = None
-                for srcname, srcbits in interconnect_map[muxname].items():
-                    if srcbits == muxbits:
-                        assert found_name is None
-                        found_name = srcname
-                if found_name is None:
-                    raise Exception("Unknown mux setting")
-                print("Local {}: {}".format(II, found_name))
+
+            used_gclk = False
+            if II == 8:
+                if not getbit(data, 186, LUTYLOCS[4 - Y] + 20):
+                    if muxbits == [[True, True, True, True], [True, True, True, False]]:
+                        print("Local {}: GCLK0".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, False], [True, True, True, True]]:
+                        print("Local {}: GCLK1".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, True, False, True], [True, True, True, True]]:
+                        print("Local {}: GCLK2".format(II))
+                        used_gclk = True
+                    else:
+                        assert False
+            if II == 17:
+                if not getbit(data, 186, LUTYLOCS[4 - Y] + 25):
+                    if muxbits == [[True, True, True, False], [True, True, True, True]]:
+                        print("Local {}: GCLK0".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, True], [True, True, True, False]]:
+                        print("Local {}: GCLK1".format(II))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, True], [True, True, False, True]]:
+                        print("Local {}: GCLK3".format(II))
+                        used_gclk = True
+                    else:
+                        assert False
+
+            if not used_gclk:
+                if anybits(muxbits):
+                    found_name = None
+                    for srcname, srcbits in interconnect_map[muxname].items():
+                        if srcbits == muxbits:
+                            assert found_name is None
+                            found_name = srcname
+                    if found_name is None:
+                        raise Exception("Unknown mux setting")
+                    print("Local {}: {}".format(II, found_name))
         print()
 
         # L
@@ -968,6 +1028,17 @@ def main():
 
     print("******************** BOTTOM IOs ********************")
     dump_bot_ios(interconnect_map, data)
+
+    print("******************** Global buffers ********************")
+    for X in range(2, 9):
+        if getbit(data, (X - 1) * 28 - 16, 103):
+            print("X{} GCLK0 buffer enabled".format(X))
+        if getbit(data, (X - 1) * 28 - 15, 103):
+            print("X{} GCLK1 buffer enabled".format(X))
+        if getbit(data, (X - 1) * 28 - 13, 103):
+            print("X{} GCLK2 buffer enabled".format(X))
+        if getbit(data, (X - 1) * 28 - 12, 103):
+            print("X{} GCLK3 buffer enabled".format(X))
 
 if __name__=='__main__':
     main()
