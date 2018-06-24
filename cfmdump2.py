@@ -522,6 +522,8 @@ def dump_logic_col(interconnect_map, data, X):
             lutval = lut_untwiddle(lutbox)
             print("LUT X{}Y{}N{}: {:04X}".format(X, Y, N, lutval))
 
+            lutchain = getbit(data, lutX + 4, lutY + (3 if N < 5 else 0))
+
             lutinpbox = getbox(data, lutX - 9, lutY, 9, 4, flipv=N >= 5)
             lutinpa = twohot_decode(DATAA_INPUTS, lutinpbox)
             if lutinpa is not None:
@@ -533,8 +535,12 @@ def dump_logic_col(interconnect_map, data, X):
             if lutinpc is not None:
                 print("LUT X{}Y{}N{} DATAC: {}".format(X, Y, N, lutinpc))
             lutinpd = twohot_decode(DATAD_INPUTS, lutinpbox)
-            if lutinpd is not None:
-                print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
+            if lutchain:
+                assert lutinpd is None
+                print("LUT X{}Y{}N{} DATAD: LUT chain".format(X, Y, N))
+            else:
+                if lutinpd is not None:
+                    print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
         print()
 
         # Local interconnect
