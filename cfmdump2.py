@@ -1,4 +1,5 @@
 import sys
+import json
 
 LUTYLOCS = [11, 57, 104, 150]
 
@@ -197,8 +198,223 @@ def twohot_decode(inp_encoding, box):
 
     if not anydriver:
         assert not anybits
-        return "<NONE>"
+        return None
     return ret
+
+def extract_mux_bits(data, muxname):
+    if muxname.startswith("L:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(3, 9)
+        assert Y in range(1, 5)
+        assert I in range(8)
+
+        boxX = (X - 1) * 28 - 21
+        if I < 4:
+            boxY = LUTYLOCS[4 - Y] + I * 4 + 4
+        else:
+            boxY = LUTYLOCS[4 - Y] + (I - 4) * 4 + 28
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("L2:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X == 8
+        assert Y in range(1, 5)
+        assert I in range(8)
+        
+        boxX = (X - 1) * 28 - 17
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 6
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 14
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 18
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 26
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 30
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 38
+        elif I == 7:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("R:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(2, 8)
+        assert Y in range(1, 5)
+        assert I in range(8)
+        
+        boxX = (X - 1) * 28 - 17
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 6
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 14
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 18
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 26
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 30
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 38
+        elif I == 7:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("U:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(2, 9)
+        assert Y in range(1, 5)
+        assert I in range(7)
+        
+        if I == 0:
+            boxX = (X - 1) * 28 - 21
+        else:
+            boxX = (X - 1) * 28 - 17
+
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 4
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 10
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 16
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 32
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 36
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 42
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("D:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(2, 9)
+        assert Y in range(1, 5)
+        assert I in range(7)
+        
+        if I == 6:
+            boxX = (X - 1) * 28 - 21
+        else:
+            boxX = (X - 1) * 28 - 17
+
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 2
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 8
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 12
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 28
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 34
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 40
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return getbox(data, boxX, boxY, 4, 2)
+
+    elif muxname.startswith("LOCAL_INTERCONNECT"):
+        X, Y, I = parse_xysi(muxname[19:])
+
+        assert X in range(1, 9)
+        if X == 1:
+            # Left IO
+            assert I in range(18)
+
+            boxX = 7
+            if I in range(9):
+                boxY = LUTYLOCS[4 - Y] + 2 * I + 2
+            else:
+                boxY = LUTYLOCS[4 - Y] + 2 * (17 - I) + 26
+
+            return getbox(data, boxX, boxY, 4, 2)
+
+        elif X == 8:
+            # Right IO
+            assert I in range(18)
+
+            boxX = 183
+            if I in range(9):
+                boxY = LUTYLOCS[4 - Y] + 2 * I + 2
+            else:
+                boxY = LUTYLOCS[4 - Y] + 2 * (17 - I) + 26
+
+            return getbox(data, boxX, boxY, 4, 2)
+
+        else:
+            assert Y in range(6)
+            if Y == 0:
+                # Bottom IO
+                assert I in range(10)
+
+                if I < 5:
+                    boxX = (X - 1) * 28 + 3
+                    boxY = 196 + 2 * (4 - I)
+                else:
+                    boxX = (X - 1) * 28 - 13
+                    boxY = 196 + 2 * (4 - (I - 5))
+
+                return getbox(data, boxX, boxY, 4, 2)
+            elif Y == 5:
+                # Top IO
+                assert I in range(10)
+
+                if I < 5:
+                    boxX = (X - 1) * 28 + 3
+                    boxY = 1 + 2 * I
+                else:
+                    boxX = (X - 1) * 28 - 13
+                    boxY = 1 + 2 * (I - 5)
+
+                return getbox(data, boxX, boxY, 4, 2)
+            else:
+                # Logic
+                assert I in range(26)
+
+                if I in range(0, 5) or I in range(13, 18):
+                    # To the right of the LUT
+                    boxX = (X - 1) * 28 + 7
+                    if I in range(0, 5):
+                        # Top half
+                        boxY = LUTYLOCS[4 - Y] + I * 4 + 2
+                    else:
+                        # Bottom half
+                        boxY = LUTYLOCS[4 - Y] + (17 - I) * 4 + 26
+                else:
+                    # To the left of the LUT
+                    boxX = (X - 1) * 28 - 13
+                    if I in range(5, 13):
+                        # Top half
+                        boxY = LUTYLOCS[4 - Y] + (I - 5) * 2
+                    else:
+                        # Bottom half
+                        boxY = LUTYLOCS[4 - Y] + (25 - I) * 2 + 30
+
+                return getbox(data, boxX, boxY, 4, 2)
+    else:
+        print("ERROR: Do not understand {}".format(muxname))
+        raise Exception()
 
 def lut_untwiddle(lutbox):
     b0 = lutbox[3][1]
@@ -274,14 +490,22 @@ def dump_logic_col(data, X):
 
             lutinpbox = getbox(data, lutX - 9, lutY, 9, 4, flipv=N >= 5)
             lutinpa = twohot_decode(DATAA_INPUTS, lutinpbox)
-            print("LUT X{}Y{}N{} DATAA: {}".format(X, Y, N, lutinpa))
+            if lutinpa is not None:
+                print("LUT X{}Y{}N{} DATAA: {}".format(X, Y, N, lutinpa))
             lutinpb = twohot_decode(DATAB_INPUTS, lutinpbox)
-            print("LUT X{}Y{}N{} DATAB: {}".format(X, Y, N, lutinpb))
+            if lutinpb is not None:
+                print("LUT X{}Y{}N{} DATAB: {}".format(X, Y, N, lutinpb))
             lutinpc = twohot_decode(DATAC_INPUTS, lutinpbox)
-            print("LUT X{}Y{}N{} DATAC: {}".format(X, Y, N, lutinpc))
+            if lutinpc is not None:
+                print("LUT X{}Y{}N{} DATAC: {}".format(X, Y, N, lutinpc))
             lutinpd = twohot_decode(DATAD_INPUTS, lutinpbox)
-            print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
+            if lutinpd is not None:
+                print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
         print()
+
+        for labI in range(26):
+            muxname = "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(X, Y, labI)
+            print(muxname)
     print()
 
 def dump_left_ios(data):
@@ -299,9 +523,10 @@ def dump_left_ios(data):
 
             if not getbit(data, 1, localY + (1 if N < 3 else 0)):
                 print("L IO Y{}N{} output: Bypass path".format(Y, N))
-                assert outinp == "<NONE>"
+                assert outinp is None
             else:
-                print("L IO Y{}N{} output: local track {}".format(Y, N, outinp))
+                if outinp is not None:
+                    print("L IO Y{}N{} output: local track {}".format(Y, N, outinp))
 
         # Routing tracks
         for N in range(8):
@@ -326,9 +551,10 @@ def dump_left_ios(data):
             elif not bitR:
                 outp = LH_IO_TRACK_MUX[N][1]
             else:
-                outp = "<NONE>"
+                outp = None
 
-            print("Wire R:X1Y{}I{} = {}".format(Y, N, outp))
+            if outp is not None:
+                print("Wire R:X1Y{}I{} = {}".format(Y, N, outp))
 
         print()
 
@@ -347,9 +573,10 @@ def dump_right_ios(data):
 
             if not getbit(data, 192, localY + (1 if N < 3 else 0)):
                 print("R IO Y{}N{} output: Bypass path".format(Y, N))
-                assert outinp == "<NONE>"
+                assert outinp is None
             else:
-                print("R IO Y{}N{} output: local track {}".format(Y, N, outinp))
+                if outinp is not None:
+                    print("R IO Y{}N{} output: local track {}".format(Y, N, outinp))
         print()
 
 def dump_top_ios(data):
@@ -374,7 +601,8 @@ def dump_top_ios(data):
                 print("T IO X{}N{} output: Bypass path".format(X, N))
                 assert outinp == "VDD ???"
             else:
-                print("T IO X{}N{} output: local track {}".format(X, N, outinp))
+                if outinp is not None and outinp != "VDD ???":
+                    print("T IO X{}N{} output: local track {}".format(X, N, outinp))
 
         # Routing tracks
         for N in range(10):
@@ -395,9 +623,10 @@ def dump_top_ios(data):
             elif not bitR:
                 outp = BOT_IO_TRACK_MUX[4 - (N % 5)][1]
             else:
-                outp = "<NONE>"
+                outp = None
 
-            print("Wire D:X{}Y5I{} = {}".format(X, N, outp))
+            if outp is not None:
+                print("Wire D:X{}Y5I{} = {}".format(X, N, outp))
         print()
 
 def dump_bot_ios(data):
@@ -422,7 +651,8 @@ def dump_bot_ios(data):
                 print("B IO X{}N{} output: Bypass path".format(X, N))
                 assert outinp == "VDD ???"
             else:
-                print("B IO X{}N{} output: local track {}".format(X, N, outinp))
+                if outinp is not None and outinp != "VDD ???":
+                    print("B IO X{}N{} output: local track {}".format(X, N, outinp))
 
         # Routing tracks
         for N in range(10):
@@ -443,9 +673,10 @@ def dump_bot_ios(data):
             elif not bitR:
                 outp = BOT_IO_TRACK_MUX[N % 5][1]
             else:
-                outp = "<NONE>"
+                outp = None
 
-            print("Wire U:X{}Y0I{} = {}".format(X, N, outp))
+            if outp is not None:
+                print("Wire U:X{}Y0I{} = {}".format(X, N, outp))
         print()
 
 def main():
