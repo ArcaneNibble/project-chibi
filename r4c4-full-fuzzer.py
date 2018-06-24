@@ -583,6 +583,162 @@ def prep_all_routes_lab3(outfn, my_wire_to_quartus_wire):
     with open(outfn, 'w') as f:
         json.dump(all_routes_to_try, f, sort_keys=True, indent=4, separators=(',', ': '))
 
+def prep_all_routes_ioout(outfn, my_wire_to_quartus_wire):
+    all_routes_to_try = {}
+
+    for ioX in [1, 8]:
+        for ioY in range(1, 5):
+            # IO indices
+            if ioX == 1 or ioY == 2:
+                N = 4
+            else:
+                N = 5
+
+            if ioX == 1:
+                udX = 2
+            else:
+                udX = 8
+
+            for ioI in range(N):
+                # Right wires
+                if ioX == 1:
+                    for dstI in range(8):
+                        dstwire = "R:X{}Y{}I{}".format(ioX + 1, ioY, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                # Left wires
+                if ioX == 8:
+                    for dstI in range(8):
+                        dstwire = "L:X{}Y{}I{}".format(ioX, ioY, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+                    for dstI in range(8):
+                        dstwire = "L2:X{}Y{}I{}".format(ioX, ioY, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                # Up wires
+                for dstI in range(7):
+                    dstwire = "U:X{}Y{}I{}".format(udX, ioY, dstI)
+                    if dstwire not in all_routes_to_try:
+                        all_routes_to_try[dstwire] = {}
+                    all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                # Down wires
+                for dstI in range(7):
+                    dstwire = "D:X{}Y{}I{}".format(udX, ioY, dstI)
+                    if dstwire not in all_routes_to_try:
+                        all_routes_to_try[dstwire] = {}
+                    all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                # Again for row below
+                if ioY != 1:
+                    # Right wires
+                    if ioX == 1:
+                        for dstI in range(8):
+                            dstwire = "R:X{}Y{}I{}".format(ioX + 1, ioY - 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                    # Left wires
+                    if ioX == 8:
+                        for dstI in range(8):
+                            dstwire = "L:X{}Y{}I{}".format(ioX, ioY - 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+                        for dstI in range(8):
+                            dstwire = "L2:X{}Y{}I{}".format(ioX, ioY, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                    # Up wires
+                    for dstI in range(7):
+                        dstwire = "U:X{}Y{}I{}".format(udX, ioY - 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                    # Down wires
+                    for dstI in range(7):
+                        dstwire = "D:X{}Y{}I{}".format(udX, ioY - 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                # Again for row again
+                if ioY != 4:
+                    # Right wires
+                    if ioX == 1:
+                        for dstI in range(8):
+                            dstwire = "R:X{}Y{}I{}".format(ioX + 1, ioY + 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                    # Left wires
+                    if ioX == 8:
+                        for dstI in range(8):
+                            dstwire = "L:X{}Y{}I{}".format(ioX, ioY + 1, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+                        for dstI in range(8):
+                            dstwire = "L2:X{}Y{}I{}".format(ioX, ioY, dstI)
+                            if dstwire not in all_routes_to_try:
+                                all_routes_to_try[dstwire] = {}
+                            all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                    # Up wires
+                    for dstI in range(7):
+                        dstwire = "U:X{}Y{}I{}".format(udX, ioY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+                    # Down wires
+                    for dstI in range(7):
+                        dstwire = "D:X{}Y{}I{}".format(udX, ioY + 1, dstI)
+                        if dstwire not in all_routes_to_try:
+                            all_routes_to_try[dstwire] = {}
+                        all_routes_to_try[dstwire]["IO_DATAIN:X{}Y{}S{}I0".format(ioX, ioY, ioI)] = "maybe"
+
+    for k, v in all_routes_to_try.items():
+        if k.startswith("LOCAL_INTERCONNECT"):
+            continue
+        if k not in my_wire_to_quartus_wire:
+            print(k)
+        assert k in my_wire_to_quartus_wire
+        for k in v:
+            if k.startswith("IO_DATAIN"):
+                continue
+            if k not in my_wire_to_quartus_wire:
+                print(k)
+            assert k in my_wire_to_quartus_wire
+
+    # What do we already know?
+    with open('initial-interconnect.json', 'r') as f:
+        initial_interconnect_map = json.load(f)
+
+    for dstnode, srcnodes in initial_interconnect_map.items():
+        if dstnode not in all_routes_to_try:
+            continue
+        for srcnode in srcnodes:
+            if srcnode not in all_routes_to_try[dstnode]:
+                continue
+            print(dstnode, srcnode)
+            assert all_routes_to_try[dstnode][srcnode] != False
+            all_routes_to_try[dstnode][srcnode] = True
+
+    with open(outfn, 'w') as f:
+        json.dump(all_routes_to_try, f, sort_keys=True, indent=4, separators=(',', ': '))
+
 def update_state(old_state_fn, new_interconnect_fn, outfn):
     with open(old_state_fn, 'r') as f:
         all_routes_to_try = json.load(f)
@@ -910,9 +1066,9 @@ def fuzz_a_route(workdir, vmdir, path, inp, outp, my_wire_to_quartus_wire, srcna
         assert "multiple usages of a single routing resource" not in rptdata
 
     if success:
-        shutil.copy(workdir + '/output_files/maxvtest.fit.rpt', 'r4c4-new-fuzz/from_{}_to_{}.fit.rpt'.format(srcname, dstname))
-        shutil.copy(workdir + '/output_files/maxvtest.pof', 'r4c4-new-fuzz/from_{}_to_{}.pof'.format(srcname, dstname))
-        shutil.copy(workdir + '/maxvtest.rcf', 'r4c4-new-fuzz/from_{}_to_{}.rcf'.format(srcname, dstname))
+        shutil.copy(workdir + '/output_files/maxvtest.fit.rpt', 'ioout-full-fuzz/from_{}_to_{}.fit.rpt'.format(srcname, dstname))
+        shutil.copy(workdir + '/output_files/maxvtest.pof', 'ioout-full-fuzz/from_{}_to_{}.pof'.format(srcname, dstname))
+        shutil.copy(workdir + '/maxvtest.rcf', 'ioout-full-fuzz/from_{}_to_{}.rcf'.format(srcname, dstname))
 
     return success
 
@@ -1478,6 +1634,203 @@ def do_fuzz_lab(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
             workqueue.put((src_A_to_in_path, src_B_to_in_path, dst_to_out_path, io_A_for_inp, io_B_for_inp, io_for_outp, lutX, lutY, lutI, src, dst))
             # workqueue.put((src_to_in_path + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
 
+def fuzz_a_route_ioout(workdir, vmdir, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname):
+    with open(workdir + '/maxvtest.qsf', 'w') as f:
+        f.write(QSF_TMPL.format(inp, outp))
+
+    with open(workdir + '/maxvtest.rcf', 'w') as f:
+        f.write("signal_name = a {\n")
+        for pathelem in path:
+            if pathelem in my_wire_to_quartus_wire:
+                pathelem = my_wire_to_quartus_wire[pathelem]
+            f.write("    {};\n".format(pathelem))
+        f.write("    zero_or_more, *;\n")
+        f.write("    dest = ( o, DATAIN );\n")
+        f.write("}\n")
+
+    while True:
+        try:
+            run_one_flow(vmdir, False, True, False)
+            break
+        except Exception:
+            pass
+
+    success = True
+    with open(workdir + '/output_files/maxvtest.fit.rpt', 'r') as f:
+        rptdata = f.read()
+        if "Cannot route signal \"a\" to atom \"o\"" in rptdata:
+            success = False
+        assert "multiple usages of a single routing resource" not in rptdata
+
+    if success:
+        shutil.copy(workdir + '/output_files/maxvtest.fit.rpt', 'ioout-full-fuzz/from_{}_to_{}.fit.rpt'.format(srcname, dstname))
+        shutil.copy(workdir + '/output_files/maxvtest.pof', 'ioout-full-fuzz/from_{}_to_{}.pof'.format(srcname, dstname))
+        shutil.copy(workdir + '/maxvtest.rcf', 'ioout-full-fuzz/from_{}_to_{}.rcf'.format(srcname, dstname))
+
+    return success
+
+def threadfn_ioout(workqueue, donequeue, my_wire_to_quartus_wire, threadi):
+    MYDIR = BASE_DIR + '/ioout-full-fuzz/thread{}'.format(threadi)
+    VMDIR = "ioout-full-fuzz/thread{}".format(threadi)
+    shutil.copytree(BASE_DIR + '/route-fuzz-seed', MYDIR)
+
+    while True:
+        try:
+            x = workqueue.get()
+            if x is None:
+                donequeue.put(None)
+                continue
+            path, inp, outp, srcname, dstname = x
+        except queue.Empty:
+            continue
+
+        success = fuzz_a_route_ioout(MYDIR, VMDIR, path, inp, outp, my_wire_to_quartus_wire, srcname, dstname)
+        donequeue.put((srcname, dstname, success))
+
+def do_fuzz_ioout(inp_state_fn, inp_route_fn, my_wire_to_quartus_wire):
+    os.mkdir(BASE_DIR + '/ioout-full-fuzz')
+
+    with open(inp_state_fn, 'r') as f:
+        fuzzing_state = json.load(f)
+    with open(inp_route_fn, 'r') as f:
+        # Index first by dst, then by src
+        # Lists ways to get _onto_ a wire
+        routing_graph_dsts_srcs = json.load(f)
+
+    # Invert the routing graph
+    routing_graph_srcs_dsts = {}
+    for dst, srcs in routing_graph_dsts_srcs.items():
+        for src in srcs:
+            if src not in routing_graph_srcs_dsts:
+                routing_graph_srcs_dsts[src] = {dst}
+            else:
+                routing_graph_srcs_dsts[src].add(dst)
+
+    with open("debug-invert-graph.json", 'w') as f:
+        json.dump({k: list(v) for k, v in routing_graph_srcs_dsts.items()}, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+    with open("work-ioout-state.json", 'w') as f:
+        json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
+    with open("work-interconnect.json", 'w') as f:
+        json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+    # For stats, and a cache
+    num_worked = 0
+    num_failed = 0
+    num_maybe = 0
+    maybe_pairs_to_test = set()
+    for dst, srcs in fuzzing_state.items():
+        for src, state in srcs.items():
+            if state == True:
+                num_worked += 1
+            elif state == False:
+                num_failed += 1
+            elif state == "maybe":
+                num_maybe += 1
+                maybe_pairs_to_test.add((src, dst))
+            else:
+                raise Exception()
+
+    workqueue = queue.Queue(2 * NTHREADS)
+    donequeue = queue.Queue()
+
+    last_save_time = time.time()
+    outstanding_tests = set()
+
+    for threadi in range(NTHREADS):
+        t = threading.Thread(target=threadfn_ioout, args=(workqueue, donequeue, my_wire_to_quartus_wire, threadi))
+        t.start()
+
+    while len(maybe_pairs_to_test):
+        while True:
+            try:
+                doneitem = donequeue.get(block=False)
+            except queue.Empty:
+                break
+
+            if doneitem is not None:
+                donesrc, donedst, donesuccess = doneitem
+                print("{} -> {} ==> {}".format(donesrc, donedst, donesuccess))
+
+                outstanding_tests.remove((donesrc, donedst))
+                if (donesrc, donedst) in maybe_pairs_to_test:
+                    maybe_pairs_to_test.remove((donesrc, donedst))
+                else:
+                    print("BUG", donesrc, donedst)
+                num_maybe -= 1
+                fuzzing_state[donedst][donesrc] = donesuccess
+                if donesuccess:
+                    num_worked += 1
+                    if donedst not in routing_graph_dsts_srcs:
+                        routing_graph_dsts_srcs[donedst] = {donesrc: "TODO"}
+                    else:
+                        routing_graph_dsts_srcs[donedst][donesrc] = "TODO"
+                    if donesrc not in routing_graph_srcs_dsts:
+                        routing_graph_srcs_dsts[donesrc] = set([donedst])
+                    else:
+                        routing_graph_srcs_dsts[donesrc].add(donedst)
+                else:
+                    num_failed += 1
+
+        if (time.time() - last_save_time >= 5) or (len(maybe_pairs_to_test) == 0):
+            try:
+                os.remove('work-ioout-state.json.bak')
+            except FileNotFoundError:
+                pass
+            try:
+                os.remove('work-interconnect.json.bak')
+            except FileNotFoundError:
+                pass
+            shutil.move('work-ioout-state.json', 'work-ioout-state.json.bak')
+            shutil.move('work-interconnect.json', 'work-interconnect.json.bak')
+
+            with open("work-ioout-state.json", 'w') as f:
+                json.dump(fuzzing_state, f, sort_keys=True, indent=4, separators=(',', ': '))
+            with open("work-interconnect.json", 'w') as f:
+                json.dump(routing_graph_dsts_srcs, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+            last_save_time = time.time()
+
+        print("Currently, there are {} routes that worked, {} routes that failed, {} routes unknown".format(num_worked, num_failed, num_maybe))
+
+        if len(maybe_pairs_to_test) == 0:
+            break
+
+        src, dst = random.choice(tuple(maybe_pairs_to_test))
+
+        if (src, dst) in outstanding_tests:
+            continue
+
+        assert src.startswith("IO_DATAIN:")
+
+        dst_to_out_path = route_to_output(routing_graph_srcs_dsts, dst)
+        if dst_to_out_path is None:
+            continue
+
+        if src in dst_to_out_path:
+            continue
+
+        io_for_inp = inp_to_io(src)
+
+        outp_local_int = dst_to_out_path[-1]
+        assert outp_local_int.startswith("LOCAL_INTERCONNECT")
+        outpX, outpY, _ = parse_xysi(outp_local_int[19:])
+
+        io_for_outp = None
+        for II in range(4):
+            maybe_io_for_outp = "IOC_X{}_Y{}_N{}".format(outpX, outpY, II)
+            if maybe_io_for_outp != io_for_inp:
+                io_for_outp = maybe_io_for_outp
+                break
+        if io_for_outp is None:
+            continue
+        if io_for_outp == io_for_inp:
+            continue
+
+        print("Testing {} -> {}".format(src, dst))
+        outstanding_tests.add((src, dst))
+        workqueue.put(([src] + dst_to_out_path, io_for_inp, io_for_outp, src, dst))
+
 def main():
     with open('my_wire_to_quartus_wire.json', 'r') as f:
         my_wire_to_quartus_wire = json.load(f)
@@ -1498,6 +1851,10 @@ def main():
         prep_all_routes_lab2(sys.argv[2], my_wire_to_quartus_wire)
     elif cmd=='prep4':
         prep_all_routes_lab3(sys.argv[2], my_wire_to_quartus_wire)
+    elif cmd=='prep-ioout':
+        prep_all_routes_ioout(sys.argv[2], my_wire_to_quartus_wire)
+    elif cmd=='fuzz3':
+        do_fuzz_ioout(sys.argv[2], sys.argv[3], my_wire_to_quartus_wire)
     else:
         raise Exception()
 
