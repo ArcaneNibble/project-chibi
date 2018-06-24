@@ -537,6 +537,7 @@ def dump_logic_col(interconnect_map, data, X):
                 print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
         print()
 
+        # Local interconnect
         for labI in range(26):
             muxname = "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(X, Y, labI)
             muxbits = extract_mux_bits(data, muxname)
@@ -550,9 +551,70 @@ def dump_logic_col(interconnect_map, data, X):
                     raise Exception("Unknown mux setting")
                 print("LAB{}: {}".format(labI, found_name))
         print()
+
+        # R
+        for trackI in range(8):
+            muxname = "R:X{}Y{}I{}".format(X, Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
+
+        # L
+        if X != 2:
+            for trackI in range(8):
+                muxname = "L:X{}Y{}I{}".format(X, Y, trackI)
+                muxbits = extract_mux_bits(data, muxname)
+                if anybits(muxbits):
+                    found_name = None
+                    for srcname, srcbits in interconnect_map[muxname].items():
+                        if srcbits == muxbits:
+                            assert found_name is None
+                            found_name = srcname
+                    if found_name is None:
+                        raise Exception("Unknown mux setting")
+                    print("{}: {}".format(muxname, found_name))
+            print()
+
+        # U
+        for trackI in range(7):
+            muxname = "U:X{}Y{}I{}".format(X, Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
+
+        # D
+        for trackI in range(7):
+            muxname = "D:X{}Y{}I{}".format(X, Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
     print()
 
-def dump_left_ios(data):
+def dump_left_ios(interconnect_map, data):
     for Y in range(1, 5):
         for N in range(5):
             localY = LUTYLOCS[4 - Y] + 8 + N * 4
@@ -571,6 +633,22 @@ def dump_left_ios(data):
             else:
                 if outinp is not None:
                     print("L IO Y{}N{} output: local track {}".format(Y, N, outinp))
+        print()
+
+        # Local interconnect
+        for II in range(18):
+            muxname = "LOCAL_INTERCONNECT:X1Y{}S0I{}".format(Y, II)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("Local {}: {}".format(II, found_name))
+        print()
 
         # Routing tracks
         for N in range(8):
@@ -602,7 +680,7 @@ def dump_left_ios(data):
 
         print()
 
-def dump_right_ios(data):
+def dump_right_ios(interconnect_map, data):
     for Y in range(1, 5):
         for N in range(5):
             localY = LUTYLOCS[4 - Y] + 8 + N * 4
@@ -623,7 +701,82 @@ def dump_right_ios(data):
                     print("R IO Y{}N{} output: local track {}".format(Y, N, outinp))
         print()
 
-def dump_top_ios(data):
+        # Local interconnect
+        for II in range(18):
+            muxname = "LOCAL_INTERCONNECT:X8Y{}S0I{}".format(Y, II)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("Local {}: {}".format(II, found_name))
+        print()
+
+        # L
+        for trackI in range(8):
+            muxname = "L:X8Y{}I{}".format(Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
+
+        # L2
+        for trackI in range(8):
+            muxname = "L2:X8Y{}I{}".format(Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
+
+        # U
+        for trackI in range(7):
+            muxname = "U:X8Y{}I{}".format(Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
+
+        # D
+        for trackI in range(7):
+            muxname = "D:X8Y{}I{}".format(Y, trackI)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("{}: {}".format(muxname, found_name))
+        print()
+
+def dump_top_ios(interconnect_map, data):
     for X in range(2, 8):
         tileX = (X - 1) * 28 - 17
 
@@ -647,6 +800,22 @@ def dump_top_ios(data):
             else:
                 if outinp is not None and outinp != "VDD ???":
                     print("T IO X{}N{} output: local track {}".format(X, N, outinp))
+        print()
+
+        # Local interconnect
+        for II in range(10):
+            muxname = "LOCAL_INTERCONNECT:X{}Y5S0I{}".format(X, II)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("Local {}: {}".format(II, found_name))
+        print()
 
         # Routing tracks
         for N in range(10):
@@ -673,7 +842,7 @@ def dump_top_ios(data):
                 print("Wire D:X{}Y5I{} = {}".format(X, N, outp))
         print()
 
-def dump_bot_ios(data):
+def dump_bot_ios(interconnect_map, data):
     for X in range(2, 8):
         tileX = (X - 1) * 28 - 17
 
@@ -697,6 +866,22 @@ def dump_bot_ios(data):
             else:
                 if outinp is not None and outinp != "VDD ???":
                     print("B IO X{}N{} output: local track {}".format(X, N, outinp))
+        print()
+
+        # Local interconnect
+        for II in range(10):
+            muxname = "LOCAL_INTERCONNECT:X{}Y0S0I{}".format(X, II)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("Local {}: {}".format(II, found_name))
+        print()
 
         # Routing tracks
         for N in range(10):
@@ -737,16 +922,16 @@ def main():
         dump_logic_col(interconnect_map, data, X)
 
     print("******************** LEFT IOs ********************")
-    dump_left_ios(data)
+    dump_left_ios(interconnect_map, data)
 
     print("******************** RIGHT IOs ********************")
-    dump_right_ios(data)
+    dump_right_ios(interconnect_map, data)
 
     print("******************** TOP IOs ********************")
-    dump_top_ios(data)
+    dump_top_ios(interconnect_map, data)
 
     print("******************** BOTTOM IOs ********************")
-    dump_bot_ios(data)
+    dump_bot_ios(interconnect_map, data)
 
 if __name__=='__main__':
     main()
