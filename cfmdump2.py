@@ -201,6 +201,40 @@ def twohot_decode(inp_encoding, box):
         return None
     return ret
 
+def parse_xyi(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert ipos > ypos
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:ipos]), int(inp[ipos + 1:]))
+
+def parse_xysi(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    spos = inp.find('S')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert spos > ypos
+    assert ipos > spos
+
+    sval = int(inp[spos + 1:ipos])
+    assert sval == 0
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[ipos + 1:]))
+
+def anybits(bits):
+    for y in bits:
+        for x in y:
+            if not x:
+                return True
+    return False
+
 def extract_mux_bits(data, muxname):
     if muxname.startswith("L:"):
         X, Y, I = parse_xyi(muxname)
@@ -473,7 +507,7 @@ def lut_untwiddle(lutbox):
 
     return lut
 
-def dump_logic_col(data, X):
+def dump_logic_col(interconnect_map, data, X):
     for Y in range(1, 5):
         lutX = (X - 1) * 28
 
@@ -505,7 +539,17 @@ def dump_logic_col(data, X):
 
         for labI in range(26):
             muxname = "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(X, Y, labI)
-            print(muxname)
+            muxbits = extract_mux_bits(data, muxname)
+            if anybits(muxbits):
+                found_name = None
+                for srcname, srcbits in interconnect_map[muxname].items():
+                    if srcbits == muxbits:
+                        assert found_name is None
+                        found_name = srcname
+                if found_name is None:
+                    raise Exception("Unknown mux setting")
+                print("LAB{}: {}".format(labI, found_name))
+        print()
     print()
 
 def dump_left_ios(data):
@@ -685,9 +729,12 @@ def main():
     with open(fn, 'rb') as f:
         data = f.read()
 
+    with open('initial-interconnect.json', 'r') as f:
+        interconnect_map = json.load(f)
+
     print("******************** LOGIC COLUMNS ********************")
     for X in range(2, 8):
-        dump_logic_col(data, X)
+        dump_logic_col(interconnect_map, data, X)
 
     print("******************** LEFT IOs ********************")
     dump_left_ios(data)
