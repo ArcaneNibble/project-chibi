@@ -28,6 +28,7 @@ WORKDIRS = [
     'ioout-full-fuzz',
     'lab-self-connection',
     'io-self-connection',
+    'top-io-gclk-fuzz',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -78,6 +79,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('lab-self-connection'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('io-self-connection'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('top-io-gclk-fuzz'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
@@ -372,6 +375,14 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
                             # HACK
                             assert wire.startswith("IO_DATAOUT")
                             continue
+                        elif srcnode.startswith("CLK_BUFFER"):
+                            assert wire.startswith("GLOBAL_CLK_H")
+                            continue
+                        elif srcnode.startswith("GLOBAL_CLK_H"):
+                            assert wire.startswith("LAB_CLK")
+                            continue
+                        elif srcnode.startswith("LAB_CLK"):
+                            srcnode_my = srcnode
                         else:
                             print("ERROR: Do not understand {}".format(srcnode))
                             raise Exception()
