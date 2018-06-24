@@ -547,15 +547,45 @@ def dump_logic_col(interconnect_map, data, X):
         for labI in range(26):
             muxname = "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(X, Y, labI)
             muxbits = extract_mux_bits(data, muxname)
-            if anybits(muxbits):
-                found_name = None
-                for srcname, srcbits in interconnect_map[muxname].items():
-                    if srcbits == muxbits:
-                        assert found_name is None
-                        found_name = srcname
-                if found_name is None:
-                    raise Exception("Unknown mux setting")
-                print("LAB{}: {}".format(labI, found_name))
+
+            used_gclk = False
+            if labI == 12:
+                if not getbit(data, lutX - 11, LUTYLOCS[4 - Y] + 16):
+                    if muxbits == [[True, True, True, True], [True, True, True, False]]:
+                        print("LAB{}: GCLK0".format(labI))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, False], [True, True, True, True]]:
+                        print("LAB{}: GCLK1".format(labI))
+                        used_gclk = True
+                    elif muxbits == [[True, True, False, True], [True, True, True, True]]:
+                        print("LAB{}: GCLK2".format(labI))
+                        used_gclk = True
+                    else:
+                        assert False
+            if labI == 25:
+                if not getbit(data, lutX - 11, LUTYLOCS[4 - Y] + 29):
+                    if muxbits == [[True, True, True, False], [True, True, True, True]]:
+                        print("LAB{}: GCLK0".format(labI))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, True], [True, True, True, False]]:
+                        print("LAB{}: GCLK1".format(labI))
+                        used_gclk = True
+                    elif muxbits == [[True, True, True, True], [True, True, False, True]]:
+                        print("LAB{}: GCLK3".format(labI))
+                        used_gclk = True
+                    else:
+                        assert False
+
+            if not used_gclk:
+                if anybits(muxbits):
+                    found_name = None
+                    for srcname, srcbits in interconnect_map[muxname].items():
+                        if srcbits == muxbits:
+                            assert found_name is None
+                            found_name = srcname
+                    if found_name is None:
+                        raise Exception("Unknown mux setting")
+                    print("LAB{}: {}".format(labI, found_name))
         print()
 
         # R

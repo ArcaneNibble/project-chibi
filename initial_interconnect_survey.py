@@ -24,6 +24,7 @@ WORKDIRS = [
     'neigh-fuzz',
     'row-io-neigh',
     'row-io-to-li',
+    'row-io-to-li-wrong',
     'ioout-full-fuzz',
     'lab-self-connection',
     'io-self-connection',
@@ -69,6 +70,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('row-io-neigh'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('row-io-to-li'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('row-io-to-li-wrong'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('ioout-full-fuzz'):
         return cfmfn[:-7] + 'rcf'

@@ -30,11 +30,10 @@ set_location_assignment LC_X{}_Y{}_N0 -to my_lcell
 set_global_assignment -name ROUTING_BACK_ANNOTATION_FILE maxvtest.rcf
 """
 
-RCF_TMPL = """signal_name = my_lcell {{
-    LE_BUFFER:*;
+RCF_TMPL = """signal_name = a {{
+    IO_DATAIN:*;
     LOCAL_INTERCONNECT:X{}Y{}S0I{};
-    IO_DATAOUT:*;
-    dest = ( o, DATAIN );
+    dest = ( my_lcell, DATAA );
 }}
 """
 
