@@ -652,7 +652,7 @@ def dump_logic_col(interconnect_map, data, X):
 
 def dump_left_ios(interconnect_map, data):
     for Y in range(1, 5):
-        for N in range(5):
+        for N in range(4):
             localY = LUTYLOCS[4 - Y] + 8 + N * 4
             if N >= 3:
                 localY += 8
@@ -748,7 +748,7 @@ def dump_left_ios(interconnect_map, data):
 
 def dump_right_ios(interconnect_map, data):
     for Y in range(1, 5):
-        for N in range(5):
+        for N in range(5 if Y != 2 else 4):
             localY = LUTYLOCS[4 - Y] + 8 + N * 4
             if N >= 3:
                 localY += 8
@@ -876,7 +876,7 @@ def dump_top_ios(interconnect_map, data):
     for X in range(2, 8):
         tileX = (X - 1) * 28 - 17
 
-        for N in range(4):
+        for N in range(4 if X != 2 and X != 4 else 3):
             outpY = 1 if N == 0 or N == 2 else 3
 
             print("T IO X{}N{} invert: {}".format(X, N,
@@ -909,7 +909,8 @@ def dump_top_ios(interconnect_map, data):
                         assert found_name is None
                         found_name = srcname
                 if found_name is None:
-                    raise Exception("Unknown mux setting")
+                    # raise Exception("Unknown mux setting")
+                    print("Unknown mux setting")
                 print("Local {}: {}".format(II, found_name))
         print()
 
@@ -942,7 +943,7 @@ def dump_bot_ios(interconnect_map, data):
     for X in range(2, 8):
         tileX = (X - 1) * 28 - 17
 
-        for N in range(4):
+        for N in range(4 if X != 4 and X != 7 else 3):
             outpY = 204 if N == 0 or N == 2 else 202
 
             print("B IO X{}N{} invert: {}".format(X, N,
@@ -975,7 +976,8 @@ def dump_bot_ios(interconnect_map, data):
                         assert found_name is None
                         found_name = srcname
                 if found_name is None:
-                    raise Exception("Unknown mux setting")
+                    # raise Exception("Unknown mux setting")
+                    print("Unknown mux setting")
                 print("Local {}: {}".format(II, found_name))
         print()
 
@@ -1030,6 +1032,76 @@ def main():
     dump_bot_ios(interconnect_map, data)
 
     print("******************** Global buffers ********************")
+    gclk_en = getbit(data, 18, 103)
+    gclk_logicen = not getbit(data, 17, 103)
+    gclk_box = getbox(data, 2, 57 + 30 + 2, 5, 2, fliph=True, flipv=True)
+    gclk_logic_val = twohot_decode(ROW_IO_INPUTS, gclk_box)
+    assert not (gclk_logicen and not gclk_en)
+    if gclk_en:
+        if not gclk_logicen:
+            assert gclk_logic_val is None
+            print("GCLK0: Dedicated pin")
+        else:
+            assert gclk_logic_val is not None
+            # XXX Something weird
+            assert gclk_logic_val != "0"
+            print("GCLK0: From logic, local {}".format(gclk_logic_val))
+
+    gclk_en = getbit(data, 14, 103)
+    gclk_logicen = not getbit(data, 11, 103)
+    gclk_box = getbox(data, 2, 57 + 30 + 0, 5, 2, fliph=True)
+    gclk_logic_val = twohot_decode(ROW_IO_INPUTS, gclk_box)
+    assert not (gclk_logicen and not gclk_en)
+    if gclk_en:
+        if not gclk_logicen:
+            assert gclk_logic_val is None
+            print("GCLK1: Dedicated pin")
+        else:
+            assert gclk_logic_val is not None
+            # XXX Something weird
+            assert gclk_logic_val != "0"
+            print("GCLK1: From logic, local {}".format(gclk_logic_val))
+
+    gclk_en = getbit(data, 4, 103)
+    gclk_logicen = not getbit(data, 3, 103)
+    gclk_box = getbox(data, 2, 57 + 30 + 6, 5, 2, fliph=True, flipv=True)
+    gclk_logic_val = twohot_decode(ROW_IO_INPUTS, gclk_box)
+    assert not (gclk_logicen and not gclk_en)
+    if gclk_en:
+        if not gclk_logicen:
+            assert gclk_logic_val is None
+            print("GCLK2: Dedicated pin")
+        else:
+            assert gclk_logic_val is not None
+            # XXX Something weird
+            assert gclk_logic_val != "0"
+            print("GCLK2: From logic, local {}".format(gclk_logic_val))
+
+    gclk_en = getbit(data, 10, 103)
+    gclk_logicen = not getbit(data, 9, 103)
+    gclk_box = getbox(data, 2, 57 + 30 + 4, 5, 2, fliph=True)
+    gclk_logic_val = twohot_decode(ROW_IO_INPUTS, gclk_box)
+    assert not (gclk_logicen and not gclk_en)
+    if gclk_en:
+        if not gclk_logicen:
+            assert gclk_logic_val is None
+            print("GCLK3: Dedicated pin")
+        else:
+            assert gclk_logic_val is not None
+            # XXX Something weird
+            assert gclk_logic_val != "0"
+            print("GCLK3: From logic, local {}".format(gclk_logic_val))
+    print()
+
+
+    if getbit(data, 5, 103):
+        print("X1 GCLK0 buffer enabled")
+    if getbit(data, 6, 103):
+        print("X1 GCLK1 buffer enabled")
+    if getbit(data, 7, 103):
+        print("X1 GCLK2 buffer enabled")
+    if getbit(data, 8, 103):
+        print("X1 GCLK3 buffer enabled")
     for X in range(2, 9):
         if getbit(data, (X - 1) * 28 - 16, 103):
             print("X{} GCLK0 buffer enabled".format(X))
