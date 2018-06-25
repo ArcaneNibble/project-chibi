@@ -1040,5 +1040,26 @@ def main():
         if getbit(data, (X - 1) * 28 - 12, 103):
             print("X{} GCLK3 buffer enabled".format(X))
 
+    print()
+    if not getbit(data, 8, 205):
+        print("DEV_OE is used")
+    if not getbit(data, 7, 205):
+        print("DEV_CLRn is used")
+    usercode = 0
+    for i in range(10):
+        if not getbit(data, 1 + i, 202):
+            usercode |= (1 << i)
+    for i in range(10):
+        if not getbit(data, 1 + i, 203):
+            usercode |= (1 << i + 10)
+    for i in range(10):
+        if not getbit(data, 1 + i, 204):
+            usercode |= (1 << i + 20)
+    if not getbit(data, 9, 205):
+        usercode |= (1 << 30)
+    if not getbit(data, 10, 205):
+        usercode |= (1 << 31)
+    print("USERCODE is 0x{:08X}".format(usercode))
+
 if __name__=='__main__':
     main()
