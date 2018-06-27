@@ -541,6 +541,24 @@ def dump_logic_col(interconnect_map, data, X):
             else:
                 if lutinpd is not None:
                     print("LUT X{}Y{}N{} DATAD: {}".format(X, Y, N, lutinpd))
+
+            if getbit(data, lutX + 5, lutY + (1 if N < 5 else 2)):
+                print("LE X{}Y{}N{} Buffer 0: Register".format(X, Y, N))
+            else:
+                print("LE X{}Y{}N{} Buffer 0: LUT".format(X, Y, N))
+            if getbit(data, lutX + 4, lutY + (1 if N < 5 else 2)):
+                print("LE X{}Y{}N{} Buffer 1: Register".format(X, Y, N))
+            else:
+                print("LE X{}Y{}N{} Buffer 1: LUT".format(X, Y, N))
+            if getbit(data, lutX + 6, lutY + (3 if N < 5 else 0)):
+                print("LE X{}Y{}N{} Local line: Register".format(X, Y, N))
+            else:
+                print("LE X{}Y{}N{} Local line: LUT".format(X, Y, N))
+
+            if getbit(data, lutX + 5, lutY + (2 if N < 5 else 1)):
+                print("LE X{}Y{}N{} is using register cascade".format(X, Y, N))
+
+            print()
         print()
 
         # Local interconnect
