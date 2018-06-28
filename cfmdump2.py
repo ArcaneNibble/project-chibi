@@ -647,6 +647,13 @@ def dump_logic_col(interconnect_map, data, X):
         # Control gunk
         muxalpha = getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 20)
         muxbeta = getbit(data, lutX, LUTYLOCS[4 - Y] + 22)
+        muxgamma = getbit(data, lutX - 10, LUTYLOCS[4 - Y] + 20)
+        muxdelta = getbit(data, lutX - 10, LUTYLOCS[4 - Y] + 25)
+        muxepsilon = getbit(data, lutX + 2, LUTYLOCS[4 - Y] + 20)
+        muxzeta = getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 22)
+        muxeta = getbit(data, lutX, LUTYLOCS[4 - Y] + 24)
+        muxtheta = getbit(data, lutX, LUTYLOCS[4 - Y] + 23)
+        inverteta = not getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 24)
 
         clock0_gclk0 = not getbit(data, lutX - 12, LUTYLOCS[4 - Y] + 18)
         clock0_gclk1 = not getbit(data, lutX - 12, LUTYLOCS[4 - Y] + 19)
@@ -695,6 +702,82 @@ def dump_logic_col(interconnect_map, data, X):
                 print("LAB X{}Y{} local clock line 1: ControlMux3".format(X, Y))
         if clock1_invert:
             print("LAB X{}Y{} local clock line 1 is inverted".format(X, Y))
+
+
+        aclr_gclk0 = not getbit(data, lutX - 10, LUTYLOCS[4 - Y] + 18)
+        aclr_gclk1 = not getbit(data, lutX - 10, LUTYLOCS[4 - Y] + 19)
+        aclr_gclk2 = not getbit(data, lutX - 10, LUTYLOCS[4 - Y] + 27)
+        aclr_gclk3 = not getbit(data, lutX - 10, LUTYLOCS[4 - Y] + 26)
+        assert aclr_gclk0 + aclr_gclk1 + aclr_gclk2 + aclr_gclk3 <= 1
+        aclr_gclk = None
+        if aclr_gclk0:
+            aclr_gclk = "GCLK0"
+        if aclr_gclk1:
+            aclr_gclk = "GCLK1"
+        if aclr_gclk2:
+            aclr_gclk = "GCLK2"
+        if aclr_gclk3:
+            aclr_gclk = "GCLK3"
+
+        aclr0_local = getbit(data, lutX, LUTYLOCS[4 - Y] + 25)
+        aclr0_tieoff_gnd = not getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 25)
+        aclr0_invert = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 24)
+        if not aclr0_tieoff_gnd:
+            if not aclr0_local:
+                assert aclr_gclk is not None
+                print("LAB X{}Y{} local aclr line 0: {}".format(X, Y, aclr_gclk))
+            else:
+                if muxgamma:
+                    print("LAB X{}Y{} local aclr line 0: ControlMux4".format(X, Y))
+                else:
+                    print("LAB X{}Y{} local aclr line 0: ControlMux5".format(X, Y))
+            if aclr0_invert:
+                print("LAB X{}Y{} local aclr line 0 is inverted".format(X, Y))
+
+        aclr1_local = getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 21)
+        aclr1_tieoff_gnd = not getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 25)
+        aclr1_invert = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 23)
+        if not aclr1_tieoff_gnd:
+            if not aclr1_local:
+                assert aclr_gclk is not None
+                print("LAB X{}Y{} local aclr line 1: {}".format(X, Y, aclr_gclk))
+            else:
+                if muxdelta:
+                    print("LAB X{}Y{} local aclr line 1: ControlMux4".format(X, Y))
+                else:
+                    print("LAB X{}Y{} local aclr line 1: ControlMux5".format(X, Y))
+            if aclr1_invert:
+                print("LAB X{}Y{} local aclr line 1 is inverted".format(X, Y))
+
+        aload_tieoff_gnd = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 22)
+        aload_invert = not getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 25)
+        if not aload_tieoff_gnd:
+            if muxbeta:
+                print("LAB X{}Y{} local aload line: ControlMux2".format(X, Y))
+            else:
+                print("LAB X{}Y{} local aload line: ControlMux3".format(X, Y))
+            if aload_invert:
+                print("LAB X{}Y{} local aload line is inverted".format(X, Y))
+
+
+        ena_tieoff_gnd_0 = not getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 24)
+        ena_invert_0 = not getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 21)
+        if not ena_tieoff_gnd_0:
+            if muxzeta:
+                print("LAB X{}Y{} local ena line 0: ControlMux2".format(X, Y))
+            else:
+                print("LAB X{}Y{} local ena line 0: ControlMux3".format(X, Y))
+            if ena_invert_0:
+                print("LAB X{}Y{} local ena line 0 is inverted".format(X, Y))
+
+        ena_tieoff_gnd_1 = not getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 20)
+        if not ena_tieoff_gnd_1:
+            if muxepsilon:
+                print("LAB X{}Y{} local ena line 1: ControlMux1".format(X, Y))
+            else:
+                print("LAB X{}Y{} local ena line 1: ControlMux0".format(X, Y))
+            if inverteta:
+                print("LAB X{}Y{} local ena line 1 is inverted".format(X, Y))
 
         print()
 
