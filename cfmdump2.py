@@ -632,6 +632,7 @@ def dump_logic_col(interconnect_map, data, X):
             print()
         print()
 
+        # Control muxes
         for i in range(6):
             boxY = LUTYLOCS[4 - Y] + 20 + 2 * (i // 2)
             controlmuxbox = getbox(data, lutX - 9, boxY, 9, 2)
@@ -640,7 +641,61 @@ def dump_logic_col(interconnect_map, data, X):
             else:
                 controlmuxinp = twohot_decode(ODD_CONTROL_MUX_INPUTS, controlmuxbox)
             if controlmuxinp is not None:
-                print("LAB X{}Y{} ControlMux{}: {}".format(X, Y, i, controlmuxinp))
+                print("LAB X{}Y{} ControlMux{}: LAB{}".format(X, Y, i, controlmuxinp))
+        print()
+
+        # Control gunk
+        muxalpha = getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 20)
+        muxbeta = getbit(data, lutX, LUTYLOCS[4 - Y] + 22)
+
+        clock0_gclk0 = not getbit(data, lutX - 12, LUTYLOCS[4 - Y] + 18)
+        clock0_gclk1 = not getbit(data, lutX - 12, LUTYLOCS[4 - Y] + 19)
+        clock0_gclk2 = not getbit(data, lutX - 12, LUTYLOCS[4 - Y] + 27)
+        clock0_gclk3 = not getbit(data, lutX - 12, LUTYLOCS[4 - Y] + 26)
+        clock0_local = not getbit(data, lutX, LUTYLOCS[4 - Y] + 20)
+        clock0_invert = not getbit(data, lutX, LUTYLOCS[4 - Y] + 21)
+
+        assert clock0_gclk0 + clock0_gclk1 + clock0_gclk2 + clock0_gclk3 + clock0_local <= 1
+        if clock0_gclk0:
+            print("LAB X{}Y{} local clock line 0: GCLK0".format(X, Y))
+        if clock0_gclk1:
+            print("LAB X{}Y{} local clock line 0: GCLK1".format(X, Y))
+        if clock0_gclk2:
+            print("LAB X{}Y{} local clock line 0: GCLK2".format(X, Y))
+        if clock0_gclk3:
+            print("LAB X{}Y{} local clock line 0: GCLK3".format(X, Y))
+        if clock0_local:
+            if muxalpha:
+                print("LAB X{}Y{} local clock line 0: ControlMux1".format(X, Y))
+            else:
+                print("LAB X{}Y{} local clock line 0: ControlMux0".format(X, Y))
+        if clock0_invert:
+            print("LAB X{}Y{} local clock line 0 is inverted".format(X, Y))
+
+        clock1_gclk0 = not getbit(data, lutX - 11, LUTYLOCS[4 - Y] + 18)
+        clock1_gclk1 = not getbit(data, lutX - 11, LUTYLOCS[4 - Y] + 19)
+        clock1_gclk2 = not getbit(data, lutX - 11, LUTYLOCS[4 - Y] + 27)
+        clock1_gclk3 = not getbit(data, lutX - 11, LUTYLOCS[4 - Y] + 26)
+        clock1_local = not getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 23)
+        clock1_invert = not getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 22)
+
+        assert clock1_gclk0 + clock1_gclk1 + clock1_gclk2 + clock1_gclk3 + clock1_local <= 1
+        if clock1_gclk0:
+            print("LAB X{}Y{} local clock line 1: GCLK0".format(X, Y))
+        if clock1_gclk1:
+            print("LAB X{}Y{} local clock line 1: GCLK1".format(X, Y))
+        if clock1_gclk2:
+            print("LAB X{}Y{} local clock line 1: GCLK2".format(X, Y))
+        if clock1_gclk3:
+            print("LAB X{}Y{} local clock line 1: GCLK3".format(X, Y))
+        if clock1_local:
+            if muxbeta:
+                print("LAB X{}Y{} local clock line 1: ControlMux2".format(X, Y))
+            else:
+                print("LAB X{}Y{} local clock line 1: ControlMux3".format(X, Y))
+        if clock1_invert:
+            print("LAB X{}Y{} local clock line 1 is inverted".format(X, Y))
+
         print()
 
         # Local interconnect
