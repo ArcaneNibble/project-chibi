@@ -115,7 +115,7 @@ ROW_IO_INPUTS = [
 
 COL_IO_INPUTS = [
     ['0', (2, 0), (0, 0)],
-    ['UNK 2 !!!', (2, 0), (1, 0)],
+#     ['UNK 2 !!!', (2, 0), (1, 0)],
     ['1', (2, 0), (1, 1)],
 
     ['2', (2, 1), (1, 0)],
@@ -144,6 +144,38 @@ BOT_IO_TRACK_MUX = [
     ["N2", "N0"],
     ["N3", "N2"],
     ["N1", "N0"],
+]
+
+EVEN_CONTROL_MUX_INPUTS = [
+    ['0', (6, 0), (0, 0)],
+    ['2', (6, 0), (2, 0)],
+    ['3', (7, 0), (0, 0)],
+    ['7', (7, 0), (2, 0)],
+    ['8', (8, 0), (0, 0)],
+    ['9', (6, 0), (0, 1)],
+    ['11', (7, 0), (0, 1)],
+    ['14', (8, 0), (0, 1)],
+    ['17', (8, 0), (2, 0)],
+    ['18', (6, 0), (1, 0)],
+    ['21', (6, 0), (2, 1)],
+    ['22', (7, 0), (1, 0)],
+    ['25', (8, 0), (1, 0)],
+]
+
+ODD_CONTROL_MUX_INPUTS = [
+    ['1', (8, 1), (5, 0)],
+    ['4', (8, 1), (3, 0)],
+    ['5', (7, 1), (3, 0)],
+    ['6', (7, 1), (5, 0)],
+    ['10', (6, 1), (3, 0)],
+    ['12', (8, 1), (3, 1)],
+    ['13', (7, 1), (3, 1)],
+    ['15', (6, 1), (5, 0)],
+    ['16', (6, 1), (3, 1)],
+    ['19', (8, 1), (5, 1)],
+    ['20', (8, 1), (4, 0)],
+    ['23', (7, 1), (4, 0)],
+    ['24', (6, 1), (4, 0)],
 ]
 
 def my_coords_to_byte_bit(x, y):
@@ -559,6 +591,17 @@ def dump_logic_col(interconnect_map, data, X):
                 print("LE X{}Y{}N{} is using register cascade".format(X, Y, N))
 
             print()
+        print()
+
+        for i in range(6):
+            boxY = LUTYLOCS[4 - Y] + 20 + 2 * (i // 2)
+            controlmuxbox = getbox(data, lutX - 9, boxY, 9, 2)
+            if i % 2 == 0:
+                controlmuxinp = twohot_decode(EVEN_CONTROL_MUX_INPUTS, controlmuxbox)
+            else:
+                controlmuxinp = twohot_decode(ODD_CONTROL_MUX_INPUTS, controlmuxbox)
+            if controlmuxinp is not None:
+                print("LAB X{}Y{} ControlMux{}: {}".format(X, Y, i, controlmuxinp))
         print()
 
         # Local interconnect
