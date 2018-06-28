@@ -720,9 +720,9 @@ def dump_logic_col(interconnect_map, data, X):
             aclr_gclk = "GCLK3"
 
         aclr0_local = getbit(data, lutX, LUTYLOCS[4 - Y] + 25)
-        aclr0_tieoff_gnd = not getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 25)
+        aclr0_disable = not getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 25)
         aclr0_invert = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 24)
-        if not aclr0_tieoff_gnd:
+        if not aclr0_disable:
             if not aclr0_local:
                 assert aclr_gclk is not None
                 print("LAB X{}Y{} local aclr line 0: {}".format(X, Y, aclr_gclk))
@@ -735,9 +735,9 @@ def dump_logic_col(interconnect_map, data, X):
                 print("LAB X{}Y{} local aclr line 0 is inverted".format(X, Y))
 
         aclr1_local = getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 21)
-        aclr1_tieoff_gnd = not getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 25)
+        aclr1_disable = not getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 25)
         aclr1_invert = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 23)
-        if not aclr1_tieoff_gnd:
+        if not aclr1_disable:
             if not aclr1_local:
                 assert aclr_gclk is not None
                 print("LAB X{}Y{} local aclr line 1: {}".format(X, Y, aclr_gclk))
@@ -749,9 +749,9 @@ def dump_logic_col(interconnect_map, data, X):
             if aclr1_invert:
                 print("LAB X{}Y{} local aclr line 1 is inverted".format(X, Y))
 
-        aload_tieoff_gnd = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 22)
+        aload_disable = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 22)
         aload_invert = not getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 25)
-        if not aload_tieoff_gnd:
+        if not aload_disable:
             if muxbeta:
                 print("LAB X{}Y{} local aload line: ControlMux2".format(X, Y))
             else:
@@ -760,9 +760,9 @@ def dump_logic_col(interconnect_map, data, X):
                 print("LAB X{}Y{} local aload line is inverted".format(X, Y))
 
 
-        ena_tieoff_gnd_0 = not getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 24)
+        ena_disable_0 = not getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 24)
         ena_invert_0 = not getbit(data, lutX + 1, LUTYLOCS[4 - Y] + 21)
-        if not ena_tieoff_gnd_0:
+        if not ena_disable_0:
             if muxzeta:
                 print("LAB X{}Y{} local ena line 0: ControlMux2".format(X, Y))
             else:
@@ -770,14 +770,37 @@ def dump_logic_col(interconnect_map, data, X):
             if ena_invert_0:
                 print("LAB X{}Y{} local ena line 0 is inverted".format(X, Y))
 
-        ena_tieoff_gnd_1 = not getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 20)
-        if not ena_tieoff_gnd_1:
+        ena_disable_1 = not getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 20)
+        if not ena_disable_1:
             if muxepsilon:
                 print("LAB X{}Y{} local ena line 1: ControlMux1".format(X, Y))
             else:
                 print("LAB X{}Y{} local ena line 1: ControlMux0".format(X, Y))
             if inverteta:
                 print("LAB X{}Y{} local ena line 1 is inverted".format(X, Y))
+
+        sync_load_disable = getbit(data, lutX + 4, LUTYLOCS[4 - Y] + 21)
+        sync_load_tieoff_vcc = getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 20)
+        assert not (sync_load_tieoff_vcc and not sync_load_disable)
+        if sync_load_tieoff_vcc:
+            print("LAB X{}Y{} local sload line: VCC".format(X, Y))
+        if not sync_load_disable:
+            if muxepsilon:
+                print("LAB X{}Y{} local sload line: ControlMux1".format(X, Y))
+            else:
+                print("LAB X{}Y{} local sload line: ControlMux0".format(X, Y))
+            if inverteta:
+                print("LAB X{}Y{} local sload line is inverted".format(X, Y))
+
+        sync_clear_disable = getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 20)
+        sync_clear_invert = not getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 21)
+        if not sync_clear_disable:
+            if muxeta:
+                print("LAB X{}Y{} local sclr: ControlMux4".format(X, Y))
+            else:
+                print("LAB X{}Y{} local sclr: ControlMux5".format(X, Y))
+            if sync_clear_invert:
+                print("LAB X{}Y{} local sclr is inverted".format(X, Y))
 
         print()
 
