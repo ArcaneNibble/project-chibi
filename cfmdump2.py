@@ -796,11 +796,21 @@ def dump_logic_col(interconnect_map, data, X):
         sync_clear_invert = not getbit(data, lutX + 6, LUTYLOCS[4 - Y] + 21)
         if not sync_clear_disable:
             if muxeta:
-                print("LAB X{}Y{} local sclr: ControlMux4".format(X, Y))
+                print("LAB X{}Y{} local sclr line: ControlMux4".format(X, Y))
             else:
-                print("LAB X{}Y{} local sclr: ControlMux5".format(X, Y))
+                print("LAB X{}Y{} local sclr line: ControlMux5".format(X, Y))
             if sync_clear_invert:
-                print("LAB X{}Y{} local sclr is inverted".format(X, Y))
+                print("LAB X{}Y{} local sclr line is inverted".format(X, Y))
+
+        inverta_disable = getbit(data, lutX + 5, LUTYLOCS[4 - Y] + 22)
+        inverta_to_cin0 = not getbit(data, lutX + 7, LUTYLOCS[4 - Y] + 24)
+        if not inverta_disable:
+            if muxtheta:
+                print("LAB X{}Y{} local inverta line: ControlMux3".format(X, Y))
+            else:
+                print("LAB X{}Y{} local inverta line: ControlMux4".format(X, Y))
+        if inverta_to_cin0:
+                print("LAB X{}Y{} inverta is driving LE0 cin".format(X, Y))
 
         print()
 
