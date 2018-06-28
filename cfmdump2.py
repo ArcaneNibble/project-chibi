@@ -554,19 +554,37 @@ def dump_logic_col(interconnect_map, data, X):
             lutval = lut_untwiddle(lutbox)
             print("LUT X{}Y{}N{}: {:04X}".format(X, Y, N, lutval))
 
-            lutchain = getbit(data, lutX + 4, lutY + (3 if N < 5 else 0))
-
             lutinpbox = getbox(data, lutX - 9, lutY, 9, 4, flipv=N >= 5)
             lutinpa = twohot_decode(DATAA_INPUTS, lutinpbox)
             if lutinpa is not None:
                 print("LUT X{}Y{}N{} DATAA: {}".format(X, Y, N, lutinpa))
+
+
             lutinpb = twohot_decode(DATAB_INPUTS, lutinpbox)
             if lutinpb is not None:
                 print("LUT X{}Y{}N{} DATAB: {}".format(X, Y, N, lutinpb))
+
+
             lutinpc = twohot_decode(DATAC_INPUTS, lutinpbox)
+
+            usecin = not getbit(data, lutX + 5, lutY + (0 if N < 5 else 3))
+            useqfbk = not getbit(data, lutX + 4, lutY + (0 if N < 5 else 3))
+
+            assert not (usecin and useqfbk)
+            if usecin or useqfbk:
+                assert lutinpc is None
+            if usecin:
+                print("LUT X{}Y{}N{} DATAC: using cin".format(X, Y, N))
+            if useqfbk:
+                print("LUT X{}Y{}N{} DATAC: using register feedback".format(X, Y, N))
             if lutinpc is not None:
                 print("LUT X{}Y{}N{} DATAC: {}".format(X, Y, N, lutinpc))
+
+
             lutinpd = twohot_decode(DATAD_INPUTS, lutinpbox)
+
+            lutchain = getbit(data, lutX + 4, lutY + (3 if N < 5 else 0))
+
             if lutchain:
                 assert lutinpd is None
                 print("LUT X{}Y{}N{} DATAD: LUT chain".format(X, Y, N))
@@ -589,6 +607,27 @@ def dump_logic_col(interconnect_map, data, X):
 
             if getbit(data, lutX + 5, lutY + (2 if N < 5 else 1)):
                 print("LE X{}Y{}N{} is using register cascade".format(X, Y, N))
+
+            synchmode = not getbit(data, lutX + 6, lutY + (0 if N < 5 else 3))
+            if synchmode:
+                print("LE X{}Y{}N{} register is using synchronous mode".format(X, Y, N))
+
+            if getbit(data, lutX + 4, lutY + (2 if N < 5 else 1)):
+                print("LE X{}Y{}N{} register is using local clock line 0".format(X, Y, N))
+            else:
+                print("LE X{}Y{}N{} register is using local clock line 1".format(X, Y, N))
+
+            if getbit(data, lutX + 5, lutY + (3 if N < 5 else 0)):
+                print("LE X{}Y{}N{} register is using local aclr line 0".format(X, Y, N))
+            else:
+                print("LE X{}Y{}N{} register is using local aclr line 1".format(X, Y, N))
+
+            if not getbit(data, lutX + 6, lutY + (1 if N < 5 else 2)):
+                # Unknown bit
+                assert False
+            if not getbit(data, lutX + 6, lutY + (2 if N < 5 else 1)):
+                # Unknown bit
+                assert False
 
             print()
         print()
