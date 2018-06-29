@@ -933,12 +933,38 @@ def dump_logic_col(interconnect_map, data, X):
         print()
     print()
 
-def dump_left_ios(interconnect_map, data):
+def dump_left_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits):
     for Y in range(1, 5):
         for N in range(4):
             localY = LUTYLOCS[4 - Y] + 8 + N * 4
             if N >= 3:
                 localY += 8
+
+            slewbitloc = slewratebits['IOC_X{}_Y{}_N{}'.format(1, Y, N)]
+            slew_is_slow = getbit(data, slewbitloc[0], slewbitloc[1])
+            if slew_is_slow:
+                print("L IO Y{}N{} slew: slow".format(Y, N))
+            else:
+                print("L IO Y{}N{} slew: fast".format(Y, N))
+
+            pullupbitloc = pullupbits['IOC_X{}_Y{}_N{}'.format(1, Y, N)]
+            pullup_is_enabled = not getbit(data, pullupbitloc[0], pullupbitloc[1])
+            if pullup_is_enabled:
+                print("L IO Y{}N{} pullup enabled".format(Y, N))
+
+            busholdbitloc = busholdbits['IOC_X{}_Y{}_N{}'.format(1, Y, N)]
+            bushold_is_enabled = not getbit(data, busholdbitloc[0], busholdbitloc[1])
+            if bushold_is_enabled:
+                print("L IO Y{}N{} bus hold enabled".format(Y, N))
+
+            currentbitlocs = lowcurrentbits['IOC_X{}_Y{}_N{}'.format(1, Y, N)]
+            currentbit1 = getbit(data, currentbitlocs[0][0], currentbitlocs[0][1])
+            currentbit2 = getbit(data, currentbitlocs[1][0], currentbitlocs[1][1])
+            assert currentbit1 == currentbit2
+            if currentbit1 and currentbit2:
+                print("L IO Y{}N{} drive strength: high".format(Y, N))
+            else:
+                print("L IO Y{}N{} drive strength: low".format(Y, N))
 
             print("L IO Y{}N{} invert: {}".format(Y, N,
                 not getbit(data, 2, localY + (1 if N < 3 else 0))))
@@ -1029,12 +1055,38 @@ def dump_left_ios(interconnect_map, data):
 
         print()
 
-def dump_right_ios(interconnect_map, data):
+def dump_right_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits):
     for Y in range(1, 5):
         for N in range(5 if Y != 2 else 4):
             localY = LUTYLOCS[4 - Y] + 8 + N * 4
             if N >= 3:
                 localY += 8
+
+            slewbitloc = slewratebits['IOC_X{}_Y{}_N{}'.format(8, Y, N)]
+            slew_is_slow = getbit(data, slewbitloc[0], slewbitloc[1])
+            if slew_is_slow:
+                print("R IO Y{}N{} slew: slow".format(Y, N))
+            else:
+                print("R IO Y{}N{} slew: fast".format(Y, N))
+
+            pullupbitloc = pullupbits['IOC_X{}_Y{}_N{}'.format(8, Y, N)]
+            pullup_is_enabled = not getbit(data, pullupbitloc[0], pullupbitloc[1])
+            if pullup_is_enabled:
+                print("R IO Y{}N{} pullup enabled".format(Y, N))
+
+            busholdbitloc = busholdbits['IOC_X{}_Y{}_N{}'.format(8, Y, N)]
+            bushold_is_enabled = not getbit(data, busholdbitloc[0], busholdbitloc[1])
+            if bushold_is_enabled:
+                print("R IO Y{}N{} bus hold enabled".format(Y, N))
+
+            currentbitlocs = lowcurrentbits['IOC_X{}_Y{}_N{}'.format(8, Y, N)]
+            currentbit1 = getbit(data, currentbitlocs[0][0], currentbitlocs[0][1])
+            currentbit2 = getbit(data, currentbitlocs[1][0], currentbitlocs[1][1])
+            assert currentbit1 == currentbit2
+            if currentbit1 and currentbit2:
+                print("R IO Y{}N{} drive strength: high".format(Y, N))
+            else:
+                print("R IO Y{}N{} drive strength: low".format(Y, N))
 
             print("R IO Y{}N{} invert: {}".format(Y, N,
                 not getbit(data, 191, localY + (1 if N < 3 else 0))))
@@ -1155,7 +1207,7 @@ def dump_right_ios(interconnect_map, data):
                 print("{}: {}".format(muxname, found_name))
         print()
 
-def dump_top_ios(interconnect_map, data):
+def dump_top_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits):
     for X in range(2, 8):
         tileX = (X - 1) * 28 - 17
 
@@ -1164,6 +1216,32 @@ def dump_top_ios(interconnect_map, data):
 
             print("T IO X{}N{} invert: {}".format(X, N,
                 not getbit(data, tileX + (11 if N >= 2 else 15), outpY + 1)))
+
+            slewbitloc = slewratebits['IOC_X{}_Y{}_N{}'.format(X, 5, N)]
+            slew_is_slow = getbit(data, slewbitloc[0], slewbitloc[1])
+            if slew_is_slow:
+                print("T IO X{}N{} slew: slow".format(X, N))
+            else:
+                print("T IO X{}N{} slew: fast".format(X, N))
+
+            pullupbitloc = pullupbits['IOC_X{}_Y{}_N{}'.format(X, 5, N)]
+            pullup_is_enabled = not getbit(data, pullupbitloc[0], pullupbitloc[1])
+            if pullup_is_enabled:
+                print("T IO X{}N{} pullup enabled".format(X, N))
+
+            busholdbitloc = busholdbits['IOC_X{}_Y{}_N{}'.format(X, 5, N)]
+            bushold_is_enabled = not getbit(data, busholdbitloc[0], busholdbitloc[1])
+            if bushold_is_enabled:
+                print("T IO X{}N{} bus hold enabled".format(X, N))
+
+            currentbitlocs = lowcurrentbits['IOC_X{}_Y{}_N{}'.format(X, 5, N)]
+            currentbit1 = getbit(data, currentbitlocs[0][0], currentbitlocs[0][1])
+            currentbit2 = getbit(data, currentbitlocs[1][0], currentbitlocs[1][1])
+            assert currentbit1 == currentbit2
+            if currentbit1 and currentbit2:
+                print("T IO X{}N{} drive strength: high".format(X, N))
+            else:
+                print("T IO X{}N{} drive strength: low".format(X, N))
 
             if N >= 2:
                 outbox = getbox(data, tileX + 8, outpY, 4, 2, fliph=True)
@@ -1222,7 +1300,7 @@ def dump_top_ios(interconnect_map, data):
                 print("Wire D:X{}Y5I{} = {}".format(X, N, outp))
         print()
 
-def dump_bot_ios(interconnect_map, data):
+def dump_bot_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits):
     for X in range(2, 8):
         tileX = (X - 1) * 28 - 17
 
@@ -1231,6 +1309,32 @@ def dump_bot_ios(interconnect_map, data):
 
             print("B IO X{}N{} invert: {}".format(X, N,
                 not getbit(data, tileX + (11 if N >= 2 else 15), outpY)))
+
+            slewbitloc = slewratebits['IOC_X{}_Y{}_N{}'.format(X, 0, N)]
+            slew_is_slow = getbit(data, slewbitloc[0], slewbitloc[1])
+            if slew_is_slow:
+                print("B IO X{}N{} slew: slow".format(X, N))
+            else:
+                print("B IO X{}N{} slew: fast".format(X, N))
+
+            pullupbitloc = pullupbits['IOC_X{}_Y{}_N{}'.format(X, 0, N)]
+            pullup_is_enabled = not getbit(data, pullupbitloc[0], pullupbitloc[1])
+            if pullup_is_enabled:
+                print("B IO X{}N{} pullup enabled".format(X, N))
+
+            busholdbitloc = busholdbits['IOC_X{}_Y{}_N{}'.format(X, 0, N)]
+            bushold_is_enabled = not getbit(data, busholdbitloc[0], busholdbitloc[1])
+            if bushold_is_enabled:
+                print("B IO X{}N{} bus hold enabled".format(X, N))
+
+            currentbitlocs = lowcurrentbits['IOC_X{}_Y{}_N{}'.format(X, 0, N)]
+            currentbit1 = getbit(data, currentbitlocs[0][0], currentbitlocs[0][1])
+            currentbit2 = getbit(data, currentbitlocs[1][0], currentbitlocs[1][1])
+            assert currentbit1 == currentbit2
+            if currentbit1 and currentbit2:
+                print("B IO X{}N{} drive strength: high".format(X, N))
+            else:
+                print("B IO X{}N{} drive strength: low".format(X, N))
 
             if N >= 2:
                 outbox = getbox(data, tileX + 8, outpY, 4, 2, fliph=True, flipv=True)
@@ -1297,22 +1401,30 @@ def main():
 
     with open('initial-interconnect.json', 'r') as f:
         interconnect_map = json.load(f)
+    with open('io-bus-hold.json', 'r') as f:
+        busholdbits = json.load(f)
+    with open('io-pull-up.json', 'r') as f:
+        pullupbits = json.load(f)
+    with open('io-fast-slew.json', 'r') as f:
+        slewratebits = json.load(f)
+    with open('io-low-current.json', 'r') as f:
+        lowcurrentbits = json.load(f)
 
     print("******************** LOGIC COLUMNS ********************")
     for X in range(2, 8):
         dump_logic_col(interconnect_map, data, X)
 
     print("******************** LEFT IOs ********************")
-    dump_left_ios(interconnect_map, data)
+    dump_left_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits)
 
     print("******************** RIGHT IOs ********************")
-    dump_right_ios(interconnect_map, data)
+    dump_right_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits)
 
     print("******************** TOP IOs ********************")
-    dump_top_ios(interconnect_map, data)
+    dump_top_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits)
 
     print("******************** BOTTOM IOs ********************")
-    dump_bot_ios(interconnect_map, data)
+    dump_bot_ios(interconnect_map, data, busholdbits, pullupbits, slewratebits, lowcurrentbits)
 
     print("******************** Global buffers ********************")
     gclk_en = getbit(data, 18, 103)
