@@ -2,6 +2,7 @@ from PIL import Image
 import sys
 import math
 import cfmdump
+import json
 
 infn = sys.argv[1]
 outfn = sys.argv[2]
@@ -453,6 +454,24 @@ for x in range(2, 8):
             196 + 2 * nn,
             1, 1,
             (250,99,213))
+
+with open('io-bus-hold.json', 'r') as f:
+    bitsbits = json.load(f)
+    for _, v in bitsbits.items():
+        drawbox(pixels, v[0], v[1], 1, 1, (255, 0, 0))
+with open('io-pull-up.json', 'r') as f:
+    bitsbits = json.load(f)
+    for _, v in bitsbits.items():
+        drawbox(pixels, v[0], v[1], 1, 1, (0, 255, 0))
+with open('io-fast-slew.json', 'r') as f:
+    bitsbits = json.load(f)
+    for _, v in bitsbits.items():
+        drawbox(pixels, v[0], v[1], 1, 1, (0, 0, 255))
+with open('io-low-current.json', 'r') as f:
+    bitsbits = json.load(f)
+    for _, v in bitsbits.items():
+        drawbox(pixels, v[0][0], v[0][1], 1, 1, (0, 255, 255))
+        drawbox(pixels, v[1][0], v[1][1], 1, 1, (0, 255, 255))
 
 # USERCODE
 draw_wire_t(pixels, 1, 202, 10, (255, 0, 255))

@@ -30,6 +30,7 @@ set_location_assignment IOC_X{}_Y{}_N{} -to o
 BASELINE_SLOW_SLEW = "set_instance_assignment -name SLOW_SLEW_RATE ON -to o"
 ENABLE_BUS_HOLD = "set_instance_assignment -name ENABLE_BUS_HOLD_CIRCUITRY ON -to o"
 ENABLE_PU = "set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to o"
+LOW_CURRENT = "set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to o"
 
 NTHREADS = 20
 
@@ -84,6 +85,19 @@ def fuzz_io_at(workdir, threadi, X, Y, N):
             pass
 
     shutil.copy(workdir + '/output_files/maxvtest.pof', 'output-modes/IOC_X{}_Y{}_N{}_pullup.pof'.format(X, Y, N))
+
+
+    with open(workdir + '/maxvtest.qsf', 'w') as f:
+        f.write(QSF_TMP.format(X, Y, N, LOW_CURRENT))
+
+    while True:
+        try:
+            run_one_flow("output-modes/thread{}".format(threadi), False, True, False)
+            break
+        except Exception:
+            pass
+
+    shutil.copy(workdir + '/output_files/maxvtest.pof', 'output-modes/IOC_X{}_Y{}_N{}_lowcurrent.pof'.format(X, Y, N))
 
 def main():
     os.mkdir(BASE_DIR + '/output-modes')
