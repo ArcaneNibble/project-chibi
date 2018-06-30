@@ -320,6 +320,19 @@ for y in [1, 2, 3, 4]:
             1, 1,
             (0, 255, 0))
 
+        draw_wire_t(pixels, 187, LUTYLOCS[4 - y] + 10 + 4 * nn,
+            4, (255, 200, 0))
+        draw_wire_b(pixels, 187, LUTYLOCS[4 - y] + 11 + 4 * nn,
+            5, (255, 200, 0))
+        draw_wire_t(pixels, 191, LUTYLOCS[4 - y] + 11 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_l(pixels, 187, LUTYLOCS[4 - y] + 10 + 4 * nn,
+            2, (255, 200, 0))
+        draw_wire_r(pixels, 191, LUTYLOCS[4 - y] + 11 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_r(pixels, 190, LUTYLOCS[4 - y] + 10 + 4 * nn,
+            1, (255, 200, 0))
+
     for nn in range(2):
         draw_wire_t(pixels, 187, LUTYLOCS[4 - y] + 28 + 4 * nn,
             4, (0, 255, 0))
@@ -338,6 +351,19 @@ for y in [1, 2, 3, 4]:
             192, LUTYLOCS[4 - y] + 28 + 4 * nn,
             1, 1,
             (0, 255, 0))
+
+        draw_wire_t(pixels, 187, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            5, (255, 200, 0))
+        draw_wire_b(pixels, 187, LUTYLOCS[4 - y] + 27 + 4 * nn,
+            4, (255, 200, 0))
+        draw_wire_b(pixels, 191, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_l(pixels, 187, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            2, (255, 200, 0))
+        draw_wire_r(pixels, 191, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_r(pixels, 190, LUTYLOCS[4 - y] + 27 + 4 * nn,
+            1, (255, 200, 0))
 
 # LH IO tiles
 for y in [1, 2, 3, 4]:
@@ -364,7 +390,20 @@ for y in [1, 2, 3, 4]:
             1, 1,
             (0, 255, 0))
 
-    for nn in range(2):
+        draw_wire_t(pixels, 3, LUTYLOCS[4 - y] + 10 + 4 * nn,
+            4, (255, 200, 0))
+        draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 11 + 4 * nn,
+            5, (255, 200, 0))
+        draw_wire_t(pixels, 2, LUTYLOCS[4 - y] + 11 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_r(pixels, 6, LUTYLOCS[4 - y] + 10 + 4 * nn,
+            2, (255, 200, 0))
+        draw_wire_l(pixels, 2, LUTYLOCS[4 - y] + 11 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_l(pixels, 3, LUTYLOCS[4 - y] + 10 + 4 * nn,
+            1, (255, 200, 0))
+
+    for nn in range(1):
         draw_wire_t(pixels, 3, LUTYLOCS[4 - y] + 28 + 4 * nn,
             4, (0, 255, 0))
         draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
@@ -382,6 +421,46 @@ for y in [1, 2, 3, 4]:
             1, LUTYLOCS[4 - y] + 28 + 4 * nn,
             1, 1,
             (0, 255, 0))
+
+        draw_wire_t(pixels, 2, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            5, (255, 200, 0))
+        draw_wire_b(pixels, 3, LUTYLOCS[4 - y] + 27 + 4 * nn,
+            4, (255, 200, 0))
+        draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_r(pixels, 6, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            2, (255, 200, 0))
+        draw_wire_l(pixels, 2, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            1, (255, 200, 0))
+        draw_wire_l(pixels, 3, LUTYLOCS[4 - y] + 27 + 4 * nn,
+            1, (255, 200, 0))
+
+    for nn in [1, 2, 3]:
+        draw_wire_t(pixels, 3, LUTYLOCS[4 - y] + 28 + 4 * nn,
+            4, (0x82, 0x0F, 0x71))
+        draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
+            5, (0x82, 0x0F, 0x71))
+        draw_wire_t(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
+            1, (0x82, 0x0F, 0x71))
+        draw_wire_r(pixels, 6, LUTYLOCS[4 - y] + 28 + 4 * nn,
+            2, (0x82, 0x0F, 0x71))
+        draw_wire_l(pixels, 2, LUTYLOCS[4 - y] + 29 + 4 * nn,
+            1, (0x82, 0x0F, 0x71))
+        draw_wire_l(pixels, 3, LUTYLOCS[4 - y] + 28 + 4 * nn,
+            1, (0x82, 0x0F, 0x71))
+
+        draw_wire_t(pixels, 2, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            5, (0x82, 0x0F, 0x71))
+        draw_wire_b(pixels, 3, LUTYLOCS[4 - y] + 27 + 4 * nn,
+            4, (0x82, 0x0F, 0x71))
+        draw_wire_b(pixels, 2, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            1, (0x82, 0x0F, 0x71))
+        draw_wire_r(pixels, 6, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            2, (0x82, 0x0F, 0x71))
+        draw_wire_l(pixels, 2, LUTYLOCS[4 - y] + 26 + 4 * nn,
+            1, (0x82, 0x0F, 0x71))
+        draw_wire_l(pixels, 3, LUTYLOCS[4 - y] + 27 + 4 * nn,
+            1, (0x82, 0x0F, 0x71))
 
 # TOP IO tiles
 for x in range(2, 8):
@@ -446,6 +525,27 @@ for x in range(2, 8):
             (x - 1) * 28, 1 + 2*nn,
             3, 2, (0, 255, 0))
 
+    for nn in range(2):
+        draw_wire_t(pixels, (x - 1) * 28 - 9, 5 + 2*nn,
+            4, (255, 200, 0))
+        draw_wire_b(pixels, (x - 1) * 28 - 9, 6 + 2*nn,
+            3, (255, 200, 0))
+        draw_wire_b(pixels, (x - 1) * 28 - 6, 5 + 2*nn,
+            1, (255, 200, 0))
+        draw_wire_l(pixels, (x - 1) * 28 - 9, 5 + 2*nn,
+            2, (255, 200, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 6, 5 + 2*nn,
+            1, (255, 200, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 7, 6 + 2*nn,
+            1, (255, 200, 0))
+
+        drawbox(pixels,
+            (x - 1) * 28 - 2, 5 + 2*nn,
+            1, 1, (255, 200, 0))
+        drawbox(pixels,
+            (x - 1) * 28, 5 + 2*nn,
+            3, 2, (255, 200, 0))
+
 
 # Bottom IO tiles (guessed)
 for x in range(2, 8):
@@ -509,6 +609,27 @@ for x in range(2, 8):
         drawbox(pixels,
             (x - 1) * 28, 202 + 2*nn,
             3, 2, (0, 255, 0))
+
+    for nn in range(2):
+        draw_wire_b(pixels, (x - 1) * 28 - 9, 199 + 2*nn,
+            4, (255, 200, 0))
+        draw_wire_t(pixels, (x - 1) * 28 - 9, 198 + 2*nn,
+            3, (255, 200, 0))
+        draw_wire_t(pixels, (x - 1) * 28 - 6, 199 + 2*nn,
+            1, (255, 200, 0))
+        draw_wire_l(pixels, (x - 1) * 28 - 9, 198 + 2*nn,
+            2, (255, 200, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 6, 199 + 2*nn,
+            1, (255, 200, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 7, 198 + 2*nn,
+            1, (255, 200, 0))
+
+        drawbox(pixels,
+            (x - 1) * 28 - 2, 199 + 2*nn,
+            1, 1, (255, 200, 0))
+        drawbox(pixels,
+            (x - 1) * 28, 198 + 2*nn,
+            3, 2, (255, 200, 0))
 
 
 with open('io-bus-hold.json', 'r') as f:
