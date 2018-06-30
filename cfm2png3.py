@@ -419,6 +419,34 @@ for x in range(2, 8):
             1, 1,
             (184,228,80))
 
+    for nn in range(2):
+        draw_wire_t(pixels, (x - 1) * 28 - 9, 1 + 2*nn,
+            4, (0, 255, 0))
+        draw_wire_b(pixels, (x - 1) * 28 - 9, 2 + 2*nn,
+            3, (0, 255, 0))
+        draw_wire_b(pixels, (x - 1) * 28 - 6, 1 + 2*nn,
+            1, (0, 255, 0))
+        draw_wire_l(pixels, (x - 1) * 28 - 9, 1 + 2*nn,
+            2, (0, 255, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 6, 1 + 2*nn,
+            1, (0, 255, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 7, 2 + 2*nn,
+            1, (0, 255, 0))
+        drawbox(pixels,
+            (x - 1) * 28 - 5, 2 + 2*nn,
+            1, 1, (0, 255, 0))
+
+        drawbox(pixels,
+            (x - 1) * 28 - 3, 2 + 2*nn,
+            1, 1, (0, 255, 0))
+        drawbox(pixels,
+            (x - 1) * 28 - 2, 1 + 2*nn,
+            1, 1, (0, 255, 0))
+        drawbox(pixels,
+            (x - 1) * 28, 1 + 2*nn,
+            3, 2, (0, 255, 0))
+
+
 # Bottom IO tiles (guessed)
 for x in range(2, 8):
     for nn in range(5):
@@ -454,6 +482,34 @@ for x in range(2, 8):
             196 + 2 * nn,
             1, 1,
             (250,99,213))
+
+    for nn in range(2):
+        draw_wire_b(pixels, (x - 1) * 28 - 9, 203 + 2*nn,
+            4, (0, 255, 0))
+        draw_wire_t(pixels, (x - 1) * 28 - 9, 202 + 2*nn,
+            3, (0, 255, 0))
+        draw_wire_t(pixels, (x - 1) * 28 - 6, 203 + 2*nn,
+            1, (0, 255, 0))
+        draw_wire_l(pixels, (x - 1) * 28 - 9, 202 + 2*nn,
+            2, (0, 255, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 6, 203 + 2*nn,
+            1, (0, 255, 0))
+        draw_wire_r(pixels, (x - 1) * 28 - 7, 202 + 2*nn,
+            1, (0, 255, 0))
+        drawbox(pixels,
+            (x - 1) * 28 - 5, 202 + 2*nn,
+            1, 1, (0, 255, 0))
+
+        drawbox(pixels,
+            (x - 1) * 28 - 3, 202 + 2*nn,
+            1, 1, (0, 255, 0))
+        drawbox(pixels,
+            (x - 1) * 28 - 2, 203 + 2*nn,
+            1, 1, (0, 255, 0))
+        drawbox(pixels,
+            (x - 1) * 28, 202 + 2*nn,
+            3, 2, (0, 255, 0))
+
 
 with open('io-bus-hold.json', 'r') as f:
     bitsbits = json.load(f)
