@@ -268,6 +268,7 @@ LABELS = [
 
 for dst, srcs in x.items():
     srcs_decoded = [None] * 13
+    is_tb_io = False
     for src, muxbits in srcs.items():
         if dst.startswith("R:"):
             _, _, I = parse_xyi(dst)
@@ -307,6 +308,7 @@ for dst, srcs in x.items():
                     muxbits = flipv(muxbits)
             else:
                 if Y == 0 or Y == 5:
+                    is_tb_io = True
                     if Y == 0:
                         muxbits = flipv(muxbits)
                     if I < 5:
@@ -328,7 +330,11 @@ for dst, srcs in x.items():
 
     print("~~~~~ {} ~~~~~".format(dst))
     print(LABELS[0])
+    if is_tb_io:
+        assert srcs_decoded[0] is None
     for i in range(len(srcs_decoded)):
+        if is_tb_io and i == 0:
+            continue
         print(LABELS[i + 1], end='')
         src = srcs_decoded[i]
         if src is None:

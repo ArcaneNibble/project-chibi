@@ -523,6 +523,10 @@ with open('io-fast-slew.json', 'r') as f:
     bitsbits = json.load(f)
     for _, v in bitsbits.items():
         drawbox(pixels, v[0], v[1], 1, 1, (0, 0, 255))
+with open('io-open-drain.json', 'r') as f:
+    bitsbits = json.load(f)
+    for _, v in bitsbits.items():
+        drawbox(pixels, v[0], v[1], 1, 1, (255, 255, 0))
 with open('io-low-current.json', 'r') as f:
     bitsbits = json.load(f)
     for _, v in bitsbits.items():
