@@ -1217,20 +1217,20 @@ right
 7L      N3
 7R      N2
 
-11L     
+11L     TCKUTAP in Y=2; SHIFTUSER in Y=3; RUNIDLEUSER in Y=4
 11R     N0
-15L     
+15L     TCKUTAP in Y=2; SHIFTUSER in Y=3; RUNIDLEUSER in Y=4
 15R     N0
 
 19L     N1
-19R     
+19R     TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
 23L     N1
-23R     
+23R     TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
 
 27L     N2
-27R     
+27R     CLKDRUSER in Y=3; USR1USER in Y=4
 31L     N2
-31R     
+31R     CLKDRUSER in Y=3; USR1USER in Y=4
 
 
 ~~~~~ Bottom IO up-going tracks
@@ -1291,3 +1291,21 @@ right
 | | | |0| | | |0|       R:X{x-4}Y{y}LogicalI1
 
 
+
+
+
+
+
+
+    input tdouser,              in Y4
+
+    output tmsutap,             in Y2
+    output tckutap,             in Y2
+
+    output shiftuser,           in Y3
+    output clkdruser,           in Y3
+    output updateuser,          in Y3
+
+    output tdiutap,             in Y4
+    output runidleuser,         in Y4
+    output usr1user             in Y4
