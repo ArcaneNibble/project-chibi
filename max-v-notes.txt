@@ -1217,9 +1217,9 @@ right
 7L      N3
 7R      N2
 
-11L     TCKUTAP in Y=2; SHIFTUSER in Y=3; RUNIDLEUSER in Y=4
+11L     DRDOUT in Y=1; TCKUTAP in Y=2; SHIFTUSER in Y=3; RUNIDLEUSER in Y=4
 11R     N0
-15L     TCKUTAP in Y=2; SHIFTUSER in Y=3; RUNIDLEUSER in Y=4
+15L     DRDOUT in Y=1; TCKUTAP in Y=2; SHIFTUSER in Y=3; RUNIDLEUSER in Y=4
 15R     N0
 
 19L     N1
@@ -1228,9 +1228,9 @@ right
 23R     OSC in Y=1; TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
 
 27L     N2
-27R     CLKDRUSER in Y=3; USR1USER in Y=4
+27R     BUSY in Y=1; BGPBUSY in Y=2; CLKDRUSER in Y=3; USR1USER in Y=4
 31L     N2
-31R     CLKDRUSER in Y=3; USR1USER in Y=4
+31R     BUSY in Y=1; BGPBUSY in Y=2; CLKDRUSER in Y=3; USR1USER in Y=4
 
 
 ~~~~~ Bottom IO up-going tracks
@@ -1302,14 +1302,24 @@ right
 
 
     output osc                  in Y1
+    output drdout               in Y1
+    output busy                 in Y1
+
+
+    output bgpbusy              in Y2
 
     output tmsutap,             in Y2
     output tckutap,             in Y2
+
 
     output shiftuser,           in Y3
     output clkdruser,           in Y3
     output updateuser,          in Y3
 
+
     output tdiutap,             in Y4
     output runidleuser,         in Y4
     output usr1user             in Y4
+
+    output sbdout               in X8Y2
+
