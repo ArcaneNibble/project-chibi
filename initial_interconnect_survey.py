@@ -375,7 +375,7 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
 
                         if srcnode in quartus_wire_to_my_wire:
                             srcnode_my = quartus_wire_to_my_wire[srcnode]
-                        elif srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER") or srcnode.startswith('JTAG_') or srcnode.startswith('UFM_'):
+                        elif srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER") or srcnode.startswith('JTAG_') or srcnode.startswith('UFM_') or srcnode.startswith("GEN_CORE_BUF"):
                             srcnode_my = srcnode
                         elif srcnode.startswith("LOCAL_INTERCONNECT"):
                             # HACK
@@ -388,7 +388,7 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
                             assert wire.startswith("LAB_CLK")
                             continue
                         elif srcnode.startswith("LAB_CLK"):
-                            if wire.startswith("LOCAL_INTERCONNECT:X8"):
+                            if wire.startswith("LOCAL_INTERCONNECT:X1") or wire.startswith("LOCAL_INTERCONNECT:X8"):
                                 continue
                             srcnode_my = srcnode
                         else:
@@ -399,7 +399,7 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
                             dstnode_my = quartus_wire_to_my_wire[wire]
                         elif wire.startswith("LOCAL_INTERCONNECT"):
                             dstnode_my = wire
-                        elif wire.startswith("IO_BYPASS_OUT"):
+                        elif wire.startswith("IO_BYPASS_OUT") or wire.startswith("GEN_CORE_BUF"):
                             # HACK
                             continue
                         else:
