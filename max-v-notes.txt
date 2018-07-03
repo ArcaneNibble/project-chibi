@@ -1223,9 +1223,9 @@ right
 15R     N0
 
 19L     N1
-19R     TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
+19R     OSC in Y=1; TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
 23L     N1
-23R     TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
+23R     OSC in Y=1; TMSUTAP in Y=2; UPDATEUSER in Y=3; TDIUTAP in Y=4
 
 27L     N2
 27R     CLKDRUSER in Y=3; USR1USER in Y=4
@@ -1293,11 +1293,15 @@ right
 
 
 
-
+    input ~oscena               in Y2
 
 
 
     input tdouser,              in Y4
+
+
+
+    output osc                  in Y1
 
     output tmsutap,             in Y2
     output tckutap,             in Y2

@@ -30,6 +30,7 @@ WORKDIRS = [
     'io-self-connection',
     'top-io-gclk-fuzz',
     'jtagblock',
+    'ufmblock',
 ]
 
 def xlat_cfm_to_pof(cfmfn):
@@ -84,6 +85,8 @@ def xlat_cfm_to_pof(cfmfn):
     elif cfmfn.startswith('top-io-gclk-fuzz'):
         return cfmfn[:-7] + 'rcf'
     elif cfmfn.startswith('jtagblock'):
+        return cfmfn[:-7] + 'rcf'
+    elif cfmfn.startswith('ufmblock'):
         return cfmfn[:-7] + 'rcf'
     else:
         raise Exception()
@@ -372,19 +375,21 @@ def handle_file(cfmfn, rcffn, nodes_to_sources_map, quartus_wire_to_my_wire):
 
                         if srcnode in quartus_wire_to_my_wire:
                             srcnode_my = quartus_wire_to_my_wire[srcnode]
-                        elif srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER") or srcnode.startswith('JTAG_'):
+                        elif srcnode.startswith("IO_DATAIN") or srcnode.startswith("LE_BUFFER") or srcnode.startswith('JTAG_') or srcnode.startswith('UFM_'):
                             srcnode_my = srcnode
                         elif srcnode.startswith("LOCAL_INTERCONNECT"):
                             # HACK
-                            assert wire.startswith("IO_DATAOUT") or wire.startswith('JTAG_')
+                            assert wire.startswith("IO_DATAOUT") or wire.startswith('JTAG_') or wire.startswith('GLOBAL_CLK_MUX')
                             continue
-                        elif srcnode.startswith("CLK_BUFFER"):
+                        elif srcnode.startswith("CLK_BUFFER") or srcnode.startswith("GLOBAL_CLK_MUX"):
                             assert wire.startswith("GLOBAL_CLK_H")
                             continue
                         elif srcnode.startswith("GLOBAL_CLK_H"):
                             assert wire.startswith("LAB_CLK")
                             continue
                         elif srcnode.startswith("LAB_CLK"):
+                            if wire.startswith("LOCAL_INTERCONNECT:X8"):
+                                continue
                             srcnode_my = srcnode
                         else:
                             print("ERROR: Do not understand {}".format(srcnode))
