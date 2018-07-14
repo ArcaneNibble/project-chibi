@@ -138,6 +138,232 @@ for X in range(2, 8):
 # print(ioioioio)
 
 
+
+def get_mux_box(muxname):
+    if muxname.startswith("L:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X in range(3, 9)
+        assert Y in range(1, 5)
+        assert I in range(8)
+
+        boxX = (X - 1) * 28 - 21
+        if I < 4:
+            boxY = LUTYLOCS[4 - Y] + I * 4 + 4
+        else:
+            boxY = LUTYLOCS[4 - Y] + (I - 4) * 4 + 28
+
+        return (boxX, boxY)
+
+    elif muxname.startswith("L2:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+        
+        assert X == 8
+        assert Y in range(1, 5)
+        assert I in range(8)
+        
+        boxX = (X - 1) * 28 - 17
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 6
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 14
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 18
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 26
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 30
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 38
+        elif I == 7:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return (boxX, boxY)
+
+    elif muxname.startswith("R:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+
+        if X == 1:
+            return None
+        
+        assert X in range(2, 8)
+        assert Y in range(1, 5)
+        assert I in range(8)
+        
+        boxX = (X - 1) * 28 - 17
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 6
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 14
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 18
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 26
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 30
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 38
+        elif I == 7:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return (boxX, boxY)
+
+    elif muxname.startswith("U:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+
+        if Y == 0:
+            return None
+        
+        assert X in range(2, 9)
+        assert Y in range(1, 5)
+        assert I in range(7)
+        
+        if I == 0:
+            boxX = (X - 1) * 28 - 21
+        else:
+            boxX = (X - 1) * 28 - 17
+
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 0
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 4
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 10
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 16
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 32
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 36
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 42
+
+        return (boxX, boxY)
+
+    elif muxname.startswith("D:"):
+        X, Y, I = parse_xyi(muxname)
+        # print(X, Y, I)
+
+        if Y == 5:
+            return None
+        
+        assert X in range(2, 9)
+        assert Y in range(1, 5)
+        assert I in range(7)
+        
+        if I == 6:
+            boxX = (X - 1) * 28 - 21
+        else:
+            boxX = (X - 1) * 28 - 17
+
+        if I == 0:
+            boxY = LUTYLOCS[4 - Y] + 2
+        elif I == 1:
+            boxY = LUTYLOCS[4 - Y] + 8
+        elif I == 2:
+            boxY = LUTYLOCS[4 - Y] + 12
+        elif I == 3:
+            boxY = LUTYLOCS[4 - Y] + 28
+        elif I == 4:
+            boxY = LUTYLOCS[4 - Y] + 34
+        elif I == 5:
+            boxY = LUTYLOCS[4 - Y] + 40
+        elif I == 6:
+            boxY = LUTYLOCS[4 - Y] + 44
+
+        return (boxX, boxY)
+
+    elif muxname.startswith("LOCAL_INTERCONNECT"):
+        X, Y, I = parse_xysi(muxname[19:])
+
+        assert X in range(1, 9)
+        if X == 1:
+            # Left IO
+            assert I in range(18)
+
+            boxX = 7
+            if I in range(9):
+                boxY = LUTYLOCS[4 - Y] + 2 * I + 2
+            else:
+                boxY = LUTYLOCS[4 - Y] + 2 * (17 - I) + 26
+
+            return (boxX, boxY)
+
+        elif X == 8:
+            # Right IO
+            assert I in range(18)
+
+            boxX = 183
+            if I in range(9):
+                boxY = LUTYLOCS[4 - Y] + 2 * I + 2
+            else:
+                boxY = LUTYLOCS[4 - Y] + 2 * (17 - I) + 26
+
+            return (boxX, boxY)
+
+        else:
+            assert Y in range(6)
+            if Y == 0:
+                # Bottom IO
+                assert I in range(10)
+
+                if I < 5:
+                    boxX = (X - 1) * 28 + 3
+                    boxY = 196 + 2 * (4 - I)
+                else:
+                    boxX = (X - 1) * 28 - 13
+                    boxY = 196 + 2 * (4 - (I - 5))
+
+                return (boxX, boxY)
+            elif Y == 5:
+                # Top IO
+                assert I in range(10)
+
+                if I < 5:
+                    boxX = (X - 1) * 28 + 3
+                    boxY = 1 + 2 * I
+                else:
+                    boxX = (X - 1) * 28 - 13
+                    boxY = 1 + 2 * (I - 5)
+
+                return (boxX, boxY)
+            else:
+                # Logic
+                assert I in range(26)
+
+                if I in range(0, 5) or I in range(13, 18):
+                    # To the right of the LUT
+                    boxX = (X - 1) * 28 + 7
+                    if I in range(0, 5):
+                        # Top half
+                        boxY = LUTYLOCS[4 - Y] + I * 4 + 2
+                    else:
+                        # Bottom half
+                        boxY = LUTYLOCS[4 - Y] + (17 - I) * 4 + 26
+                else:
+                    # To the left of the LUT
+                    boxX = (X - 1) * 28 - 13
+                    if I in range(5, 13):
+                        # Top half
+                        boxY = LUTYLOCS[4 - Y] + (I - 5) * 2
+                    else:
+                        # Bottom half
+                        boxY = LUTYLOCS[4 - Y] + (25 - I) * 2 + 30
+
+                return (boxX, boxY)
+    else:
+        print("ERROR: Do not understand {}".format(muxname))
+        raise Exception()
+
+
 ################################## HERE WE ACTUALLY READ THE INPUT
 with open(infn, 'r') as f:
     while True:
@@ -193,9 +419,16 @@ with open(infn, 'r') as f:
                 _, _, outputI, _ = parse_xysi2(dstthing[11:])
                 x, y, llI = parse_xysi(srcthing[19:])
 
-                ioioioio[(x, y)]['ios'][outputI]['outputmux'] = outputI
+                ioioioio[(x, y)]['ios'][outputI]['outputmux'] = llI
             else:
-                print("SKIPPED {} -> {}".format(srcthing, dstthing))
+                dstmuxbox = get_mux_box(dstthing)
+                if dstmuxbox is None:
+                    print("SKIPPED {} -> {}".format(srcthing, dstthing))
+                else:
+                    # print(dstmuxbox)
+                    muxbits = interconnect_map[dstthing][srcthing]
+                    # print(muxbits)
+                    setbox(outoutout, dstmuxbox[0], dstmuxbox[1], muxbits)
 
 
 # Stripes in pad ring
