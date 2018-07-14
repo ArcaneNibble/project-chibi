@@ -101,6 +101,11 @@ for X in range(2, 8):
                 'buf0': 'reg',
                 'buf1': 'reg',
                 'bufL': 'reg',
+
+                'dataa': None,
+                'datab': None,
+                'datac': None,
+                'datad': None,
             })
         lablablablab[(X, Y)] = {
             'luts': lutslutsluts,
@@ -303,6 +308,54 @@ for ((X, Y), attribs) in lablablablab.items():
         setbit(outoutout, lutX + 4, lutY + (3 if N < 5 else 0), lutattrib['lutchain'])
         setbit(outoutout, lutX + 5, lutY + (3 if N < 5 else 0), not lutattrib['aclrline1'])
         setbit(outoutout, lutX + 6, lutY + (3 if N < 5 else 0), lutattrib['bufL'] == 'reg')
+
+        if lutattrib['dataa'] is not None:
+            if isinstance(lutattrib['dataa'], int):
+                val_to_find = "LAB" + str(lutattrib['dataa'])
+            else:
+                val_to_find = lutattrib['dataa']
+            outputmuxbits = None
+            for i in range(len(DATAA_INPUTS)):
+                if DATAA_INPUTS[i][0] == val_to_find:
+                    outputmuxbits = DATAA_INPUTS[i][1:]
+            for bitX, bitY in outputmuxbits:
+                setbit(outoutout, lutX - 9 + bitX, lutY + (bitY if N < 5 else 3 - bitY))
+
+        if lutattrib['datab'] is not None:
+            if isinstance(lutattrib['datab'], int):
+                val_to_find = "LAB" + str(lutattrib['datab'])
+            else:
+                val_to_find = lutattrib['datab']
+            outputmuxbits = None
+            for i in range(len(DATAB_INPUTS)):
+                if DATAB_INPUTS[i][0] == val_to_find:
+                    outputmuxbits = DATAB_INPUTS[i][1:]
+            for bitX, bitY in outputmuxbits:
+                setbit(outoutout, lutX - 9 + bitX, lutY + (bitY if N < 5 else 3 - bitY))
+
+        if lutattrib['datac'] is not None:
+            if isinstance(lutattrib['datac'], int):
+                val_to_find = "LAB" + str(lutattrib['datac'])
+            else:
+                val_to_find = lutattrib['datac']
+            outputmuxbits = None
+            for i in range(len(DATAC_INPUTS)):
+                if DATAC_INPUTS[i][0] == val_to_find:
+                    outputmuxbits = DATAC_INPUTS[i][1:]
+            for bitX, bitY in outputmuxbits:
+                setbit(outoutout, lutX - 9 + bitX, lutY + (bitY if N < 5 else 3 - bitY))
+
+        if lutattrib['datad'] is not None:
+            if isinstance(lutattrib['datad'], int):
+                val_to_find = "LAB" + str(lutattrib['datad'])
+            else:
+                val_to_find = lutattrib['datad']
+            outputmuxbits = None
+            for i in range(len(DATAD_INPUTS)):
+                if DATAD_INPUTS[i][0] == val_to_find:
+                    outputmuxbits = DATAD_INPUTS[i][1:]
+            for bitX, bitY in outputmuxbits:
+                setbit(outoutout, lutX - 9 + bitX, lutY + (bitY if N < 5 else 3 - bitY))
 
 with open(outfn, 'wb') as f:
     f.write(outoutout)
