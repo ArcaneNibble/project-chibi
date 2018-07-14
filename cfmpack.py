@@ -536,6 +536,26 @@ setbit(outoutout, 14, 103)
 setbit(outoutout, 4, 103)
 setbit(outoutout, 10, 103)
 
+# Extra things hack for now
+setbit(outoutout, 2, LUTYLOCS[3 - 0] + 31)
+setbit(outoutout, 2, LUTYLOCS[3 - 0] + 32)
+setbit(outoutout, 2, LUTYLOCS[3 - 0] + 35)
+setbit(outoutout, 2, LUTYLOCS[3 - 0] + 36)
+setbit(outoutout, 2, LUTYLOCS[3 - 0] + 39)
+setbit(outoutout, 2, LUTYLOCS[3 - 0] + 40)
+
+setbit(outoutout, 2, LUTYLOCS[2 - 0] + 31)
+setbit(outoutout, 2, LUTYLOCS[2 - 0] + 32)
+setbit(outoutout, 2, LUTYLOCS[2 - 0] + 35)
+setbit(outoutout, 2, LUTYLOCS[2 - 0] + 36)
+
+setbit(outoutout, 2, LUTYLOCS[1 - 0] + 31)
+setbit(outoutout, 2, LUTYLOCS[1 - 0] + 32)
+setbit(outoutout, 2, LUTYLOCS[1 - 0] + 35)
+setbit(outoutout, 2, LUTYLOCS[1 - 0] + 36)
+
+setbit(outoutout, 2, LUTYLOCS[0 - 0] + 39)
+
 # IOs
 for ((X, Y), tileattribs) in ioioioio.items():
     for N in range(len(tileattribs['ios'])):
