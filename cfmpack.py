@@ -431,12 +431,33 @@ with open(infn, 'r') as f:
                     x, y, trackI = parse_xyi(dstthing[2:])
 
                     if x == 1:
-                        print("SKIPPED {} -> {}".format(srcthing, dstthing))
+                        choices = LH_IO_TRACK_MUX[trackI]
+
+                        bitL = choices[0] == ioI
+                        bitR = choices[1] == ioI
+
+                        assert bitL or bitR
+
+                        if trackI < 2:
+                            trackY = LUTYLOCS[4 - y] + 1
+                        elif trackI < 4:
+                            trackY = LUTYLOCS[4 - y] + 3
+                        elif trackI < 6:
+                            trackY = LUTYLOCS[4 - y] + 42
+                        elif trackI < 8:
+                            trackY = LUTYLOCS[4 - y] + 44
+
+                        trackX = 3 if trackI % 2 == 0 else 5
+
+                        if bitL:
+                            setbit(data, trackX + 0, trackY)
+                        if bitR:
+                            setbit(data, trackX + 1, trackY)
                     elif y == 0:
                         # bottom
                         print(x, y, trackI, ioI)
 
-                        choices = BOT_IO_TRACK_MUX[N % 5]
+                        choices = BOT_IO_TRACK_MUX[trackI % 5]
 
                         bitL = choices[0] == ioI
                         bitR = choices[1] == ioI
@@ -459,7 +480,7 @@ with open(infn, 'r') as f:
                                 setbit(outoutout, trackX + 1, trackY + 1)
                     elif y == 5:
                         # top
-                        choices = BOT_IO_TRACK_MUX[4 - (N % 5)]
+                        choices = BOT_IO_TRACK_MUX[4 - (trackI % 5)]
 
                         bitL = choices[0] == ioI
                         bitR = choices[1] == ioI
