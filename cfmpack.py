@@ -20,6 +20,14 @@ with open('io-open-drain.json', 'r') as f:
 
 outoutout = bytearray(b'\xff' * 0x1a00)
 
+def setbox(data, x, y, box, fliph=False, flipv=False):
+    h = len(box)
+    w = len(box[0])
+
+    for boxy, yy in zip(range(h), range(h) if not flipv else reversed(range(h))):
+        for boxx, xx in zip(range(w), range(w) if not fliph else reversed(range(w))):
+            setbit(data, x + xx, y + yy, box[boxy][boxx])
+
 def setbit(data, x, y, val=False):
     byte_i, bit_i = my_coords_to_byte_bit(x, y)
     if val:
@@ -66,6 +74,27 @@ for X in range(2, 8):
                 'idelay': False,
                 'oemux': None
             }
+
+for X in range(2, 8):
+    for Y in range(1, 5):
+        lutslutsluts = []
+        for N in range(10):
+            lutslutsluts.append({
+                'bits': 0xFFFF,
+                'lutchain': False,
+                'regchain': False,
+                'qfbk': False,
+                'cin': False,
+                'syncmode': False,
+                'clkline1': True,
+                'aclrline1': False,
+                'buf0': 'reg',
+                'buf1': 'reg',
+                'bufL': 'reg',
+            })
+        lablablablab[(X, Y)] = {
+            'luts': lutslutsluts,
+        }
 
 # print(ioioioio)
 
@@ -123,6 +152,75 @@ for ((X, Y, N), attribs) in ioioioio.items():
 
         setbit(outoutout, 2 if X == 1 else 191, localY + (1 if N < 3 else 0), not attribs['invert'])
         setbit(outoutout, 2 if X == 1 else 191, localY + (2 if N < 3 else -1), not attribs['invertoe'])
+
+def lut_twiddle(lutbits):
+    lutbox = []
+    for _ in range(4):
+        lutbox.append([False] * 4)
+
+    lutbox[3][1] = bool(lutbits & (1 << 0))
+    lutbox[3][0] = bool(lutbits & (1 << 1))
+    lutbox[2][1] = bool(lutbits & (1 << 2))
+    lutbox[2][0] = bool(lutbits & (1 << 3))
+
+    lutbox[2][3] = bool(lutbits & (1 << 4))
+    lutbox[2][2] = bool(lutbits & (1 << 5))
+    lutbox[3][3] = bool(lutbits & (1 << 6))
+    lutbox[3][2] = bool(lutbits & (1 << 7))
+
+    lutbox[1][1] = bool(lutbits & (1 << 8))
+    lutbox[1][0] = bool(lutbits & (1 << 9))
+    lutbox[0][1] = bool(lutbits & (1 << 10))
+    lutbox[0][0] = bool(lutbits & (1 << 11))
+
+    lutbox[1][3] = bool(lutbits & (1 << 12))
+    lutbox[1][2] = bool(lutbits & (1 << 13))
+    lutbox[0][3] = bool(lutbits & (1 << 14))
+    lutbox[0][2] = bool(lutbits & (1 << 15))
+
+    return lutbox
+
+# LABs
+for ((X, Y), attribs) in lablablablab.items():
+    lutX = (X - 1) * 28
+    labY = LUTYLOCS[4 - Y]
+
+    # Mystery bit
+    setbit(outoutout, lutX + 5, labY + 23)
+
+    # TODO: Just set these up for now
+    setbit(outoutout, lutX + 4, labY + 20)
+    setbit(outoutout, lutX + 5, labY + 20)
+    setbit(outoutout, lutX + 5, labY + 21)
+    setbit(outoutout, lutX + 1, labY + 24)
+    setbit(outoutout, lutX + 0, labY + 25)
+    setbit(outoutout, lutX + 5, labY + 25)
+    setbit(outoutout, lutX + 6, labY + 25)
+
+    for N in range(10):
+        if N < 5:
+            lutY = LUTYLOCS[4 - Y] + N * 4
+        else:
+            lutY = LUTYLOCS[4 - Y] + 46 - (N - 5) * 4 - 4
+
+        lutattrib = attribs['luts'][N]
+        lutbox = lut_twiddle(lutattrib['bits'])
+        # print(lutbox)
+        setbox(outoutout, lutX, lutY, lutbox, flipv=N >= 5)
+
+        setbit(outoutout, lutX + 4, lutY + (0 if N < 5 else 3), not lutattrib['qfbk'])
+        setbit(outoutout, lutX + 5, lutY + (0 if N < 5 else 3), not lutattrib['cin'])
+        setbit(outoutout, lutX + 6, lutY + (0 if N < 5 else 3), not lutattrib['syncmode'])
+
+        setbit(outoutout, lutX + 4, lutY + (1 if N < 5 else 2), lutattrib['buf0'] == 'reg')
+        setbit(outoutout, lutX + 5, lutY + (1 if N < 5 else 2), lutattrib['buf1'] == 'reg')
+
+        setbit(outoutout, lutX + 4, lutY + (2 if N < 5 else 1), not lutattrib['clkline1'])
+        setbit(outoutout, lutX + 5, lutY + (2 if N < 5 else 1), lutattrib['regchain'])
+
+        setbit(outoutout, lutX + 4, lutY + (3 if N < 5 else 0), lutattrib['lutchain'])
+        setbit(outoutout, lutX + 5, lutY + (3 if N < 5 else 0), not lutattrib['aclrline1'])
+        setbit(outoutout, lutX + 6, lutY + (3 if N < 5 else 0), lutattrib['bufL'] == 'reg')
 
 with open(outfn, 'wb') as f:
     f.write(outoutout)
