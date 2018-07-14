@@ -116,6 +116,22 @@ for x in range(208):
 # Dunno what this bit does
 setbit(outoutout, 1, 9)
 
+# Clocks for now
+for X in range(2, 9):
+    setbit(outoutout, (X - 1) * 28 - 16, 103)
+    setbit(outoutout, (X - 1) * 28 - 15, 103)
+    setbit(outoutout, (X - 1) * 28 - 13, 103)
+    setbit(outoutout, (X - 1) * 28 - 12, 103)
+setbit(outoutout, 5, 103)
+setbit(outoutout, 6, 103)
+setbit(outoutout, 7, 103)
+setbit(outoutout, 8, 103)
+
+setbit(outoutout, 18, 103)
+setbit(outoutout, 14, 103)
+setbit(outoutout, 4, 103)
+setbit(outoutout, 10, 103)
+
 # IOs
 for ((X, Y), tileattribs) in ioioioio.items():
     for N in range(len(tileattribs['ios'])):
@@ -152,6 +168,40 @@ for ((X, Y), tileattribs) in ioioioio.items():
             setbit(outoutout, tileX + (11 if N >= 2 else 15), outpY + (1 if Y == 5 else 0), not attribs['invert'])
             setbit(outoutout, tileX + (11 if N >= 2 else 15), outpY + (5 if Y == 5 else -4), not attribs['invertoe'])
 
+            if attribs['outputmux'] is None:
+                output_to_find = "VDD ???"
+            else:
+                output_to_find = str(attribs['outputmux'])
+            outputmuxbits = None
+            for i in range(len(COL_IO_INPUTS)):
+                if COL_IO_INPUTS[i][0] == output_to_find:
+                    outputmuxbits = COL_IO_INPUTS[i][1:]
+            # print(outputmuxbits)
+            for bitX, bitY in outputmuxbits:
+                if N >= 2:
+                    setbit(outoutout, tileX + 8 + (3 - bitX), outpY + (bitY if Y == 5 else 1 - bitY))
+                else:
+                    if bitX != 0:
+                        bitX += 1
+                    setbit(outoutout, tileX + 15 + bitX, outpY + (bitY if Y == 5 else 1 - bitY))
+
+            if attribs['oemux'] is None:
+                output_to_find = "VDD ???"
+            else:
+                output_to_find = str(attribs['oemux'])
+            outputmuxbits = None
+            for i in range(len(COL_IO_INPUTS)):
+                if COL_IO_INPUTS[i][0] == output_to_find:
+                    outputmuxbits = COL_IO_INPUTS[i][1:]
+            # print(outputmuxbits)
+            for bitX, bitY in outputmuxbits:
+                if N >= 2:
+                    setbit(outoutout, tileX + 8 + (3 - bitX), outpY + (bitY + 4 if Y == 5 else 1 - bitY - 4))
+                else:
+                    if bitX != 0:
+                        bitX += 1
+                    setbit(outoutout, tileX + 15 + bitX, outpY + (bitY + 4 if Y == 5 else 1 - bitY - 4))
+
         if X == 1 or X == 8:
             tileY = LUTYLOCS[4 - Y]
 
@@ -164,6 +214,26 @@ for ((X, Y), tileattribs) in ioioioio.items():
 
             setbit(outoutout, 2 if X == 1 else 191, localY + (1 if N < 3 else 0), not attribs['invert'])
             setbit(outoutout, 2 if X == 1 else 191, localY + (2 if N < 3 else -1), not attribs['invertoe'])
+
+            if attribs['outputmux'] is not None:
+                output_to_find = str(attribs['outputmux'])
+                outputmuxbits = None
+                for i in range(len(ROW_IO_INPUTS)):
+                    if ROW_IO_INPUTS[i][0] == output_to_find:
+                        outputmuxbits = ROW_IO_INPUTS[i][1:]
+                # print(outputmuxbits)
+                for bitX, bitY in outputmuxbits:
+                    setbit(outoutout, (187 + bitX if X == 8 else 2 + (4 - bitX)), localY + (bitY if N < 3 else 1 - bitY))
+
+            if attribs['oemux'] is not None:
+                output_to_find = str(attribs['oemux'])
+                outputmuxbits = None
+                for i in range(len(ROW_IO_INPUTS)):
+                    if ROW_IO_INPUTS[i][0] == output_to_find:
+                        outputmuxbits = ROW_IO_INPUTS[i][1:]
+                # print(outputmuxbits)
+                for bitX, bitY in outputmuxbits:
+                    setbit(outoutout, (187 + bitX if X == 8 else 2 + (4 - bitX)), localY + ((1 - bitY) + 2 if N < 3 else bitY - 2))
 
 def lut_twiddle(lutbits):
     lutbox = []
