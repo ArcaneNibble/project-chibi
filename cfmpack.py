@@ -16,6 +16,19 @@ def parse_xyn(inp):
 
     return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:npos]), int(inp[npos + 1:]))
 
+def parse_xysi2(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    spos = inp.find('S')
+    ipos = inp.find('I')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert spos > ypos
+    assert ipos > spos
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[spos + 1:ipos]), int(inp[ipos + 1:]))
+
 with open('initial-interconnect.json', 'r') as f:
     interconnect_map = json.load(f)
 with open('io-bus-hold.json', 'r') as f:
@@ -161,23 +174,28 @@ with open(infn, 'r') as f:
             else:
                 print(srcthing, value)
         else:
-            srcthing, value = l.split(' -> ')
+            srcthing, dstthing = l.split(' -> ')
 
             if srcthing == "COMBOUT":
-                x, y, n = parse_xysi(value[10:])
+                x, y, n = parse_xysi(dstthing[10:])
                 if n % 2 == 0:
                     lablablablab[(x, y)]['luts'][n // 2]['buf0'] = 'comb'
                 else:
                     lablablablab[(x, y)]['luts'][n // 2]['buf1'] = 'comb'
-            elif value.startswith("LUT"):
-                luti = int(value[3])
-                lutinp = value[5:].lower()
+            elif dstthing.startswith("LUT"):
+                luti = int(dstthing[3])
+                lutinp = dstthing[5:].lower()
 
                 x, y, llI = parse_xysi(srcthing[19:])
 
                 lablablablab[(x, y)]['luts'][luti][lutinp] = llI
+            elif dstthing.startswith("IO_DATAOUT"):
+                _, _, outputI, _ = parse_xysi2(dstthing[11:])
+                x, y, llI = parse_xysi(srcthing[19:])
+
+                ioioioio[(x, y)]['ios'][outputI]['outputmux'] = outputI
             else:
-                print("SKIPPED {} -> {}".format(srcthing, value))
+                print("SKIPPED {} -> {}".format(srcthing, dstthing))
 
 
 # Stripes in pad ring
