@@ -423,7 +423,65 @@ with open(infn, 'r') as f:
             else:
                 dstmuxbox = get_mux_box(dstthing)
                 if dstmuxbox is None:
-                    print("SKIPPED {} -> {}".format(srcthing, dstthing))
+                    assert srcthing.startswith("IO_DATAIN")
+
+                    _, _, ioI, _ = parse_xysi2(srcthing[10:])
+
+                    ioI = "N" + str(ioI)
+                    x, y, trackI = parse_xyi(dstthing[2:])
+
+                    if x == 1:
+                        print("SKIPPED {} -> {}".format(srcthing, dstthing))
+                    elif y == 0:
+                        # bottom
+                        print(x, y, trackI, ioI)
+
+                        choices = BOT_IO_TRACK_MUX[N % 5]
+
+                        bitL = choices[0] == ioI
+                        bitR = choices[1] == ioI
+
+                        assert bitL or bitR
+
+                        tileX = (x - 1) * 28 - 17
+                        trackX = tileX + (0 if trackI < 5 else 24)
+                        trackY = 196 + 2 * (trackI % 5)
+
+                        if bitL:
+                            if trackI < 5:
+                                setbit(outoutout, trackX + 0, trackY + 0)
+                            else:
+                                setbit(outoutout, trackX + 3, trackY + 0)
+                        if bitR:
+                            if trackI < 5:
+                                setbit(outoutout, trackX + 2, trackY + 1)
+                            else:
+                                setbit(outoutout, trackX + 1, trackY + 1)
+                    elif y == 5:
+                        # top
+                        choices = BOT_IO_TRACK_MUX[4 - (N % 5)]
+
+                        bitL = choices[0] == ioI
+                        bitR = choices[1] == ioI
+
+                        assert bitL or bitR
+
+                        tileX = (x - 1) * 28 - 17
+                        trackX = tileX + (0 if trackI < 5 else 24)
+                        trackY = 1 + 2 * (trackI % 5)
+
+                        if bitL:
+                            if trackI < 5:
+                                setbit(outoutout, trackX + 0, trackY + 1)
+                            else:
+                                setbit(outoutout, trackX + 3, trackY + 1)
+                        if bitR:
+                            if trackI < 5:
+                                setbit(outoutout, trackX + 2, trackY + 0)
+                            else:
+                                setbit(outoutout, trackX + 1, trackY + 0)
+                    else:
+                        assert False
                 else:
                     # print(dstmuxbox)
                     muxbits = interconnect_map[dstthing][srcthing]
