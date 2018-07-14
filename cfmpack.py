@@ -75,7 +75,7 @@ for X in [1, 8]:
                 'drivestrength': 'high',
                 'invert': True,
                 'invertoe': False,
-                'schmitttrigger': False,
+                'schmitttrigger': True,
                 'enableinput': False,
                 'outputmux': None,
                 'idelay': False,
@@ -98,7 +98,7 @@ for X in range(2, 8):
                 'drivestrength': 'high',
                 'invert': True,
                 'invertoe': False,
-                'schmitttrigger': False,
+                'schmitttrigger': True,
                 'enableinput': False,
                 'outputmux': None,
                 'idelay': False,
@@ -389,11 +389,13 @@ with open(infn, 'r') as f:
                 x, y, i = parse_xyi(loc)
 
                 if param == "INVERTOUT":
-                    ioioioio[(x, y)]['ios'][i]['invert'] = bool(value)
+                    ioioioio[(x, y)]['ios'][i]['invert'] = value.lower() == 'true'
                 elif param == "INVERTOE":
-                    ioioioio[(x, y)]['ios'][i]['invertoe'] = bool(value)
+                    ioioioio[(x, y)]['ios'][i]['invertoe'] = value.lower() == 'true'
                 elif param == "ENABLEIBUF":
-                    ioioioio[(x, y)]['ios'][i]['enableinput'] = bool(value)
+                    ioioioio[(x, y)]['ios'][i]['enableinput'] = value.lower() == 'true'
+                elif param == "SCHMITTTRIGGER":
+                    ioioioio[(x, y)]['ios'][i]['schmitttrigger'] = value.lower() == 'true'
                 else:
                     print("SKIPPED {} = {}".format(srcthing, value))
 
@@ -562,7 +564,7 @@ for ((X, Y), tileattribs) in ioioioio.items():
         if Y == 0 or Y == 5:
             tileX = (X - 1) * 28 - 17
 
-            setbit(outoutout, tileX + [27, 18, 11, 9][N], 0 if Y == 5 else 206, attribs['schmitttrigger'])
+            setbit(outoutout, tileX + [27, 18, 11, 9][N], 0 if Y == 5 else 206, not attribs['schmitttrigger'])
             setbit(outoutout, tileX + [26, 17, 10, 8][N], 0 if Y == 5 else 206, attribs['enableinput'])
 
             outpY = (1 if N == 0 or N == 2 else 3) if Y == 5 else (204 if N == 0 or N == 2 else 202)
@@ -607,7 +609,7 @@ for ((X, Y), tileattribs) in ioioioio.items():
         if X == 1 or X == 8:
             tileY = LUTYLOCS[4 - Y]
 
-            setbit(outoutout, 0 if X == 1 else 193, tileY + [1, 8, 14, 21, 28][N], attribs['schmitttrigger'])
+            setbit(outoutout, 0 if X == 1 else 193, tileY + [1, 8, 14, 21, 28][N], not attribs['schmitttrigger'])
             setbit(outoutout, 0 if X == 1 else 193, tileY + [0, 7, 13, 20, 27][N], attribs['enableinput'])
 
             localY = tileY + 8 + N * 4
