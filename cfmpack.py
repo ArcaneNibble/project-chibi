@@ -5,6 +5,17 @@ import json
 infn = sys.argv[1]
 outfn = sys.argv[2]
 
+def parse_xyn(inp):
+    xpos = inp.find('X')
+    ypos = inp.find('Y')
+    npos = inp.find('N')
+
+    assert xpos >= 0
+    assert ypos > xpos
+    assert npos > ypos
+
+    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:npos]), int(inp[npos + 1:]))
+
 with open('initial-interconnect.json', 'r') as f:
     interconnect_map = json.load(f)
 with open('io-bus-hold.json', 'r') as f:
@@ -112,6 +123,62 @@ for X in range(2, 8):
         }
 
 # print(ioioioio)
+
+
+################################## HERE WE ACTUALLY READ THE INPUT
+with open(infn, 'r') as f:
+    while True:
+        l = f.readline()
+        if not l:
+            break
+        l = l.strip()
+
+        if not l:
+            continue
+
+        if ' = ' in l:
+            srcthing, value = l.split(' = ')
+
+            if srcthing.startswith("LUTBITS:"):
+                x, y, n = parse_xyn(srcthing[8:])
+                # print(x, y, n)
+                bits = int(value, 2)
+                # print(bits)
+                lablablablab[(x, y)]['luts'][n]['bits'] = bits
+            elif srcthing.startswith("IO_TILE:"):
+                _, loc, param = srcthing.split(':')
+                x, y, i = parse_xyi(loc)
+
+                if param == "INVERTOUT":
+                    ioioioio[(x, y)]['ios'][i]['invert'] = bool(value)
+                elif param == "INVERTOE":
+                    ioioioio[(x, y)]['ios'][i]['invertoe'] = bool(value)
+                elif param == "ENABLEIBUF":
+                    ioioioio[(x, y)]['ios'][i]['enableinput'] = bool(value)
+                else:
+                    print("SKIPPED {} = {}".format(srcthing, value))
+
+            else:
+                print(srcthing, value)
+        else:
+            srcthing, value = l.split(' -> ')
+
+            if srcthing == "COMBOUT":
+                x, y, n = parse_xysi(value[10:])
+                if n % 2 == 0:
+                    lablablablab[(x, y)]['luts'][n // 2]['buf0'] = 'comb'
+                else:
+                    lablablablab[(x, y)]['luts'][n // 2]['buf1'] = 'comb'
+            elif value.startswith("LUT"):
+                luti = int(value[3])
+                lutinp = value[5:].lower()
+
+                x, y, llI = parse_xysi(srcthing[19:])
+
+                lablablablab[(x, y)]['luts'][luti][lutinp] = llI
+            else:
+                print("SKIPPED {} -> {}".format(srcthing, value))
+
 
 # Stripes in pad ring
 for x in range(208):
@@ -299,8 +366,8 @@ for ((X, Y), attribs) in lablablablab.items():
         setbit(outoutout, lutX + 5, lutY + (0 if N < 5 else 3), not lutattrib['cin'])
         setbit(outoutout, lutX + 6, lutY + (0 if N < 5 else 3), not lutattrib['syncmode'])
 
-        setbit(outoutout, lutX + 4, lutY + (1 if N < 5 else 2), lutattrib['buf0'] == 'reg')
-        setbit(outoutout, lutX + 5, lutY + (1 if N < 5 else 2), lutattrib['buf1'] == 'reg')
+        setbit(outoutout, lutX + 4, lutY + (1 if N < 5 else 2), lutattrib['buf1'] == 'reg')
+        setbit(outoutout, lutX + 5, lutY + (1 if N < 5 else 2), lutattrib['buf0'] == 'reg')
 
         setbit(outoutout, lutX + 4, lutY + (2 if N < 5 else 1), not lutattrib['clkline1'])
         setbit(outoutout, lutX + 5, lutY + (2 if N < 5 else 1), lutattrib['regchain'])
