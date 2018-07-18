@@ -62,6 +62,16 @@ def setbit(data, x, y, val=False):
 
 ioioioio = {}
 lablablablab = {}
+gclkgclk = {
+    'gclk0src': None,
+    'gclk1src': None,
+    'gclk2src': None,
+    'gclk3src': None,
+    'gclk0cols': set(),
+    'gclk1cols': set(),
+    'gclk2cols': set(),
+    'gclk3cols': set(),
+}
 
 for X in [1, 8]:
     for Y in range(1, 5):
@@ -133,6 +143,8 @@ for X in range(2, 8):
             })
         lablablablab[(X, Y)] = {
             'luts': lutslutsluts,
+            'clk0': None,
+            'clk1': None,
         }
 
 # print(ioioioio)
@@ -398,7 +410,13 @@ with open(infn, 'r') as f:
                     ioioioio[(x, y)]['ios'][i]['schmitttrigger'] = value.lower() == 'true'
                 else:
                     print("SKIPPED {} = {}".format(srcthing, value))
-
+            elif srcthing.startswith("GCLK_COL:"):
+                colidx = srcthing[10]
+                gclkidx = srcthing[12]
+                gclkgclk['gclk{}cols'.format(gclkidx)].add(int(colidx))
+            elif srcthing.startswith('GCLK_SOURCE:'):
+                gclkidx = srcthing[13]
+                gclkgclk['gclk{}src'.format(gclkidx)] = value.lower()
             else:
                 print(srcthing, value)
         else:
@@ -410,6 +428,12 @@ with open(infn, 'r') as f:
                     lablablablab[(x, y)]['luts'][n // 2]['buf0'] = 'comb'
                 else:
                     lablablablab[(x, y)]['luts'][n // 2]['buf1'] = 'comb'
+            elif srcthing == "REGOUT":
+                x, y, n = parse_xysi(dstthing[10:])
+                if n % 2 == 0:
+                    lablablablab[(x, y)]['luts'][n // 2]['buf0'] = 'reg'
+                else:
+                    lablablablab[(x, y)]['luts'][n // 2]['buf1'] = 'reg'
             elif dstthing.startswith("LUT"):
                 luti = int(dstthing[3])
                 lutinp = dstthing[5:].lower()
@@ -422,6 +446,16 @@ with open(infn, 'r') as f:
                 x, y, llI = parse_xysi(srcthing[19:])
 
                 ioioioio[(x, y)]['ios'][outputI]['outputmux'] = llI
+            elif dstthing.startswith("TILECLK"):
+                x, y, clki = parse_xyi(dstthing[8:])
+                assert srcthing[0:4] == "GCLK" # TODO
+                lablablablab[(x, y)]['clk0' if clki == 0 else 'clk1'] = srcthing.lower()
+            elif srcthing.startswith("TILECLK"):
+                x, y, n = parse_xyi(dstthing[4:])
+                if srcthing[7] == '0':
+                    lablablablab[(x, y)]['luts'][n]['clkline1'] = False
+                else:
+                    lablablablab[(x, y)]['luts'][n]['clkline1'] = True
             else:
                 dstmuxbox = get_mux_box(dstthing)
                 if dstmuxbox is None:
@@ -522,19 +556,19 @@ setbit(outoutout, 1, 9)
 
 # Clocks for now
 for X in range(2, 9):
-    setbit(outoutout, (X - 1) * 28 - 16, 103)
-    setbit(outoutout, (X - 1) * 28 - 15, 103)
-    setbit(outoutout, (X - 1) * 28 - 13, 103)
-    setbit(outoutout, (X - 1) * 28 - 12, 103)
-setbit(outoutout, 5, 103)
-setbit(outoutout, 6, 103)
-setbit(outoutout, 7, 103)
-setbit(outoutout, 8, 103)
+    setbit(outoutout, (X - 1) * 28 - 16, 103, X in gclkgclk['gclk0cols'])
+    setbit(outoutout, (X - 1) * 28 - 15, 103, X in gclkgclk['gclk1cols'])
+    setbit(outoutout, (X - 1) * 28 - 13, 103, X in gclkgclk['gclk2cols'])
+    setbit(outoutout, (X - 1) * 28 - 12, 103, X in gclkgclk['gclk3cols'])
+setbit(outoutout, 5, 103, 1 in gclkgclk['gclk0cols'])
+setbit(outoutout, 6, 103, 1 in gclkgclk['gclk1cols'])
+setbit(outoutout, 7, 103, 1 in gclkgclk['gclk2cols'])
+setbit(outoutout, 8, 103, 1 in gclkgclk['gclk3cols'])
 
-setbit(outoutout, 18, 103)
-setbit(outoutout, 14, 103)
-setbit(outoutout, 4, 103)
-setbit(outoutout, 10, 103)
+setbit(outoutout, 18, 103, gclkgclk['gclk0src'] != None)
+setbit(outoutout, 14, 103, gclkgclk['gclk1src'] != None)
+setbit(outoutout, 4, 103, gclkgclk['gclk2src'] != None)
+setbit(outoutout, 10, 103, gclkgclk['gclk3src'] != None)
 
 # Extra things hack for now
 setbit(outoutout, 2, LUTYLOCS[3 - 0] + 31)
