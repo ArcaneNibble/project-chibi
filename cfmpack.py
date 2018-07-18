@@ -737,6 +737,23 @@ for ((X, Y), attribs) in lablablablab.items():
     setbit(outoutout, lutX + 5, labY + 25)
     setbit(outoutout, lutX + 6, labY + 25)
 
+    if attribs['clk0'] == 'gclk0':
+        setbit(outoutout, lutX - 12, labY + 18)
+    if attribs['clk0'] == 'gclk1':
+        setbit(outoutout, lutX - 12, labY + 19)
+    if attribs['clk0'] == 'gclk2':
+        setbit(outoutout, lutX - 12, labY + 27)
+    if attribs['clk0'] == 'gclk3':
+        setbit(outoutout, lutX - 12, labY + 26)
+    if attribs['clk1'] == 'gclk0':
+        setbit(outoutout, lutX - 11, labY + 18)
+    if attribs['clk1'] == 'gclk1':
+        setbit(outoutout, lutX - 11, labY + 19)
+    if attribs['clk1'] == 'gclk2':
+        setbit(outoutout, lutX - 11, labY + 27)
+    if attribs['clk1'] == 'gclk3':
+        setbit(outoutout, lutX - 11, labY + 26)
+
     for N in range(10):
         if N < 5:
             lutY = LUTYLOCS[4 - Y] + N * 4
