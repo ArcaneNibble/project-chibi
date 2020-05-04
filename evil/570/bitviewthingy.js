@@ -756,11 +756,11 @@ window.onload = () => {
 
             // XXX check me
             let alteraLoc = "UNKNOWN/INVALID?";
-            // if (x <= 193 && y <= 206) {
-            //     let alteraX = 193 - x;
-            //     alteraLoc = (alteraX + y * 195).toString();
-            //     alteraLoc += " (" + alteraX + ", " + y + ")";
-            // }
+            if (x <= 361 && y <= 344) {
+                let alteraX = 361 - x;
+                alteraLoc = (alteraX + y * 363).toString();
+                alteraLoc += " (" + alteraX + ", " + y + ")";
+            }
 
             status += "Altera bit number " + alteraLoc + "<br>";
 
