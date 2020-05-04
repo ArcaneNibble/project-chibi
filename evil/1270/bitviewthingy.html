@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <title>Project Chibi? RE Tool</title>
+        <style>
+            body {
+                height: 100%;
+                margin: 0px;
+            }
+
+            #mainflex {
+                display: flex;
+                height: 100%;
+            }
+
+            #canvaswrap {
+                overflow: scroll;
+            }
+
+            #canvas {
+                width: 1948px;
+                height: 2048px;
+            }
+
+            #status {
+                flex-grow: 1;
+                position: sticky;
+            }
+        </style>
+        <script src="bitviewthingy.js"></script>
+    </head>
+    <body>
+        <div id="mainflex">
+            <div id="canvaswrap">
+                <canvas id="canvas" width="1948" height="2048"></canvas>
+            </div>
+            <div id="sidebar">
+                <div>
+                    <input type="file" id="fileopen" />
+                    <button id="clearbutton">Clear</button>
+                </div>
+                <div id="status">Hi2</div>
+            </div>
+        </div>
+    </body>
+</html>
