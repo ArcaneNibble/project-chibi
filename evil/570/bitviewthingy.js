@@ -1,6 +1,6 @@
 const SCALE_PX = 4;
 const WIDTH = 374;
-const HEIGHT = 512;
+const HEIGHT = 384;
 
 let ATTRIBS = new Array(WIDTH * HEIGHT);
 let DID_ATTRIBS = false;
