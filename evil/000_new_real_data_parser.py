@@ -717,18 +717,12 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
 
                 print(wireI, this_mux_bitdata)
 
-                # assert this_mux_bitdata[0] == this_mux_bitdata[1]
-                # assert this_mux_bitdata[0] != '??'
-                ### XXX FIX FOR MISSING IO PADS
-                result = None
-                if this_mux_bitdata[0] == '??':
-                    result = this_mux_bitdata[1]
-                elif this_mux_bitdata[1] == '??':
-                    result = this_mux_bitdata[0]
-                else:
-                    result = this_mux_bitdata[0]
-                    assert this_mux_bitdata[0] == this_mux_bitdata[1]
-                assert result is not None
+                results = set(this_mux_bitdata)
+                assert len(results) == 1 or len(results) == 2
+                if len(results) == 2:
+                    assert '??' in results
+                    results.remove('??')
+                result = list(results)[0]
                 assert e_dirs[result] == 2
                 my_wire_to_quartus_wire[my_name] = result
 
@@ -764,18 +758,12 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
 
                 print(wireI, this_mux_bitdata)
 
-                # assert this_mux_bitdata[0] == this_mux_bitdata[1]
-                # assert this_mux_bitdata[0] != '??'
-                ### XXX FIX FOR MISSING IO PADS
-                result = None
-                if this_mux_bitdata[0] == '??':
-                    result = this_mux_bitdata[1]
-                elif this_mux_bitdata[1] == '??':
-                    result = this_mux_bitdata[0]
-                else:
-                    result = this_mux_bitdata[0]
-                    assert this_mux_bitdata[0] == this_mux_bitdata[1]
-                assert result is not None
+                results = set(this_mux_bitdata)
+                assert len(results) == 1 or len(results) == 2
+                if len(results) == 2:
+                    assert '??' in results
+                    results.remove('??')
+                result = list(results)[0]
                 assert e_dirs[result] == 4
                 my_wire_to_quartus_wire[my_name] = result
 
@@ -821,18 +809,12 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
 
                 print(wireI, this_mux_bitdata)
 
-                # assert this_mux_bitdata[0] == this_mux_bitdata[1]
-                # assert this_mux_bitdata[0] != '??'
-                ### XXX FIX FOR MISSING IO PADS
-                result = None
-                if this_mux_bitdata[0] == '??':
-                    result = this_mux_bitdata[1]
-                elif this_mux_bitdata[1] == '??':
-                    result = this_mux_bitdata[0]
-                else:
-                    result = this_mux_bitdata[0]
-                    assert this_mux_bitdata[0] == this_mux_bitdata[1]
-                assert result is not None
+                results = set(this_mux_bitdata)
+                assert len(results) == 1 or len(results) == 2
+                if len(results) == 2:
+                    assert '??' in results
+                    results.remove('??')
+                result = list(results)[0]
                 assert e_dirs[result] == 3
                 my_wire_to_quartus_wire[my_name] = result
 
