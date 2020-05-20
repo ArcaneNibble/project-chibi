@@ -836,6 +836,123 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                 assert e_dirs[result] == 3
                 my_wire_to_quartus_wire[my_name] = result
 
+        # MAIN interconnect area
+        def getbox(x, y):
+            ret = []
+            for xx in range(4):
+                for yy in range(2):
+                    ret.append(bits_info[y + yy][x + xx])
+            return ret
+
+        for labrow in range(LONG_ROWS + SHORT_ROWS):
+            if labrow < SHORT_ROWS:
+                numcols = SHORT_COLS
+            else:
+                numcols = LONG_COLS
+            for labcol in range(numcols + 1):
+                tileY = 1 + labrow
+                if labrow < SHORT_ROWS:
+                    tileX = 1 + (LONG_COLS - SHORT_COLS) + labcol
+                    coordXbase = 7 + LAB_WIDTH * (
+                        labcol + (LONG_COLS - SHORT_COLS))
+                else:
+                    tileX = 1 + labcol
+                    coordXbase = 7 + LAB_WIDTH * labcol
+                if dev == "240":
+                    tileX += 1
+
+                coordYbase = blockY(tileY)
+
+                print(tileX, tileY, coordXbase, coordYbase)
+
+                # UP
+                for wireI in range(7):
+                    my_name = 'U:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI == 0:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 0)
+                    elif wireI == 1:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 4)
+                    elif wireI == 2:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 10)
+                    elif wireI == 3:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 16)
+                    elif wireI == 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 32)
+                    elif wireI == 5:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 36)
+                    elif wireI == 6:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 42)
+
+                    print(wireI, this_mux_bitdata)
+
+                    results = set(this_mux_bitdata)
+                    assert len(results) == 1 or len(results) == 2
+                    if len(results) == 2:
+                        assert '??' in results
+                        results.remove('??')
+                    result = list(results)[0]
+                    assert e_dirs[result] == 3
+                    my_wire_to_quartus_wire[my_name] = result
+
+                # DOWN
+                for wireI in range(7):
+                    my_name = 'D:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI == 0:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 2)
+                    elif wireI == 1:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 8)
+                    elif wireI == 2:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 12)
+                    elif wireI == 3:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 28)
+                    elif wireI == 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 34)
+                    elif wireI == 5:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 40)
+                    elif wireI == 6:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 44)
+
+                    print(wireI, this_mux_bitdata)
+
+                    results = set(this_mux_bitdata)
+                    assert len(results) == 1 or len(results) == 2
+                    if len(results) == 2:
+                        assert '??' in results
+                        results.remove('??')
+                    result = list(results)[0]
+                    assert e_dirs[result] == 4
+                    my_wire_to_quartus_wire[my_name] = result
+
         with open(outfn, 'w', newline='') as f:
             json.dump(my_wire_to_quartus_wire, f, sort_keys=True,
                       indent=4, separators=(',', ': '))
