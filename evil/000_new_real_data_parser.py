@@ -935,6 +935,94 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                     assert e_dirs[result] == 4
                     my_wire_to_quartus_wire[my_name] = result
 
+                # RIGHT (except last col which is L2)
+                for wireI in range(8):
+                    if labcol != numcols:
+                        my_name = 'R:X{}Y{}I{}'.format(tileX, tileY, wireI)
+                    else:
+                        my_name = 'L2:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI == 0:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 0)
+                    elif wireI == 1:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 6)
+                    elif wireI == 2:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 14)
+                    elif wireI == 3:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 18)
+                    elif wireI == 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 26)
+                    elif wireI == 5:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 30)
+                    elif wireI == 6:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 38)
+                    elif wireI == 7:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 44)
+
+                    print(wireI, this_mux_bitdata)
+
+                    results = set(this_mux_bitdata)
+                    assert len(results) == 1 or len(results) == 2
+                    if len(results) == 2:
+                        assert '??' in results
+                        results.remove('??')
+                    result = list(results)[0]
+                    if labcol != numcols:
+                        assert e_dirs[result] == 2
+                    else:
+                        assert e_dirs[result] == 1
+                    my_wire_to_quartus_wire[my_name] = result
+
+                # LEFT (except first col which doesn't have any or 
+                # the UFM corner which is R2)
+                for wireI in range(8):
+                    if labcol == 0 and labrow >= SHORT_ROWS:
+                        continue
+
+                    if labcol != 0:
+                        my_name = 'L:X{}Y{}I{}'.format(tileX, tileY, wireI)
+                    else:
+                        my_name = 'R2:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI < 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 4 + 4 * wireI)
+                    else:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 28 + 4 * (wireI - 4))
+
+                    print(wireI, this_mux_bitdata)
+
+                    results = set(this_mux_bitdata)
+                    assert len(results) == 1 or len(results) == 2
+                    if len(results) == 2:
+                        assert '??' in results
+                        results.remove('??')
+                    result = list(results)[0]
+                    if labcol != 0:
+                        assert e_dirs[result] == 1
+                    else:
+                        assert e_dirs[result] == 2
+                    my_wire_to_quartus_wire[my_name] = result
+
         with open(outfn, 'w', newline='') as f:
             json.dump(my_wire_to_quartus_wire, f, sort_keys=True,
                       indent=4, separators=(',', ': '))
