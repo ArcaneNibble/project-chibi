@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import csv
+import json
 import sys
 from collections import namedtuple
 
+
+LAB_WIDTH = 28
+LAB_HEIGHT = 46
 
 route_elem = namedtuple(
     'route_elem',
@@ -415,18 +419,62 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
     if dev == "240":
         CRAM_WIDTH = 195
         CRAM_HEIGHT = 207
+
+        LONG_ROWS = 4
+        SHORT_ROWS = 0
+        LONG_COLS = 6
+        SHORT_COLS = 0
+
+        CLK_AFTER_LAB_ROWS = 2
     elif dev == "570":
         CRAM_WIDTH = 363
         CRAM_HEIGHT = 345
+
+        LONG_ROWS = 4
+        SHORT_ROWS = 3
+        LONG_COLS = 12
+        SHORT_COLS = 3
+
+        CLK_AFTER_LAB_ROWS = 4
     elif dev == "1270":
         CRAM_WIDTH = 475
         CRAM_HEIGHT = 483
+
+        LONG_ROWS = 7
+        SHORT_ROWS = 3
+        LONG_COLS = 16
+        SHORT_COLS = 5
+
+        CLK_AFTER_LAB_ROWS = 5
     elif dev == "2210":
         CRAM_WIDTH = 587
         CRAM_HEIGHT = 621
+
+        LONG_ROWS = 10
+        SHORT_ROWS = 3
+        LONG_COLS = 20
+        SHORT_COLS = 7
+
+        CLK_AFTER_LAB_ROWS = 7
     else:
         print("Invalid device {}".format(dev))
         sys.exit(1)
+
+    def blockY(tileY):
+        # number 0 is the bottom IO
+        # number 1 to (LONG_ROWS + SHORT_ROWS) are LABs
+        # number (LONG_ROWS + SHORT_ROWS) + 1 is the top IO
+        assert tileY > 0
+        assert tileY <= LONG_ROWS + SHORT_ROWS
+
+        y_from_the_top = (LONG_ROWS + SHORT_ROWS) - tileY
+        temp_y_out = LAB_HEIGHT * y_from_the_top
+        if tileY <= CLK_AFTER_LAB_ROWS:
+            temp_y_out += 1
+
+        temp_y_out += 11    # TOP IO height
+
+        return temp_y_out
 
     route_elems = parse_routing(routingdump_fn)
     route_bits = parse_asm(asmdump_fn)
@@ -484,9 +532,6 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                     efanin.z,
                     efanin.index))
     elif mode == "dump_lab_bits":
-        LAB_WIDTH = 28
-        LAB_HEIGHT = 46
-
         outfn = "labbits-parsed-{}.csv".format(dev)
 
         bits_info = []
@@ -585,6 +630,215 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
         with open(outfn, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(bits_info)
+    elif mode == "analyze_wire_names":
+        outfn = "wire-name-map-{}.json".format(dev)
+        my_wire_to_quartus_wire = {}
+
+        # FIXME COPYPASTA
+        bits_info = []
+        for _ in range(CRAM_HEIGHT):
+            bits_info.append(['??'] * (CRAM_WIDTH - 1))
+
+        e_dirs = {}
+
+        # routing
+        for elem_src_i, e in enumerate(route_elems):
+            e = route_elems[elem_src_i]
+            a = route_bits[elem_src_i]
+
+            elem_src_name = "{}:X{}Y{}S{}I{}".format(
+                elem_enum_types[e.m_element_enum], e.x, e.y, e.z, e.index)
+
+            e_dirs[elem_src_name] = e.m_direction
+
+            for fanout_i, elem_dst_i in enumerate(e.fanouts):
+                elem_dst_i = e.fanouts[fanout_i]
+                edest = route_elems[elem_dst_i]
+                elem_dst_name = "{}:X{}Y{}S{}I{}".format(
+                    elem_enum_types[edest.m_element_enum],
+                    edest.x, edest.y, edest.z, edest.index)
+
+                bits_involved = a[fanout_i]
+                assert len(bits_involved) <= 2  # just for now
+
+                for bit, _, _ in bits_involved:
+                    alteraX = bit % CRAM_WIDTH
+                    alteraY = bit // CRAM_WIDTH
+
+                    cur_data = bits_info[alteraY][-alteraX - 1]
+                    if cur_data == '??':
+                        new_data = elem_dst_name
+                    elif elem_dst_name in cur_data:
+                        new_data = cur_data
+                    else:
+                        print("WARN: adding {} to {}".format(
+                            elem_dst_name, cur_data))
+                        new_data = cur_data + '\n' + elem_dst_name
+
+                    bits_info[alteraY][-alteraX - 1] = new_data
+        with open('debug.csv', 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(bits_info)
+
+        # LEFT HAND SIDE IOs
+        for labrow in range(LONG_ROWS):
+            if dev == "240":
+                tileX = 1
+            else:
+                tileX = 0
+
+            tileY = 1 + SHORT_ROWS + labrow
+
+            coordYbase = blockY(tileY)
+
+            print(tileX, tileY, coordYbase)
+
+            for wireI in range(8):
+                my_name = 'R:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                if wireI % 2 == 0:
+                    coordX = 3
+                else:
+                    coordX = 5
+
+                if wireI // 2 == 0:
+                    coordY = coordYbase + 1
+                elif wireI // 2 == 1:
+                    coordY = coordYbase + 3
+                elif wireI // 2 == 2:
+                    coordY = coordYbase + 42
+                elif wireI // 2 == 3:
+                    coordY = coordYbase + 44
+
+                this_mux_bitdata = [
+                    bits_info[coordY][coordX + 0],
+                    bits_info[coordY][coordX + 1],
+                ]
+
+                print(wireI, this_mux_bitdata)
+
+                # assert this_mux_bitdata[0] == this_mux_bitdata[1]
+                # assert this_mux_bitdata[0] != '??'
+                ### XXX FIX FOR MISSING IO PADS
+                result = None
+                if this_mux_bitdata[0] == '??':
+                    result = this_mux_bitdata[1]
+                elif this_mux_bitdata[1] == '??':
+                    result = this_mux_bitdata[0]
+                else:
+                    result = this_mux_bitdata[0]
+                    assert this_mux_bitdata[0] == this_mux_bitdata[1]
+                assert result is not None
+                assert e_dirs[result] == 2
+                my_wire_to_quartus_wire[my_name] = result
+
+        # TOP IOs
+        for iocol in range(LONG_COLS):
+            tileY = LONG_ROWS + SHORT_ROWS + 1
+
+            if dev == "240":
+                tileX = 2 + iocol
+            else:
+                tileX = 1 + iocol
+
+            coordXbase = 11 + LAB_WIDTH * iocol
+
+            print(tileX, tileY, coordXbase)
+
+            for wireI in range(10):
+                my_name = 'D:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                coordY = 1 + 2 * (wireI % 5)
+                # print(coordY)
+
+                if wireI < 5:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 1][coordXbase + 0],
+                        bits_info[coordY + 0][coordXbase + 2],
+                    ]
+                else:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 0][coordXbase + 25],
+                        bits_info[coordY + 1][coordXbase + 27],
+                    ]
+
+                print(wireI, this_mux_bitdata)
+
+                # assert this_mux_bitdata[0] == this_mux_bitdata[1]
+                # assert this_mux_bitdata[0] != '??'
+                ### XXX FIX FOR MISSING IO PADS
+                result = None
+                if this_mux_bitdata[0] == '??':
+                    result = this_mux_bitdata[1]
+                elif this_mux_bitdata[1] == '??':
+                    result = this_mux_bitdata[0]
+                else:
+                    result = this_mux_bitdata[0]
+                    assert this_mux_bitdata[0] == this_mux_bitdata[1]
+                assert result is not None
+                assert e_dirs[result] == 4
+                my_wire_to_quartus_wire[my_name] = result
+
+        # BOTTOM IOs
+        for iocol in range(LONG_COLS):
+            if dev != "240" and iocol == (LONG_COLS - SHORT_COLS - 1):
+                continue
+
+            if iocol < (LONG_COLS - SHORT_COLS):
+                tileY = SHORT_ROWS
+                coordYbase = 11 + LONG_ROWS * LAB_HEIGHT + 1
+                # XXX the last +1 is a hack for the clock
+            else:
+                tileY = 0
+                coordYbase = 11 + (LONG_ROWS + SHORT_ROWS) * LAB_HEIGHT + 1
+                # XXX the last +1 is a hack for the clock
+
+            if dev == "240":
+                tileX = 2 + iocol
+            else:
+                tileX = 1 + iocol
+
+            coordXbase = 11 + LAB_WIDTH * iocol
+
+            print(tileX, tileY, coordXbase, coordYbase)
+
+            for wireI in range(10):
+                my_name = 'U:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                coordY = coordYbase + 2 * (wireI % 5)
+                # print(coordY)
+
+                if wireI < 5:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 0][coordXbase + 0],
+                        bits_info[coordY + 1][coordXbase + 2],
+                    ]
+                else:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 1][coordXbase + 25],
+                        bits_info[coordY + 0][coordXbase + 27],
+                    ]
+
+                print(wireI, this_mux_bitdata)
+
+                # assert this_mux_bitdata[0] == this_mux_bitdata[1]
+                # assert this_mux_bitdata[0] != '??'
+                ### XXX FIX FOR MISSING IO PADS
+                result = None
+                if this_mux_bitdata[0] == '??':
+                    result = this_mux_bitdata[1]
+                elif this_mux_bitdata[1] == '??':
+                    result = this_mux_bitdata[0]
+                else:
+                    result = this_mux_bitdata[0]
+                    assert this_mux_bitdata[0] == this_mux_bitdata[1]
+                assert result is not None
+                assert e_dirs[result] == 3
+                my_wire_to_quartus_wire[my_name] = result
+
+        with open(outfn, 'w', newline='') as f:
+            json.dump(my_wire_to_quartus_wire, f, sort_keys=True,
+                      indent=4, separators=(',', ': '))
     else:
         print("Invalid mode {}".format(mode))
         sys.exit(1)
