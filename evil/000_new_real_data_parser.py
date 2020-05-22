@@ -676,9 +676,6 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                         new_data = cur_data + '\n' + elem_dst_name
 
                     bits_info[alteraY][-alteraX - 1] = new_data
-        with open('debug.csv', 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerows(bits_info)
 
         # LEFT HAND SIDE IOs
         for labrow in range(LONG_ROWS):
@@ -989,7 +986,7 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                         assert e_dirs[result] == 1
                     my_wire_to_quartus_wire[my_name] = result
 
-                # LEFT (except first col which doesn't have any or 
+                # LEFT (except first col which doesn't have any or
                 # the UFM corner which is R2)
                 for wireI in range(8):
                     if labcol == 0 and labrow >= SHORT_ROWS:
@@ -1026,6 +1023,195 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
         with open(outfn, 'w', newline='') as f:
             json.dump(my_wire_to_quartus_wire, f, sort_keys=True,
                       indent=4, separators=(',', ': '))
+    elif mode == "dump_routing_my_way":
+        outfn = "routing-bits-{}.json".format(dev)
+        my_wire_to_quartus_wire = {}
+
+        # FIXME COPYPASTA
+        bits_info = []
+        for _ in range(CRAM_HEIGHT):
+            bits_info.append([None] * (CRAM_WIDTH - 1))
+
+        e_num_fanins = {}
+
+        # routing
+        for elem_src_i, e in enumerate(route_elems):
+            e = route_elems[elem_src_i]
+            a = route_bits[elem_src_i]
+
+            elem_src_name = "{}:X{}Y{}S{}I{}".format(
+                elem_enum_types[e.m_element_enum], e.x, e.y, e.z, e.index)
+
+            e_num_fanins[elem_src_name] = len(e.fanins)
+
+            for fanout_i, elem_dst_i in enumerate(e.fanouts):
+                elem_dst_i = e.fanouts[fanout_i]
+                edest = route_elems[elem_dst_i]
+                elem_dst_name = "{}:X{}Y{}S{}I{}".format(
+                    elem_enum_types[edest.m_element_enum],
+                    edest.x, edest.y, edest.z, edest.index)
+
+                bits_involved = a[fanout_i]
+                assert len(bits_involved) <= 2  # just for now
+
+                for bit, _, _ in bits_involved:
+                    alteraX = bit % CRAM_WIDTH
+                    alteraY = bit // CRAM_WIDTH
+
+                    cur_data = bits_info[alteraY][-alteraX - 1]
+                    if cur_data is None:
+                        new_data = (elem_dst_name, [elem_src_name])
+                    else:
+                        existing_dst_name, existing_srcs = cur_data
+                        assert existing_dst_name == elem_dst_name
+                        new_data = (elem_dst_name,
+                                    existing_srcs + [elem_src_name])
+
+                    bits_info[alteraY][-alteraX - 1] = new_data
+
+        # print(e_num_fanins)
+        # print(bits_info)
+
+        # LEFT HAND SIDE IOs
+        print("LEFT HAND IOs (please manually check me)")
+        for labrow in range(LONG_ROWS):
+            if dev == "240":
+                tileX = 1
+            else:
+                tileX = 0
+
+            tileY = 1 + SHORT_ROWS + labrow
+
+            coordYbase = blockY(tileY)
+
+            for wireI in range(8):
+                my_name = 'R:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                if wireI % 2 == 0:
+                    coordX = 3
+                else:
+                    coordX = 5
+
+                if wireI // 2 == 0:
+                    coordY = coordYbase + 1
+                elif wireI // 2 == 1:
+                    coordY = coordYbase + 3
+                elif wireI // 2 == 2:
+                    coordY = coordYbase + 42
+                elif wireI // 2 == 3:
+                    coordY = coordYbase + 44
+
+                if bits_info[coordY][coordX + 0] is not None:
+                    assert len(bits_info[coordY][coordX + 0][1]) == 1
+                    left_src = bits_info[coordY][coordX + 0][1][0]
+                else:
+                    left_src = "???"
+                if bits_info[coordY][coordX + 1] is not None:
+                    assert len(bits_info[coordY][coordX + 1][1]) == 1
+                    right_src = bits_info[coordY][coordX + 1][1][0]
+                else:
+                    right_src = "???"
+
+                print("{} srcs: {} {}".format(
+                    my_name, left_src, right_src))
+
+        # TOP IOs
+        print("*" * 80)
+        print("TOP IOs (please manually check me)")
+        for iocol in range(LONG_COLS):
+            tileY = LONG_ROWS + SHORT_ROWS + 1
+
+            if dev == "240":
+                tileX = 2 + iocol
+            else:
+                tileX = 1 + iocol
+
+            coordXbase = 11 + LAB_WIDTH * iocol
+
+            for wireI in range(10):
+                my_name = 'D:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                coordY = 1 + 2 * (wireI % 5)
+                # print(coordY)
+
+                if wireI < 5:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 1][coordXbase + 0],
+                        bits_info[coordY + 0][coordXbase + 2],
+                    ]
+                else:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 0][coordXbase + 25],
+                        bits_info[coordY + 1][coordXbase + 27],
+                    ]
+
+                if this_mux_bitdata[0] is not None:
+                    assert len(this_mux_bitdata[0][1]) == 1
+                    left_src = this_mux_bitdata[0][1][0]
+                else:
+                    left_src = "???"
+                if this_mux_bitdata[1] is not None:
+                    assert len(this_mux_bitdata[1][1]) == 1
+                    right_src = this_mux_bitdata[1][1][0]
+                else:
+                    right_src = "???"
+
+                print("{} srcs: {} {}".format(
+                    my_name, left_src, right_src))
+
+        # BOTTOM IOs
+        print("*" * 80)
+        print("BOTTOM IOs (please manually check me)")
+        for iocol in range(LONG_COLS):
+            if dev != "240" and iocol == (LONG_COLS - SHORT_COLS - 1):
+                continue
+
+            if iocol < (LONG_COLS - SHORT_COLS):
+                tileY = SHORT_ROWS
+                coordYbase = 11 + LONG_ROWS * LAB_HEIGHT + 1
+                # XXX the last +1 is a hack for the clock
+            else:
+                tileY = 0
+                coordYbase = 11 + (LONG_ROWS + SHORT_ROWS) * LAB_HEIGHT + 1
+                # XXX the last +1 is a hack for the clock
+
+            if dev == "240":
+                tileX = 2 + iocol
+            else:
+                tileX = 1 + iocol
+
+            coordXbase = 11 + LAB_WIDTH * iocol
+
+            for wireI in range(10):
+                my_name = 'U:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                coordY = coordYbase + 2 * (wireI % 5)
+                # print(coordY)
+
+                if wireI < 5:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 0][coordXbase + 0],
+                        bits_info[coordY + 1][coordXbase + 2],
+                    ]
+                else:
+                    this_mux_bitdata = [
+                        bits_info[coordY + 1][coordXbase + 25],
+                        bits_info[coordY + 0][coordXbase + 27],
+                    ]
+
+                if this_mux_bitdata[0] is not None:
+                    assert len(this_mux_bitdata[0][1]) == 1
+                    left_src = this_mux_bitdata[0][1][0]
+                else:
+                    left_src = "???"
+                if this_mux_bitdata[1] is not None:
+                    assert len(this_mux_bitdata[1][1]) == 1
+                    right_src = this_mux_bitdata[1][1][0]
+                else:
+                    right_src = "???"
+
+                print("{} srcs: {} {}".format(
+                    my_name, left_src, right_src))
     else:
         print("Invalid mode {}".format(mode))
         sys.exit(1)
