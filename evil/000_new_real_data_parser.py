@@ -1024,15 +1024,17 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
             json.dump(my_wire_to_quartus_wire, f, sort_keys=True,
                       indent=4, separators=(',', ': '))
     elif mode == "dump_routing_my_way":
+        # FIXME ALL THE COPYPASTA
         outfn = "routing-bits-{}.json".format(dev)
-        my_wire_to_quartus_wire = {}
+        my_routing_dump = {}
 
         # FIXME COPYPASTA
         bits_info = []
         for _ in range(CRAM_HEIGHT):
             bits_info.append([None] * (CRAM_WIDTH - 1))
 
-        e_num_fanins = {}
+        # FIXME WE NEED TO CHECK THIS AT SOME POINT??
+        # e_num_fanins = {}
 
         # routing
         for elem_src_i, e in enumerate(route_elems):
@@ -1042,7 +1044,7 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
             elem_src_name = "{}:X{}Y{}S{}I{}".format(
                 elem_enum_types[e.m_element_enum], e.x, e.y, e.z, e.index)
 
-            e_num_fanins[elem_src_name] = len(e.fanins)
+            # e_num_fanins[elem_src_name] = len(e.fanins)
 
             for fanout_i, elem_dst_i in enumerate(e.fanouts):
                 elem_dst_i = e.fanouts[fanout_i]
@@ -1212,6 +1214,112 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
 
                 print("{} srcs: {} {}".format(
                     my_name, left_src, right_src))
+
+        # MAIN interconnect area
+        print("*" * 80)
+        print("Processing main routing area...")
+        def getbox(x, y):
+            ret = []
+            out_name = None
+            for yy in range(2):
+                tmp = []
+                for xx in range(4):
+                    if bits_info[y + yy][x + xx] is None:
+                        tmp.append([])
+                    else:
+                        if out_name is None:
+                            out_name = bits_info[y + yy][x + xx][0]
+                        else:
+                            assert out_name == bits_info[y + yy][x + xx][0]
+                        tmp.append(bits_info[y + yy][x + xx][1])
+                ret.append(tmp)
+            return ret
+        def reformatbox(inbox):
+            outdata = {}
+
+            h = len(inbox)
+            w = len(inbox[0])
+
+            # print(w, h, inbox)
+
+            for x in range(w):
+                for y in range(h):
+                    inputs_here = inbox[y][x]
+                    for input_ in inputs_here:
+                        if input_ not in outdata:
+                            tmp = []
+                            for _ in range(h):
+                                tmp.append([True] * w)
+                            outdata[input_] = tmp
+
+                        outdata[input_][y][x] = False
+
+            return outdata
+
+        for labrow in range(LONG_ROWS + SHORT_ROWS):
+            if labrow < SHORT_ROWS:
+                numcols = SHORT_COLS
+            else:
+                numcols = LONG_COLS
+            for labcol in range(numcols + 1):
+                tileY = 1 + labrow
+                if labrow < SHORT_ROWS:
+                    tileX = 1 + (LONG_COLS - SHORT_COLS) + labcol
+                    coordXbase = 7 + LAB_WIDTH * (
+                        labcol + (LONG_COLS - SHORT_COLS))
+                else:
+                    tileX = 1 + labcol
+                    coordXbase = 7 + LAB_WIDTH * labcol
+                if dev == "240":
+                    tileX += 1
+
+                coordYbase = blockY(tileY)
+
+                print("Working on X{}Y{}".format(tileX, tileY))
+
+                # UP
+                for wireI in range(7):
+                    my_name = 'U:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI == 0:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 0)
+                    elif wireI == 1:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 4)
+                    elif wireI == 2:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 10)
+                    elif wireI == 3:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 16)
+                    elif wireI == 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 32)
+                    elif wireI == 5:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 36)
+                    elif wireI == 6:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 42)
+
+                    # print(wireI, this_mux_bitdata)
+                    this_mux_routes = reformatbox(this_mux_bitdata)
+                    # print(my_name, this_mux_routes)
+
+                    assert len(this_mux_routes) <= 13
+                    my_routing_dump[my_name] = this_mux_routes
+
+        with open(outfn, 'w', newline='') as f:
+            json.dump(my_routing_dump, f, sort_keys=True,
+                      indent=4, separators=(',', ': '))
     else:
         print("Invalid mode {}".format(mode))
         sys.exit(1)
