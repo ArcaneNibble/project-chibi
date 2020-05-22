@@ -1039,6 +1039,10 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
         for _ in range(CRAM_HEIGHT):
             bits_info.append([None] * (CRAM_WIDTH - 1))
 
+        bits_info_mark = []
+        for _ in range(CRAM_HEIGHT):
+            bits_info_mark.append([None] * (CRAM_WIDTH - 1))
+
         # FIXME WE NEED TO CHECK THIS AT SOME POINT??
         # e_num_fanins = {}
 
@@ -1109,6 +1113,8 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                 elif wireI // 2 == 3:
                     coordY = coordYbase + 44
 
+                bits_info_mark[coordY][coordX + 0] = True
+                bits_info_mark[coordY][coordX + 1] = True
                 if bits_info[coordY][coordX + 0] is not None:
                     assert len(bits_info[coordY][coordX + 0][1]) == 1
                     left_src = bits_info[coordY][coordX + 0][1][0]
@@ -1143,11 +1149,15 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                 # print(coordY)
 
                 if wireI < 5:
+                    bits_info_mark[coordY + 1][coordXbase + 0] = True
+                    bits_info_mark[coordY + 0][coordXbase + 2] = True
                     this_mux_bitdata = [
                         bits_info[coordY + 1][coordXbase + 0],
                         bits_info[coordY + 0][coordXbase + 2],
                     ]
                 else:
+                    bits_info_mark[coordY + 0][coordXbase + 25] = True
+                    bits_info_mark[coordY + 1][coordXbase + 27] = True
                     this_mux_bitdata = [
                         bits_info[coordY + 0][coordXbase + 25],
                         bits_info[coordY + 1][coordXbase + 27],
@@ -1197,11 +1207,15 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                 # print(coordY)
 
                 if wireI < 5:
+                    bits_info_mark[coordY + 0][coordXbase + 0] = True
+                    bits_info_mark[coordY + 1][coordXbase + 2] = True
                     this_mux_bitdata = [
                         bits_info[coordY + 0][coordXbase + 0],
                         bits_info[coordY + 1][coordXbase + 2],
                     ]
                 else:
+                    bits_info_mark[coordY + 1][coordXbase + 25] = True
+                    bits_info_mark[coordY + 0][coordXbase + 27] = True
                     this_mux_bitdata = [
                         bits_info[coordY + 1][coordXbase + 25],
                         bits_info[coordY + 0][coordXbase + 27],
@@ -1234,6 +1248,7 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
             for yy in range(2):
                 tmp = []
                 for xx in range(4):
+                    bits_info_mark[y + yy][x + xx] = True
                     if bits_info[y + yy][x + xx] is None:
                         tmp.append([])
                     else:
@@ -1483,6 +1498,8 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                                 gclk_workaround_y = SHORT_ROWS
                         # print(tileX, gclk_workaround_y)
                         if localI == 12:
+                            bits_info_mark[coordYbase + 16][coordXbase + 10] =\
+                                True
                             gclkbit = \
                                 bits_info[coordYbase + 16][coordXbase + 10]
                             # print(gclkbit)
@@ -1501,6 +1518,8 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                                 del this_mux_routes[clk]
                             # print(this_mux_routes)
                         elif localI == 25:
+                            bits_info_mark[coordYbase + 29][coordXbase + 10] =\
+                                True
                             gclkbit = \
                                 bits_info[coordYbase + 29][coordXbase + 10]
                             # print(gclkbit)
@@ -1521,6 +1540,19 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
 
                         assert len(this_mux_routes) <= 13
                         my_routing_dump[expected_name] = this_mux_routes
+
+        didnt_look_at = set()
+        for x in range(CRAM_WIDTH - 1):
+            for y in range(CRAM_HEIGHT):
+                if not bits_info_mark[y][x]:
+                    bit_data = bits_info[y][x]
+                    if bit_data is not None:
+                        # print("DIDN'T LOOK AT ({}, {}) {}".format(
+                        #     x, y, bit_data))
+                        didnt_look_at.add(bit_data[0])
+        for x in sorted(list(didnt_look_at)):
+            print("DIDN'T LOOK AT {}".format(x))
+
 
         with open(outfn, 'w', newline='') as f:
             json.dump(my_routing_dump, f, sort_keys=True,
