@@ -1024,6 +1024,12 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
             json.dump(my_wire_to_quartus_wire, f, sort_keys=True,
                       indent=4, separators=(',', ': '))
     elif mode == "dump_routing_my_way":
+        wirenamefn = "wire-name-map-{}.json".format(dev)
+        with open(wirenamefn, 'r') as f:
+            my_wire_to_quartus_wire = json.load(f)
+            quartus_wire_to_my_wire = \
+                {v: k for k, v in my_wire_to_quartus_wire.items()}
+
         # FIXME ALL THE COPYPASTA
         outfn = "routing-bits-{}.json".format(dev)
         my_routing_dump = {}
@@ -1218,6 +1224,7 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
         # MAIN interconnect area
         print("*" * 80)
         print("Processing main routing area...")
+
         def getbox(x, y):
             ret = []
             out_name = None
@@ -1234,6 +1241,7 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                         tmp.append(bits_info[y + yy][x + xx][1])
                 ret.append(tmp)
             return ret
+
         def reformatbox(inbox):
             outdata = {}
 
@@ -1246,6 +1254,9 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                 for y in range(h):
                     inputs_here = inbox[y][x]
                     for input_ in inputs_here:
+                        if input_ in quartus_wire_to_my_wire:
+                            input_ = quartus_wire_to_my_wire[input_]
+
                         if input_ not in outdata:
                             tmp = []
                             for _ in range(h):
@@ -1313,6 +1324,114 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                     # print(wireI, this_mux_bitdata)
                     this_mux_routes = reformatbox(this_mux_bitdata)
                     # print(my_name, this_mux_routes)
+
+                    assert len(this_mux_routes) <= 13
+                    my_routing_dump[my_name] = this_mux_routes
+
+                # DOWN
+                for wireI in range(7):
+                    my_name = 'D:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI == 0:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 2)
+                    elif wireI == 1:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 8)
+                    elif wireI == 2:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 12)
+                    elif wireI == 3:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 28)
+                    elif wireI == 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 34)
+                    elif wireI == 5:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 40)
+                    elif wireI == 6:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 44)
+
+                    this_mux_routes = reformatbox(this_mux_bitdata)
+
+                    assert len(this_mux_routes) <= 13
+                    my_routing_dump[my_name] = this_mux_routes
+
+                # RIGHT (except last col which is L2)
+                for wireI in range(8):
+                    if labcol != numcols:
+                        my_name = 'R:X{}Y{}I{}'.format(tileX, tileY, wireI)
+                    else:
+                        my_name = 'L2:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI == 0:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 0)
+                    elif wireI == 1:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 6)
+                    elif wireI == 2:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 14)
+                    elif wireI == 3:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 18)
+                    elif wireI == 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 26)
+                    elif wireI == 5:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 30)
+                    elif wireI == 6:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 38)
+                    elif wireI == 7:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 4,
+                            coordYbase + 44)
+
+                    this_mux_routes = reformatbox(this_mux_bitdata)
+
+                    assert len(this_mux_routes) <= 13
+                    my_routing_dump[my_name] = this_mux_routes
+
+                # LEFT (except first col which doesn't have any or
+                # the UFM corner which is R2)
+                for wireI in range(8):
+                    if labcol == 0 and labrow >= SHORT_ROWS:
+                        continue
+
+                    if labcol != 0:
+                        my_name = 'L:X{}Y{}I{}'.format(tileX, tileY, wireI)
+                    else:
+                        my_name = 'R2:X{}Y{}I{}'.format(tileX, tileY, wireI)
+
+                    if wireI < 4:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 4 + 4 * wireI)
+                    else:
+                        this_mux_bitdata = getbox(
+                            coordXbase + 0,
+                            coordYbase + 28 + 4 * (wireI - 4))
+
+                    this_mux_routes = reformatbox(this_mux_bitdata)
 
                     assert len(this_mux_routes) <= 13
                     my_routing_dump[my_name] = this_mux_routes
