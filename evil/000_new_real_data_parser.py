@@ -1603,6 +1603,73 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                         assert len(this_mux_routes) <= 13
                         my_routing_dump[expected_name] = this_mux_routes
 
+                # ufm corner local interconnect
+                if labcol == 0 and (labrow == 1 or labrow == 2):
+                    for localI in range(10):
+                        expected_name = \
+                            'LOCAL_INTERCONNECT:X{}Y{}S0I{}'.format(
+                                tileX - 1, tileY, localI)
+
+                        # print(expected_name)
+
+                        if localI < 5:
+                            # top half
+                            this_mux_bitdata, mux_name = getbox2(
+                                coordXbase + 0,
+                                coordYbase + 2 + 4 * localI)
+                        else:
+                            # bottom half
+                            this_mux_bitdata, mux_name = getbox2(
+                                coordXbase + 0,
+                                coordYbase + 42 - 4 * (localI - 5))
+
+                        # print(mux_name, expected_name)
+                        assert mux_name == expected_name
+
+                        this_mux_routes = reformatbox(this_mux_bitdata)
+                        # print(expected_name, this_mux_routes)
+
+                        # GCLK workarounds
+                        if localI == 4:
+                            bits_info_mark[coordYbase + 20][coordXbase - 2] =\
+                                True
+                            gclkbit = \
+                                bits_info[coordYbase + 20][coordXbase - 2]
+                            # print(gclkbit)
+                            assert gclkbit[0] == expected_name
+                            expected_clks = [
+                                'LAB_CLK:X{}Y2S0I0'.format(tileX - 1),
+                                'LAB_CLK:X{}Y2S0I1'.format(tileX - 1),
+                                'LAB_CLK:X{}Y2S0I2'.format(tileX - 1),
+                            ]
+                            # print(expected_clks)
+                            assert sorted(gclkbit[1]) == expected_clks
+                            # print(this_mux_routes)
+                            for clk in expected_clks:
+                                del this_mux_routes[clk]
+                            # print(this_mux_routes)
+                        elif localI == 9:
+                            bits_info_mark[coordYbase + 25][coordXbase - 2] =\
+                                True
+                            gclkbit = \
+                                bits_info[coordYbase + 25][coordXbase - 2]
+                            # print(gclkbit)
+                            assert gclkbit[0] == expected_name
+                            expected_clks = [
+                                'LAB_CLK:X{}Y2S0I0'.format(tileX - 1),
+                                'LAB_CLK:X{}Y2S0I1'.format(tileX - 1),
+                                'LAB_CLK:X{}Y2S0I3'.format(tileX - 1),
+                            ]
+                            # print(expected_clks)
+                            assert sorted(gclkbit[1]) == expected_clks
+                            # print(this_mux_routes)
+                            for clk in expected_clks:
+                                del this_mux_routes[clk]
+                            # print(this_mux_routes)
+
+                        assert len(this_mux_routes) <= 13
+                        my_routing_dump[expected_name] = this_mux_routes
+
         # left hand side IO local interconnect
         for labrow in range(LONG_ROWS):
             if dev == "240":
