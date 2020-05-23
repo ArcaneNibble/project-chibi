@@ -1541,6 +1541,148 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                         assert len(this_mux_routes) <= 13
                         my_routing_dump[expected_name] = this_mux_routes
 
+                # right hand side IO local interconnect
+                if labcol == numcols:
+                    for localI in range(18):
+                        expected_name = \
+                            'LOCAL_INTERCONNECT:X{}Y{}S0I{}'.format(
+                                tileX, tileY, localI)
+
+                        if localI < 9:
+                            # top half
+                            this_mux_bitdata, mux_name = getbox2(
+                                coordXbase + 8,
+                                coordYbase + 2 + 2 * localI)
+                        else:
+                            # bottom half
+                            this_mux_bitdata, mux_name = getbox2(
+                                coordXbase + 8,
+                                coordYbase + 42 - 2 * (localI - 9))
+
+                        # print(mux_name, expected_name)
+                        assert mux_name == expected_name
+
+                        this_mux_routes = reformatbox(this_mux_bitdata)
+
+                        # GCLK workarounds
+                        if localI == 8:
+                            bits_info_mark[coordYbase + 20][coordXbase + 11] =\
+                                True
+                            gclkbit = \
+                                bits_info[coordYbase + 20][coordXbase + 11]
+                            # print(gclkbit)
+                            assert gclkbit[0] == expected_name
+                            expected_clks = [
+                                'LAB_CLK:X{}Y1S0I0'.format(tileX),
+                                'LAB_CLK:X{}Y1S0I1'.format(tileX),
+                                'LAB_CLK:X{}Y1S0I2'.format(tileX),
+                            ]
+                            assert sorted(gclkbit[1]) == expected_clks
+                            # print(this_mux_routes)
+                            for clk in expected_clks:
+                                del this_mux_routes[clk]
+                            # print(this_mux_routes)
+                        elif localI == 17:
+                            bits_info_mark[coordYbase + 25][coordXbase + 11] =\
+                                True
+                            gclkbit = \
+                                bits_info[coordYbase + 25][coordXbase + 11]
+                            # print(gclkbit)
+                            assert gclkbit[0] == expected_name
+                            expected_clks = [
+                                'LAB_CLK:X{}Y1S0I0'.format(tileX),
+                                'LAB_CLK:X{}Y1S0I1'.format(tileX),
+                                'LAB_CLK:X{}Y1S0I3'.format(tileX),
+                            ]
+                            assert sorted(gclkbit[1]) == expected_clks
+                            # print(this_mux_routes)
+                            for clk in expected_clks:
+                                del this_mux_routes[clk]
+                            # print(this_mux_routes)
+
+                        assert len(this_mux_routes) <= 13
+                        my_routing_dump[expected_name] = this_mux_routes
+
+        # left hand side IO local interconnect
+        for labrow in range(LONG_ROWS):
+            if dev == "240":
+                tileX = 1
+            else:
+                tileX = 0
+
+            tileY = 1 + SHORT_ROWS + labrow
+
+            coordYbase = blockY(tileY)
+
+            for localI in range(18):
+                expected_name = 'LOCAL_INTERCONNECT:X{}Y{}S0I{}'.format(
+                    tileX, tileY, localI)
+
+                if localI < 9:
+                    # top half
+                    this_mux_bitdata, mux_name = getbox2(
+                        7,
+                        coordYbase + 2 + 2 * localI)
+                else:
+                    # bottom half
+                    this_mux_bitdata, mux_name = getbox2(
+                        7,
+                        coordYbase + 42 - 2 * (localI - 9))
+
+                # print(mux_name, expected_name)
+                assert mux_name == expected_name
+
+                this_mux_routes = reformatbox(this_mux_bitdata)
+
+                # GCLK workarounds
+                gclk_workaround_y = 1
+                if dev != "240":
+                    gclk_workaround_y = 4
+                # print(tileX, gclk_workaround_y)
+                if localI == 8:
+                    bits_info_mark[coordYbase + 20][10] =\
+                        True
+                    gclkbit = \
+                        bits_info[coordYbase + 20][10]
+                    # print(gclkbit)
+                    assert gclkbit[0] == expected_name
+                    expected_clks = [
+                        'LAB_CLK:X{}Y{}S0I0'.format(
+                            tileX, gclk_workaround_y),
+                        'LAB_CLK:X{}Y{}S0I1'.format(
+                            tileX, gclk_workaround_y),
+                        'LAB_CLK:X{}Y{}S0I2'.format(
+                            tileX, gclk_workaround_y),
+                    ]
+                    assert sorted(gclkbit[1]) == expected_clks
+                    # print(this_mux_routes)
+                    for clk in expected_clks:
+                        del this_mux_routes[clk]
+                    # print(this_mux_routes)
+                elif localI == 17:
+                    bits_info_mark[coordYbase + 25][10] =\
+                        True
+                    gclkbit = \
+                        bits_info[coordYbase + 25][10]
+                    # print(gclkbit)
+                    assert gclkbit[0] == expected_name
+                    expected_clks = [
+                        'LAB_CLK:X{}Y{}S0I0'.format(
+                            tileX, gclk_workaround_y),
+                        'LAB_CLK:X{}Y{}S0I1'.format(
+                            tileX, gclk_workaround_y),
+                        'LAB_CLK:X{}Y{}S0I3'.format(
+                            tileX, gclk_workaround_y),
+                    ]
+                    assert sorted(gclkbit[1]) == expected_clks
+                    # print(this_mux_routes)
+                    for clk in expected_clks:
+                        del this_mux_routes[clk]
+                    # print(this_mux_routes)
+
+                assert len(this_mux_routes) <= 13
+                my_routing_dump[expected_name] = this_mux_routes
+
         didnt_look_at = set()
         for x in range(CRAM_WIDTH - 1):
             for y in range(CRAM_HEIGHT):
@@ -1552,7 +1694,6 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                         didnt_look_at.add(bit_data[0])
         for x in sorted(list(didnt_look_at)):
             print("DIDN'T LOOK AT {}".format(x))
-
 
         with open(outfn, 'w', newline='') as f:
             json.dump(my_routing_dump, f, sort_keys=True,
