@@ -4,6 +4,10 @@ import json
 import sys
 
 dev = sys.argv[1]
+if len(sys.argv) >= 3 and sys.argv[2] == "skipdummy":
+    skipdummy = True
+else:
+    skipdummy = False
 
 with open('routing-bits-{}.json'.format(dev), 'r') as f:
     x = json.load(f)
@@ -11,7 +15,13 @@ with open('wire-name-map-{}.json'.format(dev), 'r') as f:
     wirenamemap = json.load(f)
 
 print("----- There are {} muxes in the database".format(len(x)))
-print("----- There are {} routing pairs in the database".format(sum((len(v) for k, v in x.items()))))
+print("----- There are {} routing pairs in the database".format(
+    sum((len(v) for k, v in x.items()))))
+print("----- There are {} *real* routing pairs in the database".format(
+    sum((len([x for x in v
+        if not x.startswith("R4:") and not x.startswith("C4:")])
+        for k, v in x.items()))))
+
 
 def bits2str(bits):
     ret = ""
@@ -22,6 +32,7 @@ def bits2str(bits):
         ret += rowstr + '\n'
     return ret
 
+
 def parse_xyi(inp):
     xpos = inp.find('X')
     ypos = inp.find('Y')
@@ -31,7 +42,10 @@ def parse_xyi(inp):
     assert ypos > xpos
     assert ipos > ypos
 
-    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:ipos]), int(inp[ipos + 1:]))
+    return (int(inp[xpos + 1:ypos]),
+            int(inp[ypos + 1:ipos]),
+            int(inp[ipos + 1:]))
+
 
 def parse_xysi(inp):
     xpos = inp.find('X')
@@ -47,7 +61,10 @@ def parse_xysi(inp):
     sval = int(inp[spos + 1:ipos])
     assert sval == 0
 
-    return (int(inp[xpos + 1:ypos]), int(inp[ypos + 1:spos]), int(inp[ipos + 1:]))
+    return (int(inp[xpos + 1:ypos]),
+            int(inp[ypos + 1:spos]),
+            int(inp[ipos + 1:]))
+
 
 def anybits(bits):
     for y in bits:
@@ -55,6 +72,7 @@ def anybits(bits):
             if not x:
                 return True
     return False
+
 
 def decodemux(bits):
     A = not bits[0][0]
@@ -74,184 +92,109 @@ def decodemux(bits):
     if G:
         return 0
     if C:
-        if A: return 1
-        if B: return 2
-        if E: return 3
-        if F: return 4
+        if A:
+            return 1
+        if B:
+            return 2
+        if E:
+            return 3
+        if F:
+            return 4
     if D:
-        if A: return 5
-        if B: return 6
-        if E: return 7
-        if F: return 8
+        if A:
+            return 5
+        if B:
+            return 6
+        if E:
+            return 7
+        if F:
+            return 8
     if H:
-        if A: return 9
-        if B: return 10
-        if E: return 11
-        if F: return 12
+        if A:
+            return 9
+        if B:
+            return 10
+        if E:
+            return 11
+        if F:
+            return 12
+
 
 def flipv(muxbits):
     return muxbits[::-1]
 
+
 def fliph(muxbits):
     return [x[::-1] for x in muxbits]
 
-# # print(x)
-# uniq_r_muxes = []
-# for _ in range(8):
-#     uniq_r_muxes.append(set())
 
-# for X in range(2, 8):
-#     for Y in range(1, 5):
-#         for N in range(8):
-#             mux = "R:X{}Y{}I{}".format(X, Y, N)
-#             muxvals = x[mux]
-#             # print(muxvals)
-#             for muxsrc, muxbits in muxvals.items():
-#                 uniq_r_muxes[N].add(bits2str(muxbits))
+def is_left_io(x, y):
+    if dev == "240":
+        return x == 1
+    else:
+        return x == 0
 
-# # print(uniq_r_muxes)
-# for N in range(8):
-#     print("~~~~~ R{} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_r_muxes[N])):
-#         print(xx)
 
-# # print(x)
-# uniq_l_muxes = []
-# for _ in range(8):
-#     uniq_l_muxes.append(set())
+def is_right_io(x, y):
+    if dev == "240":
+        return x == 8
+    elif dev == "570":
+        return x == 13
+    elif dev == "1270":
+        return x == 17
+    elif dev == "2210":
+        return x == 21
+    else:
+        assert False
 
-# # print(x)
-# uniq_l2_muxes = []
-# for _ in range(8):
-#     uniq_l2_muxes.append(set())
 
-# for X in [8]:
-#     for Y in range(1, 5):
-#         for N in range(8):
-#             mux = "L2:X{}Y{}I{}".format(X, Y, N)
-#             muxvals = x[mux]
-#             # print(muxvals)
-#             for muxsrc, muxbits in muxvals.items():
-#                 uniq_l2_muxes[N].add(bits2str(muxbits))
+def is_top_io(x, y):
+    if dev == "240":
+        return y == 5
+    elif dev == "570":
+        return y == 8
+    elif dev == "1270":
+        return y == 11
+    elif dev == "2210":
+        return y == 14
+    else:
+        assert False
 
-# # print(uniq_l2_muxes)
-# for N in range(8):
-#     print("~~~~~ L2:{} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_l2_muxes[N])):
-#         print(xx)
 
-# # print(x)
-# uniq_l_muxes = []
-# for _ in range(8):
-#     uniq_l_muxes.append(set())
+def is_bot_io(x, y):
+    if dev == "240":
+        return y == 0
+    elif dev == "570":
+        if x < 9:
+            return y == 3
+        else:
+            return y == 0
+    elif dev == "1270":
+        if x < 11:
+            return y == 3
+        else:
+            return y == 0
+    elif dev == "2210":
+        if x < 13:
+            return y == 3
+        else:
+            return y == 0
+    else:
+        assert False
 
-# for X in range(3, 9):
-#     for Y in range(1, 5):
-#         for N in range(8):
-#             mux = "L:X{}Y{}I{}".format(X, Y, N)
-#             muxvals = x[mux]
-#             # print(muxvals)
-#             for muxsrc, muxbits in muxvals.items():
-#                 uniq_l_muxes[N].add(bits2str(muxbits))
 
-# # print(uniq_l_muxes)
-# for N in range(8):
-#     print("~~~~~ L{} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_l_muxes[N])):
-#         print(xx)
+def is_ufm_corner(x, y):
+    if dev == "240":
+        return False
+    elif dev == "570":
+        return x == 9 and (y == 2 or y == 3)
+    elif dev == "1270":
+        return x == 11 and (y == 2 or y == 3)
+    elif dev == "2210":
+        return x == 13 and (y == 2 or y == 3)
+    else:
+        assert False
 
-# uniq_u_muxes = []
-# for _ in range(7):
-#     uniq_u_muxes.append(set())
-
-# for X in [8]:#range(2, 8):
-#     for Y in range(1, 5):
-#         for N in range(7):
-#             mux = "U:X{}Y{}I{}".format(X, Y, N)
-#             muxvals = x[mux]
-#             # print(muxvals)
-#             for muxsrc, muxbits in muxvals.items():
-#                 uniq_u_muxes[N].add(bits2str(muxbits))
-
-# # print(uniq_r_muxes)
-# for N in range(7):
-#     print("~~~~~ U{} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_u_muxes[N])):
-#         print(xx)
-
-# uniq_d_muxes = []
-# for _ in range(7):
-#     uniq_d_muxes.append(set())
-
-# for X in [8]:#range(2, 8):
-#     for Y in range(1, 5):
-#         for N in range(7):
-#             mux = "D:X{}Y{}I{}".format(X, Y, N)
-#             muxvals = x[mux]
-#             # print(muxvals)
-#             for muxsrc, muxbits in muxvals.items():
-#                 uniq_d_muxes[N].add(bits2str(muxbits))
-
-# # print(uniq_r_muxes)
-# for N in range(7):
-#     print("~~~~~ D{} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_d_muxes[N])):
-#         print(xx)
-
-# uniq_l_li_muxes = []
-# for _ in range(18):
-#     uniq_l_li_muxes.append(set())
-
-# for Y in range(1, 5):
-#     for N in range(18):
-#         mux = "LOCAL_INTERCONNECT:X1Y{}S0I{}".format(Y, N)
-#         muxvals = x[mux]
-#         # print(muxvals)
-#         for muxsrc, muxbits in muxvals.items():
-#             uniq_l_li_muxes[N].add(bits2str(muxbits))
-
-# # print(uniq_r_muxes)
-# for N in range(18):
-#     print("~~~~~ LOCAL_INTERCONNECT:X1 {} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_l_li_muxes[N])):
-#         print(xx)
-
-# uniq_li_muxes = []
-# for _ in range(26):
-#     uniq_li_muxes.append(set())
-
-# for X in range(2, 8):
-#     for Y in range(1, 5):
-#         for N in range(26):
-#             mux = "LOCAL_INTERCONNECT:X{}Y{}S0I{}".format(X, Y, N)
-#             muxvals = x[mux]
-#             # print(muxvals)
-#             for muxsrc, muxbits in muxvals.items():
-#                 uniq_li_muxes[N].add(bits2str(muxbits))
-
-# # print(uniq_r_muxes)
-# for N in range(26):
-#     print("~~~~~ LOCAL_INTERCONNECT:X1 {} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_li_muxes[N])):
-#         print(xx)
-
-# uniq_top_li_muxes = []
-# for _ in range(10):
-#     uniq_top_li_muxes.append(set())
-
-# for X in range(2, 8):
-#     for N in range(10):
-#         mux = "LOCAL_INTERCONNECT:X{}Y5S0I{}".format(X, N)
-#         muxvals = x[mux]
-#         # print(muxvals)
-#         for muxsrc, muxbits in muxvals.items():
-#             uniq_top_li_muxes[N].add(bits2str(muxbits))
-
-# # print(uniq_r_muxes)
-# for N in range(10):
-#     print("~~~~~ LOCAL_INTERCONNECT:Y5 {} ~~~~~".format(N))
-#     for xx in sorted(list(uniq_top_li_muxes[N])):
-#         print(xx)
 
 LABELS = [
     "|G|C|D|H|A|B|E|F|",
@@ -278,53 +221,60 @@ for dst, srcs in x.items():
             _, _, I = parse_xyi(dst)
             if I >= 4:
                 muxbits = flipv(muxbits)
-        elif dst.startswith("L:") or dst.startswith("L2"):
+        elif (dst.startswith("L:") or dst.startswith(
+              "L2:") or dst.startswith("R2:")):
             _, _, I = parse_xyi(dst)
             muxbits = fliph(muxbits)
             if I >= 4:
                 muxbits = flipv(muxbits)
         elif dst.startswith("U:"):
-            X, _, I = parse_xyi(dst)
-            if X == 8:
+            X, Y, I = parse_xyi(dst)
+            if is_right_io(X, Y):
                 muxbits = fliph(muxbits)
 
-            if I == 0 and X != 8:
+            if I == 0 and not is_right_io(X, Y):
                 muxbits = fliph(muxbits)
             if I >= 4:
                 muxbits = flipv(muxbits)
         elif dst.startswith("D:"):
-            X, _, I = parse_xyi(dst)
-            if X == 8:
+            X, Y, I = parse_xyi(dst)
+            if is_right_io(X, Y):
                 muxbits = fliph(muxbits)
 
-            if I == 6 and X != 8:
+            if I == 6 and not is_right_io(X, Y):
                 muxbits = fliph(muxbits)
             if I >= 3:
                 muxbits = flipv(muxbits)
         elif dst.startswith("LOCAL_INTERCONNECT:"):
             X, Y, I = parse_xysi(dst[19:])
-            if X == 1:
+            if is_left_io(X, Y):
                 muxbits = fliph(muxbits)
                 if I > 8:
                     muxbits = flipv(muxbits)
-            elif X == 8:
+            elif is_right_io(X, Y):
                 if I > 8:
                     muxbits = flipv(muxbits)
             else:
-                if Y == 0 or Y == 5:
-                    is_tb_io = True
-                    if Y == 0:
+                is_tb_io = is_top_io(X, Y) or is_bot_io(X, Y)
+                if is_tb_io:
+                    if is_bot_io(X, Y):
                         muxbits = flipv(muxbits)
                     if I < 5:
                         muxbits = fliph(muxbits)
+                elif is_ufm_corner(X, Y):
+                    muxbits = fliph(muxbits)
+                    if I >= 5:
+                        muxbits = flipv(muxbits)
                 else:
                     if I in range(0, 5) or I in range(13, 18):
                         muxbits = fliph(muxbits)
                     if I >= 13:
                         muxbits = flipv(muxbits)
         else:
-            continue
+            print(dst)
+            assert False
 
+        # print(dst)
         muxidx = decodemux(muxbits)
 
         if srcs_decoded[muxidx] is not None:
@@ -343,46 +293,14 @@ for dst, srcs in x.items():
         src = srcs_decoded[i]
         if src is None:
             print("???")
+        elif src.startswith("R4:") or src.startswith("C4:"):
+            if skipdummy:
+                print("???")
+            else:
+                print("*DUMMY* ({})".format(src))
         else:
             print(src, end='')
             if src in wirenamemap:
                 print(" ({})".format(wirenamemap[src]))
             else:
                 print()
-
-        # if dst.startswith("LOCAL_INTERCONNECT:"):
-        #     continue
-
-        # print(dst, src)
-
-        # if dst.startswith("L:"):
-        #     _, _, I = parse_xyi(dst)
-        #     muxbits = fliph(muxbits)
-        #     if I >= 4:
-        #         muxbits = flipv(muxbits)
-        # if dst.startswith("R:"):
-        #     _, _, I = parse_xyi(dst)
-        #     if I >= 4:
-        #         muxbits = flipv(muxbits)
-        # if dst.startswith("D:"):
-        #     X, _, I = parse_xyi(dst)
-        #     if I >= 3:
-        #         muxbits = flipv(muxbits)
-        #     if I == 6:
-        #         muxbits = fliph(muxbits)
-        #     if X == 8:
-        #         muxbits = fliph(muxbits)
-        # if dst.startswith("U:"):
-        #     X, _, I = parse_xyi(dst)
-        #     if I >= 4:
-        #         muxbits = flipv(muxbits)
-        #     if I == 0:
-        #         muxbits = fliph(muxbits)
-        #     if X == 8:
-        #         muxbits = fliph(muxbits)
-        # if dst.startswith("L2:"):
-        #     _, _, I = parse_xyi(dst)
-        #     if I >= 4:
-        #         muxbits = flipv(muxbits)
-
-        # decodemux(muxbits)
