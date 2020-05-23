@@ -1683,6 +1683,86 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
                 assert len(this_mux_routes) <= 13
                 my_routing_dump[expected_name] = this_mux_routes
 
+        # top IO local interconnect
+        for iocol in range(LONG_COLS):
+            tileY = LONG_ROWS + SHORT_ROWS + 1
+
+            if dev == "240":
+                tileX = 2 + iocol
+            else:
+                tileX = 1 + iocol
+
+            coordXbase = 11 + LAB_WIDTH * iocol
+
+            for localI in range(10):
+                expected_name = 'LOCAL_INTERCONNECT:X{}Y{}S0I{}'.format(
+                    tileX, tileY, localI)
+
+                # XXX this is a hack, only 12 entries
+                if localI < 5:
+                    # right half
+                    this_mux_bitdata, mux_name = getbox2(
+                        coordXbase + 20,
+                        1 + 2 * localI)
+                else:
+                    # left half
+                    this_mux_bitdata, mux_name = getbox2(
+                        coordXbase + 4,
+                        1 + 2 * (localI - 5))
+
+                # print(mux_name, expected_name)
+                assert mux_name == expected_name
+
+                this_mux_routes = reformatbox(this_mux_bitdata)
+
+                assert len(this_mux_routes) <= 12
+                my_routing_dump[expected_name] = this_mux_routes
+
+        # bottom IO local interconnect
+        for iocol in range(LONG_COLS):
+            if dev != "240" and iocol == (LONG_COLS - SHORT_COLS - 1):
+                continue
+
+            if iocol < (LONG_COLS - SHORT_COLS):
+                tileY = SHORT_ROWS
+                coordYbase = 11 + LONG_ROWS * LAB_HEIGHT + 1
+                # XXX the last +1 is a hack for the clock
+            else:
+                tileY = 0
+                coordYbase = 11 + (LONG_ROWS + SHORT_ROWS) * LAB_HEIGHT + 1
+                # XXX the last +1 is a hack for the clock
+
+            if dev == "240":
+                tileX = 2 + iocol
+            else:
+                tileX = 1 + iocol
+
+            coordXbase = 11 + LAB_WIDTH * iocol
+
+            for localI in range(10):
+                expected_name = 'LOCAL_INTERCONNECT:X{}Y{}S0I{}'.format(
+                    tileX, tileY, localI)
+
+                # XXX this is a hack, only 12 entries
+                if localI < 5:
+                    # right half
+                    this_mux_bitdata, mux_name = getbox2(
+                        coordXbase + 20,
+                        coordYbase + 8 - 2 * localI)
+                else:
+                    # left half
+                    this_mux_bitdata, mux_name = getbox2(
+                        coordXbase + 4,
+                        coordYbase + 8 - 2 * (localI - 5))
+
+                # print(mux_name, expected_name)
+                assert mux_name == expected_name
+
+                this_mux_routes = reformatbox(this_mux_bitdata)
+
+                assert len(this_mux_routes) <= 12
+                my_routing_dump[expected_name] = this_mux_routes
+
         didnt_look_at = set()
         for x in range(CRAM_WIDTH - 1):
             for y in range(CRAM_HEIGHT):
