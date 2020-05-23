@@ -282,7 +282,10 @@ for dst, srcs in x.items():
         assert srcs_decoded[muxidx] is None
         srcs_decoded[muxidx] = src
 
-    print("~~~~~ {} ~~~~~".format(dst))
+    if dst in wirenamemap:
+        print("~~~~~ {} ({}) ~~~~~".format(dst, wirenamemap[dst]))
+    else:
+        print("~~~~~ {} ~~~~~".format(dst))
     print(LABELS[0])
     if is_tb_io:
         assert srcs_decoded[0] is None
