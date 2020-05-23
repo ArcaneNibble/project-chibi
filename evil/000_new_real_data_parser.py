@@ -1845,6 +1845,24 @@ def main(dev, mode, asmdump_fn, routingdump_fn, asmdbdump_fn):
         with open(outfn, 'w', newline='') as f:
             json.dump(my_routing_dump, f, sort_keys=True,
                       indent=4, separators=(',', ': '))
+    elif mode == "double_check_wire_name_map":
+        wirenamefn = "wire-name-map-{}.json".format(dev)
+        with open(wirenamefn, 'r') as f:
+            my_wire_to_quartus_wire = json.load(f)
+            quartus_wire_to_my_wire = \
+                {v: k for k, v in my_wire_to_quartus_wire.items()}
+
+        for e in route_elems:
+            elem_src_name = "{}:X{}Y{}S{}I{}".format(
+                elem_enum_types[e.m_element_enum], e.x, e.y, e.z, e.index)
+
+            if not (elem_src_name.startswith("R4:") or elem_src_name
+                    .startswith("C4:")):
+                continue
+
+            if elem_src_name not in quartus_wire_to_my_wire:
+                # print(elem_src_name)
+                assert len(e.fanins) == 0
     else:
         print("Invalid mode {}".format(mode))
         sys.exit(1)
